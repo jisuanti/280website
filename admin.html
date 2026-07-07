@@ -59,12 +59,6 @@
             border-radius: 6px; margin-bottom: 6px; font-size: 0.9em;
         }
         .item-row button { margin-left: 8px; }
-        .module-row {
-            display: flex; align-items: center; gap: 8px;
-            padding: 10px; background: #f9f9f9; border-radius: 6px; margin-bottom: 6px;
-        }
-        .module-row input { flex: 1; }
-        .mod-icon { font-size: 1.2em; }
         .editor-box {
             margin-top: 16px; background: #f9f9f9; padding: 20px; border-radius: 8px;
         }
@@ -88,10 +82,9 @@
             <h1>⚙️ 后台管理</h1>
             <div>
                 <select id="moduleSelect" onchange="switchAdminModule()">
-                    <option value="modules">📦 模块管理</option>
+                    <option value="notices">📋 公告栏</option>
                     <option value="book">📖 历史书</option>
-                    <option value="notice">📋 公告栏</option>
-                    <option value="novel">📖 小说管理</option>
+                    <option value="novels">📖 小说管理</option>
                 </select>
                 <button class="logout-btn" onclick="logout()">退出</button>
             </div>
@@ -99,184 +92,46 @@
         <main class="admin-main" id="adminMain"></main>
     </div>
 
+    <script src="supabase.js"></script>
     <script>
-        // ===== 内联数据层（不依赖 data.js）=====
-        const STORAGE_KEY = 'class280_site';
-        function getData() {
-            try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
-            catch(e) { return {}; }
-        }
-        function saveData(data) {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-        }
-
         // ===== 登录 =====
-        const PASSWORD = 'hanliupiannuan';
+        const PASSWORD = '280class';
+        
         function login() {
             if (document.getElementById('pwd').value === PASSWORD) {
                 localStorage.setItem('admin_ok', '1');
                 showPanel();
             } else alert('密码错误');
         }
-        function logout() { localStorage.removeItem('admin_ok'); location.reload(); }
+        
+        function logout() { 
+            localStorage.removeItem('admin_ok'); 
+            location.reload(); 
+        }
+        
         function showPanel() {
             document.getElementById('loginBox').style.display = 'none';
             document.getElementById('panel').style.display = 'block';
             switchAdminModule();
         }
+        
         if (localStorage.getItem('admin_ok') === '1') showPanel();
+        
         document.getElementById('pwd').addEventListener('keypress', e => {
             if (e.key === 'Enter') login();
         });
 
-        // ===== 模块管理 =====
+        // ===== 切换模块 =====
         function switchAdminModule() {
             const mod = document.getElementById('moduleSelect').value;
-            if (mod === 'modules') renderModuleManager();
+            if (mod === 'notices') renderNoticeEditor();
             else if (mod === 'book') renderBookEditor();
-            else if (mod === 'notice') renderNoticeEditor();
-            else if (mod === 'novel') renderNovelManager();
-        }
-
-        function renderModuleManager() {
-            const data = getData();
-            const modules = data.modules || [];
-            document.getElementById('adminMain').innerHTML = `
-                <div class="admin-section">
-                    <h2>📦 模块管理</h2>
-                    <p class="desc">管理前台导航栏显示的模块。</p>
-                    <div id="moduleList"></div>
-                    <button class="btn-primary" onclick="addModule()">＋ 添加模块</button>
-                </div>
-            `;
-            document.getElementById('moduleList').innerHTML = modules.map((mod, idx) => `
-                <div class="module-row">
-                    <span class="mod-icon">${mod.icon}</span>
-                    <input value="${mod.name}" onchange="updateModule(${idx}, 'name', this.value)" />
-                    <input value="${mod.id}" onchange="updateModule(${idx}, 'id', this.value)" />
-                    <button class="del-btn" onclick="deleteModule(${idx})">删除</button>
-                </div>
-            `).join('');
-        }
-
-        function addModule() {
-            const data = getData();
-            if (!data.modules) data.modules = [];
-            data.modules.push({ id: 'module_' + Date.now(), name: '新模块', icon: '📄' });
-            saveData(data);
-            renderModuleManager();
-        }
-
-        function updateModule(idx, key, val) {
-            const data = getData();
-            data.modules[idx][key] = val;
-            saveData(data);
-        }
-
-        function deleteModule(idx) {
-            if (!confirm('确认删除？')) return;
-            const data = getData();
-            data.modules.splice(idx, 1);
-            saveData(data);
-            renderModuleManager();
-        }
-
-        // ===== 历史书管理 =====
-        function renderBookEditor() {
-            const data = getData();
-            const book = data.bookChapters || [];
-            document.getElementById('adminMain').innerHTML = `
-                <div class="admin-section">
-                    <h2>📖 历史书管理</h2>
-                    <button class="btn-primary" onclick="showAddChapter()">＋ 新建章节</button>
-                    <div style="margin-top:16px;">
-                        ${(book || []).map((ch, idx) => `
-                            <div class="item-row">
-                                <span>第${idx+1}章：${escapeHtml(ch.title || '未命名')}</span>
-                                <div>
-                                    <button onclick="editChapter(${ch.id})">编辑</button>
-                                    <button class="del-btn" onclick="deleteChapter(${ch.id})">删除</button>
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
-                    <div id="chapterEditor"></div>
-                </div>
-            `;
-        }
-
-        let editingChapter = -1;
-        function showAddChapter() {
-            editingChapter = -1;
-            document.getElementById('chapterEditor').innerHTML = chapterFormHTML({});
-        }
-
-        function editChapter(id) {
-            editingChapter = id;
-            const data = getData();
-            const ch = (data.bookChapters || []).find(c => c.id === id) || {};
-            document.getElementById('chapterEditor').innerHTML = chapterFormHTML(ch);
-        }
-
-        function chapterFormHTML(ch) {
-            return `
-                <div class="editor-box">
-                <label>章节标题</label>
-                <input id="chTitle" value="${escapeHtml(ch.title || '')}" />
-                <label>课前导言</label>
-                <textarea id="chPreface">${(ch.preface || '').replace(/"/g,'&quot;')}</textarea>
-                <label>正文</label>
-                <textarea id="chBody" class="big">${(ch.body || '').replace(/"/g,'&quot;')}</textarea>
-                <label>习题</label>
-                <textarea id="chExercises">${(ch.exercises || '').replace(/"/g,'&quot;')}</textarea>
-                <label>知识扩展</label>
-                <textarea id="chExtension">${(ch.extension || '').replace(/"/g,'&quot;')}</textarea>
-                <label>结尾总结</label>
-                <textarea id="chEnding">${(ch.ending || '').replace(/"/g,'&quot;')}</textarea>
-                <div class="actions">
-                    <button class="btn-primary" onclick="saveChapter()">💾 保存</button>
-                    <button onclick="renderBookEditor()">取消</button>
-                </div>
-                </div>
-            `;
-        }
-
-        function saveChapter() {
-            const data = getData();
-            if (!data.bookChapters) data.bookChapters = [];
-            const chData = {
-                title: document.getElementById('chTitle').value.trim() || '未命名',
-                preface: document.getElementById('chPreface').value.trim(),
-                body: document.getElementById('chBody').value.trim(),
-                exercises: document.getElementById('chExercises').value.trim(),
-                extension: document.getElementById('chExtension').value.trim(),
-                ending: document.getElementById('chEnding').value.trim(),
-                images: []
-            };
-            if (editingChapter === -1) {
-                chData.id = Date.now();
-                data.bookChapters.push(chData);
-            } else {
-                const idx = data.bookChapters.findIndex(c => c.id === editingChapter);
-                if (idx !== -1) data.bookChapters[idx] = { ...data.bookChapters[idx], ...chData, id: editingChapter };
-            }
-            saveData(data);
-            alert('保存成功！');
-            renderBookEditor();
-        }
-
-        function deleteChapter(id) {
-            if (!confirm('确认删除？')) return;
-            const data = getData();
-            data.bookChapters = (data.bookChapters || []).filter(c => c.id !== id);
-            saveData(data);
-            renderBookEditor();
+            else if (mod === 'novels') renderNovelManager();
         }
 
         // ===== 公告管理 =====
-        function renderNoticeEditor() {
-            const data = getData();
-            const notices = data.notices || [];
+        async function renderNoticeEditor() {
+            const notices = await DB.getNotices();
             document.getElementById('adminMain').innerHTML = `
                 <div class="admin-section">
                     <h2>📋 公告栏管理</h2>
@@ -311,32 +166,117 @@
             `;
         }
 
-        function saveNotice() {
-            const data = getData();
-            if (!data.notices) data.notices = [];
-            data.notices.push({
-                id: Date.now(),
-                title: document.getElementById('ntTitle').value.trim(),
-                date: document.getElementById('ntDate').value,
-                content: document.getElementById('ntContent').value.trim()
-            });
-            saveData(data);
+        async function saveNotice() {
+            const title = document.getElementById('ntTitle').value.trim();
+            const date = document.getElementById('ntDate').value;
+            const content = document.getElementById('ntContent').value.trim();
+            
+            if (!title || !content) return alert('请填写标题和内容');
+            
+            await DB.addNotice({ title, date, content });
             alert('发布成功！');
             renderNoticeEditor();
         }
 
-        function deleteNotice(id) {
+        async function deleteNotice(id) {
             if (!confirm('确认删除？')) return;
-            const data = getData();
-            data.notices = (data.notices || []).filter(n => n.id !== id);
-            saveData(data);
+            await supabaseRequest('notices', 'DELETE', null, id);
+            alert('删除成功！');
             renderNoticeEditor();
         }
 
+        // ===== 历史书管理 =====
+        let editingChapterId = null;
+
+        async function renderBookEditor() {
+            const chapters = await DB.getChapters();
+            document.getElementById('adminMain').innerHTML = `
+                <div class="admin-section">
+                    <h2>📖 历史书管理</h2>
+                    <button class="btn-primary" onclick="showAddChapter()">＋ 新建章节</button>
+                    <div style="margin-top:16px;">
+                        ${(chapters || []).map((ch, idx) => `
+                            <div class="item-row">
+                                <span>第${idx+1}章：${escapeHtml(ch.title || '未命名')}</span>
+                                <div>
+                                    <button onclick="editChapter(${ch.id})">编辑</button>
+                                    <button class="del-btn" onclick="deleteChapter(${ch.id})">删除</button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div id="chapterEditor"></div>
+                </div>
+            `;
+        }
+
+        function showAddChapter() {
+            editingChapterId = null;
+            document.getElementById('chapterEditor').innerHTML = chapterFormHTML({});
+        }
+
+        function editChapter(id) {
+            editingChapterId = id;
+            DB.getChapters().then(chapters => {
+                const ch = chapters.find(c => c.id === id) || {};
+                document.getElementById('chapterEditor').innerHTML = chapterFormHTML(ch);
+            });
+        }
+
+        function chapterFormHTML(ch) {
+            return `
+                <div class="editor-box">
+                <label>章节标题</label>
+                <input id="chTitle" value="${escapeHtml(ch.title || '')}" />
+                <label>课前导言</label>
+                <textarea id="chPreface">${(ch.preface || '').replace(/"/g,'&quot;')}</textarea>
+                <label>正文</label>
+                <textarea id="chBody" class="big">${(ch.body || '').replace(/"/g,'&quot;')}</textarea>
+                <label>习题</label>
+                <textarea id="chExercises">${(ch.exercises || '').replace(/"/g,'&quot;')}</textarea>
+                <label>知识扩展</label>
+                <textarea id="chExtension">${(ch.extension || '').replace(/"/g,'&quot;')}</textarea>
+                <label>结尾总结</label>
+                <textarea id="chEnding">${(ch.ending || '').replace(/"/g,'&quot;')}</textarea>
+                <div class="actions">
+                    <button class="btn-primary" onclick="saveChapter()">💾 保存</button>
+                    <button onclick="renderBookEditor()">取消</button>
+                </div>
+                </div>
+            `;
+        }
+
+        async function saveChapter() {
+            const chapterData = {
+                title: document.getElementById('chTitle').value.trim() || '未命名',
+                preface: document.getElementById('chPreface').value.trim(),
+                body: document.getElementById('chBody').value.trim(),
+                exercises: document.getElementById('chExercises').value.trim(),
+                extension: document.getElementById('chExtension').value.trim(),
+                ending: document.getElementById('chEnding').value.trim(),
+                images: []
+            };
+
+            if (editingChapterId) {
+                await supabaseRequest('chapters', 'PATCH', chapterData, editingChapterId);
+            } else {
+                await DB.addChapter(chapterData);
+            }
+            
+            alert('保存成功！');
+            renderBookEditor();
+        }
+
+        async function deleteChapter(id) {
+            if (!confirm('确认删除？')) return;
+            await supabaseRequest('chapters', 'DELETE', null, id);
+            alert('删除成功！');
+            renderBookEditor();
+        }
+
         // ===== 小说管理 =====
-        function renderNovelManager() {
-            const data = getData();
-            const novels = data.novels || [];
+        async function renderNovelManager() {
+            const novels = await DB.getNovels();
             document.getElementById('adminMain').innerHTML = `
                 <div class="admin-section">
                     <h2>📖 小说管理</h2>
@@ -347,7 +287,6 @@
                                 <div>
                                     <strong>${escapeHtml(n.title || '无题')}</strong>
                                     <span style="margin-left:8px;color:#999;">✍️ ${escapeHtml(n.author || '匿名')}</span>
-                                    <span style="margin-left:8px;color:#999;">👍 ${n.likes || 0}</span>
                                 </div>
                                 <button class="del-btn" onclick="deleteNovel(${n.id})">删除</button>
                             </div>
@@ -357,14 +296,14 @@
             `;
         }
 
-        function deleteNovel(id) {
+        async function deleteNovel(id) {
             if (!confirm('确认删除？')) return;
-            const data = getData();
-            data.novels = (data.novels || []).filter(n => n.id !== id);
-            saveData(data);
+            await supabaseRequest('novels', 'DELETE', null, id);
+            alert('删除成功！');
             renderNovelManager();
         }
 
+        // ===== 工具函数 =====
         function escapeHtml(str) {
             if (!str) return '';
             return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
