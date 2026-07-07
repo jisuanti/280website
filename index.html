@@ -23,9 +23,6 @@
         .generic-page { background: #fff; border-radius: 10px; padding: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
         .generic-page h1 { font-size: 1.6em; color: #3e2723; border-bottom: 2px solid #d7ccc8; padding-bottom: 12px; margin-bottom: 24px; }
         .generic-body p { margin-bottom: 12px; line-height: 1.9; text-indent: 2em; }
-        .generic-images { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 20px; }
-        .generic-images img { max-width: 240px; max-height: 240px; border-radius: 8px; object-fit: cover; cursor: pointer; transition: transform 0.2s; }
-        .generic-images img:hover { transform: scale(1.05); }
         .book-layout { display: flex; gap: 24px; }
         .book-toc { width: 240px; background: #fff; border-radius: 10px; padding: 20px; position: sticky; top: 80px; height: fit-content; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
         .book-toc h3 { font-size: 1em; color: #666; margin-bottom: 12px; }
@@ -43,9 +40,6 @@
         .bk-section.exercises { border-left: 4px solid #ffb74d; }
         .bk-section.extension { border-left: 4px solid #ba68c8; }
         .bk-section.ending { border-left: 4px solid #e57373; }
-        .bk-images { display: flex; flex-wrap: wrap; gap: 10px; }
-        .bk-images img { max-width: 200px; max-height: 200px; border-radius: 6px; object-fit: cover; cursor: pointer; transition: transform 0.2s; }
-        .bk-images img:hover { transform: scale(1.05); }
         .notice-list { display: flex; flex-direction: column; gap: 16px; }
         .notice-card { background: #fff; border-radius: 10px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
         .notice-date { font-size: 0.8em; color: #999; margin-bottom: 6px; }
@@ -62,10 +56,6 @@
         .novel-actions button:hover { background: #e8d5c4; }
         .like-btn { color: #e57373; }
         .novel-body { color: #444; line-height: 1.9; margin-top: 12px; display:none; }
-        .novel-comments { margin-top: 12px; display:none; }
-        .comment-item { background: #f9f9f9; border-radius: 6px; padding: 10px; margin-bottom: 6px; }
-        .comment-meta { font-size: 0.85em; color: #999; margin-bottom: 4px; display: flex; gap: 10px; }
-        .comment-text { font-size: 0.95em; }
         .editor-box { margin-top: 16px; background: #f9f9f9; padding: 20px; border-radius: 8px; }
         label { display: block; margin: 12px 0 4px; font-weight: 600; font-size: 0.88em; color: #555; }
         input, textarea, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.95em; font-family: inherit; }
@@ -74,16 +64,6 @@
         .btn-primary { background: #8d6e63; color: #fff; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 0.95em; }
         .btn-primary:hover { background: #6d4c41; }
         .actions { margin-top: 14px; display: flex; gap: 10px; }
-        @media (max-width: 768px) {
-            .book-layout { flex-direction: column; }
-            .book-toc { width: 100%; position: static; display: flex; flex-wrap: wrap; gap: 6px; padding: 12px; }
-            .book-toc h3 { width: 100%; }
-            .toc-item { font-size: 0.82em; padding: 6px 8px; }
-            .header-inner { flex-wrap: wrap; }
-            .main-nav { order: 3; width: 100%; overflow-x: auto; }
-            .novel-card { flex-direction: column; }
-            .novel-cover { width: 100%; height: 200px; }
-        }
     </style>
 </head>
 <body>
@@ -101,73 +81,65 @@
         <img id="overlayImg" src="" />
     </div>
 
-    <script src="supabase.js"></script>
-<script>
-const SUPABASE_URL = 'https://gbktpjnitqpwomcprrol.supabase.co';
-const SUPABASE_KEY = 'yJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdia3Rwam5pdHFwd29tY3Bycm9sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTk2NDIsImV4cCI6MjA5ODk5NTY0Mn0.TIp9NAdDRZrI16Jq_no7Ga9EpX7ooc6b5Ck7r-sNqww';
+    <script>
+        // ===== Supabase 配置（内联）=====
+        const SUPABASE_URL = 'https://gbktpjnitqpwomcprrol.supabase.co';   // ← 替换
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdia3Rwam5pdHFwd29tY3Bycm9sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTk2NDIsImV4cCI6MjA5ODk5NTY0Mn0.TIp9NAdDRZrI16Jq_no7Ga9EpX7ooc6b5Ck7r-sNqww';                // ← 替换
 
-async function supabaseRequest(table, method = 'GET', data = null, id = null) {
-    const url = id 
-        ? `${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`
-        : `${SUPABASE_URL}/rest/v1/${table}`;
-    
-    const options = {
-        method: method,
-        headers: {
-            'apikey': SUPABASE_KEY,
-            'Authorization': `Bearer ${SUPABASE_KEY}`,
-            'Content-Type': 'application/json',
-            'Prefer': 'return=representation'
+        async function supabaseRequest(table, method = 'GET', data = null, id = null) {
+            const url = id 
+                ? `${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`
+                : `${SUPABASE_URL}/rest/v1/${table}`;
+            const options = {
+                method: method,
+                headers: {
+                    'apikey': SUPABASE_KEY,
+                    'Authorization': `Bearer ${SUPABASE_KEY}`,
+                    'Content-Type': 'application/json',
+                    'Prefer': 'return=representation'
+                }
+            };
+            if (data && (method === 'POST' || method === 'PATCH')) {
+                options.body = JSON.stringify(data);
+            }
+            const res = await fetch(url, options);
+            if (method === 'DELETE') return { ok: true };
+            return res.json();
         }
-    };
-    
-    if (data && (method === 'POST' || method === 'PATCH')) {
-        options.body = JSON.stringify(data);
-    }
-    
-    const res = await fetch(url, options);
-    if (method === 'DELETE') return { ok: true };
-    return res.json();
-}
 
-const DB = {
-    async getNotices() { return await supabaseRequest('notices') || []; },
-    async addNotice(notice) { return await supabaseRequest('notices', 'POST', notice); },
-    async getChapters() { return await supabaseRequest('chapters') || []; },
-    async addChapter(ch) { return await supabaseRequest('chapters', 'POST', ch); },
-    async getNovels() { return await supabaseRequest('novels') || []; },
-    async addNovel(novel) { return await supabaseRequest('novels', 'POST', novel); },
-    async likeNovel(id) {
-        const novels = await supabaseRequest('novels') || [];
-        const novel = novels.find(n => n.id === id);
-        if (novel) {
-            await supabaseRequest('novels', 'PATCH', { likes: (novel.likes || 0) + 1 }, id);
-        }
-    }
-};
-</script>
+        const DB = {
+            async getNotices() { return await supabaseRequest('notices') || []; },
+            async addNotice(notice) { return await supabaseRequest('notices', 'POST', notice); },
+            async getChapters() { return await supabaseRequest('chapters') || []; },
+            async addChapter(ch) { return await supabaseRequest('chapters', 'POST', ch); },
+            async getNovels() { return await supabaseRequest('novels') || []; },
+            async addNovel(novel) { return await supabaseRequest('novels', 'POST', novel); },
+            async likeNovel(id) {
+                const novels = await supabaseRequest('novels') || [];
+                const novel = novels.find(n => n.id === id);
+                if (novel) {
+                    await supabaseRequest('novels', 'PATCH', { likes: (novel.likes || 0) + 1 }, id);
+                }
+            }
+        };
+
         // ===== 工具函数 =====
         function openOverlay(src) { document.getElementById('overlayImg').src = src; document.getElementById('imgOverlay').style.display = 'flex'; }
         function closeOverlay() { document.getElementById('imgOverlay').style.display = 'none'; }
-        function formatText(text) { if (!text) return ''; return text.split('\\n').filter(l => l.trim()).map(l => `<p>${escapeHtml(l)}</p>`).join(''); }
+        function formatText(text) { if (!text) return ''; return text.split('\n').filter(l => l.trim()).map(l => `<p>${escapeHtml(l)}</p>`).join(''); }
         function escapeHtml(str) { if (!str) return ''; return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-        // ===== 模块注册表 =====
+        // ===== 模块注册 =====
         const modules = {};
-
-        function registerModule(mod) {
-            modules[mod.id] = mod;
-        }
+        function registerModule(mod) { modules[mod.id] = mod; }
 
         // ===== 历史书模块 =====
         registerModule({
-            id: 'book',
-            name: '历史书',
-            icon: '📖',
+            id: 'book', name: '历史书', icon: '📖',
             _chapters: [],
             render(data) {
                 this._chapters = data.chapters || [];
-                if (this._chapters.length === 0) return '<div class="empty">暂无章节，请通过管理页添加</div>';
+                if (this._chapters.length === 0) return '<div class="empty">暂无章节</div>';
                 return `
                     <div class="book-layout">
                         <aside class="book-toc">
@@ -184,10 +156,7 @@ const DB = {
                     </div>
                 `;
             },
-            init(data) {
-                this._chapters = data.chapters || [];
-                if (this._chapters.length > 0) this.openChapter(0);
-            },
+            init(data) { this._chapters = data.chapters || []; if (this._chapters.length > 0) this.openChapter(0); },
             openChapter(idx) {
                 const ch = this._chapters[idx];
                 if (!ch) return;
@@ -197,9 +166,9 @@ const DB = {
                     <h1>${escapeHtml(ch.title || '')}</h1>
                     ${ch.preface ? `<section class="bk-section preface"><h4>📋 课前导言</h4>${formatText(ch.preface)}</section>` : ''}
                     ${ch.body ? `<section class="bk-section body"><h4>📖 正文</h4>${formatText(ch.body)}</section>` : ''}
-                    ${ch.exercises ? `<section class="bk-section exercises"><h4>📝 习题与思考</h4>${formatText(ch.exercises)}</section>` : ''}
-                    ${ch.extension ? `<section class="bk-section extension"><h4>🔗 知识扩展</h4>${formatText(ch.extension)}</section>` : ''}
-                    ${ch.ending ? `<section class="bk-section ending"><h4>📑 本章总结</h4>${formatText(ch.ending)}</section>` : ''}
+                    ${ch.exercises ? `<section class="bk-section exercises"><h4>📝 习题</h4>${formatText(ch.exercises)}</section>` : ''}
+                    ${ch.extension ? `<section class="bk-section extension"><h4>🔗 扩展</h4>${formatText(ch.extension)}</section>` : ''}
+                    ${ch.ending ? `<section class="bk-section ending"><h4>📑 总结</h4>${formatText(ch.ending)}</section>` : ''}
                 `;
                 document.querySelectorAll('.toc-item').forEach((el, i) => el.classList.toggle('active', i === idx));
             }
@@ -207,9 +176,7 @@ const DB = {
 
         // ===== 公告栏模块 =====
         registerModule({
-            id: 'notice',
-            name: '公告栏',
-            icon: '📋',
+            id: 'notice', name: '公告栏', icon: '📋',
             render(data) {
                 const notices = data.notices || [];
                 if (notices.length === 0) return '<div class="empty">暂无公告</div>';
@@ -229,9 +196,7 @@ const DB = {
 
         // ===== 小说模块 =====
         registerModule({
-            id: 'novel',
-            name: '小说',
-            icon: '📖',
+            id: 'novel', name: '小说', icon: '📖',
             render(data) {
                 const novels = data.novels || [];
                 return `
@@ -245,10 +210,7 @@ const DB = {
                                     ${n.cover ? `<img class="novel-cover" src="${n.cover}" onclick="openOverlay('${n.cover}')" />` : ''}
                                     <div class="novel-info">
                                         <h3 class="novel-title">${escapeHtml(n.title || '无题')}</h3>
-                                        <div class="novel-meta">
-                                            <span>✍️ ${escapeHtml(n.author || '匿名')}</span>
-                                            <span>👍 ${n.likes || 0}</span>
-                                        </div>
+                                        <div class="novel-meta"><span>✍️ ${escapeHtml(n.author || '匿名')}</span><span>👍 ${n.likes || 0}</span></div>
                                         <div class="novel-intro">${escapeHtml(n.intro || '暂无简介')}</div>
                                         <div class="novel-actions">
                                             <button class="like-btn" onclick="likeNovel(${n.id})">👍 点赞</button>
@@ -270,14 +232,10 @@ const DB = {
             el.style.display = 'block';
             el.innerHTML = `
                 <div class="editor-box">
-                    <label>小说标题</label>
-                    <input id="novelTitle" placeholder="输入标题" />
-                    <label>作者昵称</label>
-                    <input id="novelAuthor" placeholder="你的昵称" />
-                    <label>小说简介</label>
-                    <textarea id="novelIntro" placeholder="一句话介绍..."></textarea>
-                    <label>小说正文</label>
-                    <textarea id="novelBodyInput" class="big" placeholder="开始创作..."></textarea>
+                    <label>小说标题</label><input id="novelTitle" placeholder="输入标题" />
+                    <label>作者昵称</label><input id="novelAuthor" placeholder="你的昵称" />
+                    <label>小说简介</label><textarea id="novelIntro" placeholder="一句话介绍..."></textarea>
+                    <label>小说正文</label><textarea id="novelBodyInput" class="big" placeholder="开始创作..."></textarea>
                     <div class="actions">
                         <button class="btn-primary" onclick="publishNovel()">📨 发布小说</button>
                         <button onclick="document.getElementById('novelForm').style.display='none'">取消</button>
@@ -292,7 +250,6 @@ const DB = {
             const intro = document.getElementById('novelIntro').value.trim();
             const body = document.getElementById('novelBodyInput').value.trim();
             if (!title || !body) return alert('请填写标题和正文');
-            
             await DB.addNovel({ title, author, intro, body, cover: '', likes: 0, comments: [] });
             alert('🎉 小说发布成功！');
             location.reload();
@@ -312,49 +269,72 @@ const DB = {
             const el = document.getElementById(`novelBody-${id}`);
             if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
         }
-// ===== 创作投稿模块 =====
-registerModule({
-    id: 'submit',
-    name: '创作投稿',
-    icon: '✍️',
-    render() {
-        return `
-            <div class="generic-page">
-                <h1>✍️ 创作投稿</h1>
-                <p style="color:#666;margin-bottom:20px;">你可以投稿新章节或建议，审核通过后会发布。</p>
-                <div class="editor-box">
-                    <label>投稿类型</label>
-                    <select id="submitType">
-                        <option value="chapter">📖 新章节（加入历史书）</option>
-                        <option value="suggestion">💡 建议反馈</option>
-                    </select>
-                    <label>你的昵称</label>
-                    <input id="submitNick" placeholder="匿名" />
-                    <div id="chapterFields">
-                        <label>章节标题</label>
-                        <input id="submitTitle" placeholder="第X章 标题" />
-                        <label>正文内容</label>
-                        <textarea id="submitBody" class="big" placeholder="正文内容..."></textarea>
+
+        // ===== 创作投稿模块 =====
+        registerModule({
+            id: 'submit', name: '创作投稿', icon: '✍️',
+            render() {
+                return `
+                    <div class="generic-page">
+                        <h1>✍️ 创作投稿</h1>
+                        <p style="color:#666;margin-bottom:20px;">你可以投稿新章节或建议，审核通过后会发布。</p>
+                        <div class="editor-box">
+                            <label>投稿类型</label>
+                            <select id="submitType">
+                                <option value="chapter">📖 新章节（加入历史书）</option>
+                                <option value="suggestion">💡 建议反馈</option>
+                            </select>
+                            <label>你的昵称</label>
+                            <input id="submitNick" placeholder="匿名" />
+                            <div id="chapterFields">
+                                <label>章节标题</label><input id="submitTitle" placeholder="第X章 标题" />
+                                <label>正文内容</label><textarea id="submitBody" class="big" placeholder="正文内容..."></textarea>
+                            </div>
+                            <div id="suggestionFields" style="display:none;">
+                                <label>建议内容</label><textarea id="submitSuggestion" class="big" placeholder="请输入你的建议..."></textarea>
+                            </div>
+                            <div class="actions" style="margin-top:16px;">
+                                <button class="btn-primary" onclick="doSubmit()">📨 提交投稿</button>
+                            </div>
+                        </div>
                     </div>
-                    <div id="suggestionFields" style="display:none;">
-                        <label>建议内容</label>
-                        <textarea id="submitSuggestion" class="big" placeholder="请输入你的建议..."></textarea>
-                    </div>
-                    <div class="actions" style="margin-top:16px;">
-                        <button class="btn-primary" onclick="doSubmit()">📨 提交投稿</button>
-                    </div>
-                </div>
-            </div>
-        `;
-    },
-    init() {
-        const el = document.getElementById('submitType');
-        if (el) el.addEventListener('change', function() {
-            document.getElementById('chapterFields').style.display = this.value === 'chapter' ? 'block' : 'none';
-            document.getElementById('suggestionFields').style.display = this.value === 'suggestion' ? 'block' : 'none';
+                `;
+            },
+            init() {
+                const el = document.getElementById('submitType');
+                if (el) el.addEventListener('change', function() {
+                    document.getElementById('chapterFields').style.display = this.value === 'chapter' ? 'block' : 'none';
+                    document.getElementById('suggestionFields').style.display = this.value === 'suggestion' ? 'block' : 'none';
+                });
+            }
         });
-    }
-});
+
+        async function doSubmit() {
+            const type = document.getElementById('submitType').value;
+            const nickname = document.getElementById('submitNick').value.trim() || '匿名';
+            if (type === 'chapter') {
+                const title = document.getElementById('submitTitle').value.trim();
+                const body = document.getElementById('submitBody').value.trim();
+                if (!title || !body) return alert('请填写章节标题和正文');
+                await supabaseRequest('submissions', 'POST', {
+                    nickname,
+                    content: JSON.stringify({ title, body, images: [] }),
+                    status: 'pending'
+                });
+                alert('🎉 投稿成功！等待管理员审核。');
+            } else {
+                const suggestion = document.getElementById('submitSuggestion').value.trim();
+                if (!suggestion) return alert('请填写建议内容');
+                await supabaseRequest('suggestions', 'POST', {
+                    nickname,
+                    content: suggestion,
+                    is_read: 0
+                });
+                alert('🎉 建议已提交！');
+            }
+            location.reload();
+        }
+
         // ===== 导航和路由 =====
         async function renderNav() {
             document.getElementById('mainNav').innerHTML = `
@@ -365,27 +345,18 @@ registerModule({
             `;
         }
 
-        function switchModule(modId) {
-            location.hash = modId;
-        }
+        function switchModule(modId) { location.hash = modId; }
 
         async function loadModule(modId) {
             const mod = modules[modId];
             if (!mod) { document.getElementById('moduleContent').innerHTML = '<div class="empty">模块加载失败</div>'; return; }
-
             const [chapters, notices, novels] = await Promise.all([
-                DB.getChapters(),
-                DB.getNotices(),
-                DB.getNovels()
+                DB.getChapters(), DB.getNotices(), DB.getNovels()
             ]);
             const data = { chapters, notices, novels };
-
             document.getElementById('moduleContent').innerHTML = mod.render(data);
             if (mod.init) mod.init(data);
-
-            document.querySelectorAll('.nav-item').forEach(el => {
-                el.classList.toggle('active', el.textContent.includes(mod.name));
-            });
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.toggle('active', el.textContent.includes(mod.name)));
         }
 
         window.addEventListener('hashchange', () => {
@@ -396,11 +367,8 @@ registerModule({
         async function init() {
             await renderNav();
             const hash = location.hash.slice(1);
-            if (hash && modules[hash]) {
-                loadModule(hash);
-            } else {
-                loadModule('book');
-            }
+            if (hash && modules[hash]) loadModule(hash);
+            else loadModule('book');
         }
 
         init();
