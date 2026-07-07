@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>280班网站</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family: "PingFang SC", "Noto Serif SC", "Microsoft YaHei", serif; background: #f4f1eb; color: #2c2c2c; }
+        .site-header { background: #3e2723; color: #fff; position: sticky; top: 0; z-index: 100; }
+        .header-inner { max-width: 1200px; margin: 0 auto; padding: 12px 24px; display: flex; align-items: center; gap: 20px; }
+        .logo { font-size: 1.2em; font-weight: 600; white-space: nowrap; }
+        .main-nav { display: flex; gap: 4px; flex: 1; }
+        .nav-item { color: rgba(255,255,255,0.75); text-decoration: none; padding: 8px 16px; border-radius: 20px; font-size: 0.9em; transition: 0.2s; white-space: nowrap; cursor: pointer; user-select: none; }
+        .nav-item:hover { background: rgba(255,255,255,0.15); color: #fff; }
+        .nav-item.active { background: rgba(255,255,255,0.22); color: #fff; }
+        .admin-link { color: #ffcc80; text-decoration: none; font-size: 0.85em; border: 1px solid #ffcc80; padding: 6px 14px; border-radius: 20px; white-space: nowrap; transition: 0.2s; }
+        .admin-link:hover { background: #ffcc80; color: #3e2723; }
+        .module-content { max-width: 1200px; margin: 0 auto; padding: 30px 24px; min-height: calc(100vh - 56px); }
+        .empty { text-align: center; padding: 80px 20px; color: #999; font-size: 1.1em; }
+        .img-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 999; justify-content: center; align-items: center; }
+        .img-overlay img { max-width: 90vw; max-height: 90vh; border-radius: 8px; }
+        .generic-page { background: #fff; border-radius: 10px; padding: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .generic-page h1 { font-size: 1.6em; color: #3e2723; border-bottom: 2px solid #d7ccc8; padding-bottom: 12px; margin-bottom: 24px; }
+        .generic-body p { margin-bottom: 12px; line-height: 1.9; text-indent: 2em; }
+        .generic-images { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 20px; }
+        .generic-images img { max-width: 240px; max-height: 240px; border-radius: 8px; object-fit: cover; cursor: pointer; transition: transform 0.2s; }
+        .generic-images img:hover { transform: scale(1.05); }
+        .book-layout { display: flex; gap: 24px; }
+        .book-toc { width: 240px; background: #fff; border-radius: 10px; padding: 20px; position: sticky; top: 80px; height: fit-content; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .book-toc h3 { font-size: 1em; color: #666; margin-bottom: 12px; }
+        .toc-item { padding: 8px 10px; cursor: pointer; border-radius: 6px; font-size: 0.9em; margin-bottom: 4px; transition: 0.15s; }
+        .toc-item:hover { background: #f5f0e8; }
+        .toc-item.active { background: #e8d5c4; color: #5d4037; font-weight: 600; }
+        .book-content { flex: 1; min-width: 0; }
+        .welcome-hint { color: #999; text-align: center; padding: 60px 0; }
+        .book-content h1 { font-size: 1.7em; color: #3e2723; border-bottom: 2px solid #d7ccc8; padding-bottom: 12px; margin-bottom: 28px; }
+        .bk-section { background: #fff; border-radius: 8px; padding: 20px 24px; margin-bottom: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+        .bk-section h4 { font-size: 0.85em; color: #8d6e63; margin-bottom: 10px; letter-spacing: 1px; }
+        .bk-section p { margin-bottom: 10px; line-height: 1.9; text-indent: 2em; }
+        .bk-section.preface { border-left: 4px solid #81c784; }
+        .bk-section.body { border-left: 4px solid #64b5f6; }
+        .bk-section.exercises { border-left: 4px solid #ffb74d; }
+        .bk-section.extension { border-left: 4px solid #ba68c8; }
+        .bk-section.ending { border-left: 4px solid #e57373; }
+        .bk-images { display: flex; flex-wrap: wrap; gap: 10px; }
+        .bk-images img { max-width: 200px; max-height: 200px; border-radius: 6px; object-fit: cover; cursor: pointer; transition: transform 0.2s; }
+        .bk-images img:hover { transform: scale(1.05); }
+        .notice-list { display: flex; flex-direction: column; gap: 16px; }
+        .notice-card { background: #fff; border-radius: 10px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .notice-date { font-size: 0.8em; color: #999; margin-bottom: 6px; }
+        .notice-title { font-size: 1.2em; color: #3e2723; margin-bottom: 10px; }
+        .notice-body p { line-height: 1.8; margin-bottom: 8px; }
+        .novel-card { background: #fff; border-radius: 10px; padding: 20px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); display: flex; gap: 16px; }
+        .novel-cover { width: 120px; height: 160px; object-fit: cover; border-radius: 6px; cursor: pointer; flex-shrink: 0; }
+        .novel-info { flex: 1; }
+        .novel-title { font-size: 1.2em; color: #3e2723; margin-bottom: 8px; }
+        .novel-meta { font-size: 0.85em; color: #999; margin-bottom: 8px; display: flex; gap: 12px; }
+        .novel-intro { color: #666; font-size: 0.95em; line-height: 1.7; margin-bottom: 12px; }
+        .novel-actions { display: flex; gap: 10px; }
+        .novel-actions button { background: #f5f0e8; border: none; padding: 6px 14px; border-radius: 20px; cursor: pointer; font-size: 0.9em; transition: 0.2s; }
+        .novel-actions button:hover { background: #e8d5c4; }
+        .like-btn { color: #e57373; }
+        .novel-body { color: #444; line-height: 1.9; margin-top: 12px; display:none; }
+        .novel-comments { margin-top: 12px; display:none; }
+        .comment-item { background: #f9f9f9; border-radius: 6px; padding: 10px; margin-bottom: 6px; }
+        .comment-meta { font-size: 0.85em; color: #999; margin-bottom: 4px; display: flex; gap: 10px; }
+        .comment-text { font-size: 0.95em; }
+        .editor-box { margin-top: 16px; background: #f9f9f9; padding: 20px; border-radius: 8px; }
+        label { display: block; margin: 12px 0 4px; font-weight: 600; font-size: 0.88em; color: #555; }
+        input, textarea, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.95em; font-family: inherit; }
+        textarea { min-height: 70px; resize: vertical; }
+        textarea.big { min-height: 180px; }
+        .btn-primary { background: #8d6e63; color: #fff; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 0.95em; }
+        .btn-primary:hover { background: #6d4c41; }
+        .actions { margin-top: 14px; display: flex; gap: 10px; }
+        @media (max-width: 768px) {
+            .book-layout { flex-direction: column; }
+            .book-toc { width: 100%; position: static; display: flex; flex-wrap: wrap; gap: 6px; padding: 12px; }
+            .book-toc h3 { width: 100%; }
+            .toc-item { font-size: 0.82em; padding: 6px 8px; }
+            .header-inner { flex-wrap: wrap; }
+            .main-nav { order: 3; width: 100%; overflow-x: auto; }
+            .novel-card { flex-direction: column; }
+            .novel-cover { width: 100%; height: 200px; }
+        }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <div class="header-inner">
+            <h1 class="logo">🏫 280班</h1>
+            <nav class="main-nav" id="mainNav"></nav>
+            <a href="admin.html" class="admin-link">管理</a>
+        </div>
+    </header>
+
+    <main class="module-content" id="moduleContent"></main>
+
+    <div class="img-overlay" id="imgOverlay" onclick="closeOverlay()">
+        <img id="overlayImg" src="" />
+    </div>
+
+    <script src="data.js"></script>
+    <script>
+        // ===== 工具函数 =====
+        function openOverlay(src) { document.getElementById('overlayImg').src = src; document.getElementById('imgOverlay').style.display = 'flex'; }
+        function closeOverlay() { document.getElementById('imgOverlay').style.display = 'none'; }
+        function formatText(text) { if (!text) return ''; return text.split('\n').filter(l => l.trim()).map(l => `<p>${escapeHtml(l)}</p>`).join(''); }
+        function escapeHtml(str) { if (!str) return ''; return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+        // ===== 模块注册表 =====
+        const modules = {};
+
+        function registerModule(mod) {
+            modules[mod.id] = mod;
+        }
+
+        // ===== 历史书模块（内联）=====
+        registerModule({
+            id: 'book',
+            name: '历史书',
+            icon: '📖',
+            _chapters: [],
+            _currentChapterId: null,
+            render(data) {
+                this._chapters = data.bookChapters || [];
+                const chapters = this._chapters;
+                if (chapters.length === 0) return '<div class="empty">暂无章节，请通过管理页添加</div>';
+                return `
+                    <div class="book-layout">
+                        <aside class="book-toc">
+                            <h3>目录</h3>
+                            ${chapters.map((ch, idx) => `
+                                <div class="toc-item" onclick="modules['book'].openChapter(${idx})">
+                                    第${idx+1}章 ${escapeHtml(ch.title || '未命名')}
+                                </div>
+                            `).join('')}
+                        </aside>
+                        <article class="book-content" id="bookContent">
+                            <div class="welcome-hint">请从左侧目录选择章节</div>
+                        </article>
+                    </div>
+                `;
+            },
+            init(data) {
+                this._chapters = data.bookChapters || [];
+                if (this._chapters.length > 0) this.openChapter(0);
+            },
+            openChapter(idx) {
+                const ch = this._chapters[idx];
+                if (!ch) return;
+                this._currentChapterId = ch.id;
+                const el = document.getElementById('bookContent');
+                if (!el) return;
+                el.innerHTML = `
+                    <h1>${escapeHtml(ch.title || '')}</h1>
+                    ${ch.preface ? `<section class="bk-section preface"><h4>📋 课前导言</h4>${formatText(ch.preface)}</section>` : ''}
+                    ${ch.body ? `<section class="bk-section body"><h4>📖 正文</h4>${formatText(ch.body)}</section>` : ''}
+                    ${ch.images && ch.images.length ? `<section class="bk-section"><h4>🖼️ 图片资料</h4><div class="bk-images">${ch.images.map(img => `<img src="${img}" onclick="openOverlay('${img}')" />`).join('')}</div></section>` : ''}
+                    ${ch.exercises ? `<section class="bk-section exercises"><h4>📝 习题与思考</h4>${formatText(ch.exercises)}</section>` : ''}
+                    ${ch.extension ? `<section class="bk-section extension"><h4>🔗 知识扩展</h4>${formatText(ch.extension)}</section>` : ''}
+                    ${ch.ending ? `<section class="bk-section ending"><h4>📑 本章总结</h4>${formatText(ch.ending)}</section>` : ''}
+                `;
+                document.querySelectorAll('.toc-item').forEach((el, i) => el.classList.toggle('active', i === idx));
+            }
+        });
+
+        // ===== 公告栏模块（内联）=====
+        registerModule({
+            id: 'notice',
+            name: '公告栏',
+            icon: '📋',
+            render(data) {
+                const notices = data.notices || [];
+                if (notices.length === 0) return '<div class="empty">暂无公告</div>';
+                return `
+                    <div class="notice-list">
+                        ${notices.map(n => `
+                            <div class="notice-card">
+                                <div class="notice-date">${n.date || ''}</div>
+                                <h3 class="notice-title">${escapeHtml(n.title || '')}</h3>
+                                <div class="notice-body">${formatText(n.content || '')}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+        });
+
+        // ===== 创作投稿模块（内联）=====
+        registerModule({
+            id: 'submit',
+            name: '创作投稿',
+            icon: '✍️',
+            render(data) {
+                return `
+                    <div class="generic-page">
+                        <h1>✍️ 创作投稿</h1>
+                        <p style="color:#666;margin-bottom:20px;">你可以投稿新章节、建议或反馈，审核通过后会发布。</p>
+                        <div class="editor-box">
+                            <label>投稿类型</label>
+                            <select id="submitType" onchange="toggleSubmitFields()">
+                                <option value="chapter">📖 新章节（加入历史书）</option>
+                                <option value="suggestion">💡 建议反馈</option>
+                            </select>
+                            <label>你的昵称</label>
+                            <input id="submitNick" placeholder="匿名" />
+                            <div id="chapterFields">
+                                <label>章节标题</label>
+                                <input id="submitTitle" placeholder="第X章 标题" />
+                                <label>正文内容</label>
+                                <textarea id="submitBody" class="big" placeholder="正文内容..."></textarea>
+                            </div>
+                            <div id="suggestionFields" style="display:none;">
+                                <label>建议内容</label>
+                                <textarea id="submitSuggestion" class="big" placeholder="请输入你的建议..."></textarea>
+                            </div>
+                            <div class="actions" style="margin-top:16px;">
+                                <button class="btn-primary" onclick="doSubmit()">📨 提交投稿</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            },
+            init() {
+                const el = document.getElementById('submitType');
+                if (el) el.addEventListener('change', function() {
+                    document.getElementById('chapterFields').style.display = this.value === 'chapter' ? 'block' : 'none';
+                    document.getElementById('suggestionFields').style.display = this.value === 'suggestion' ? 'block' : 'none';
+                });
+            }
+        });
+
+        function toggleSubmitFields() {
+            const isChapter = document.getElementById('submitType').value === 'chapter';
+            document.getElementById('chapterFields').style.display = isChapter ? 'block' : 'none';
+            document.getElementById('suggestionFields').style.display = isChapter ? 'none' : 'block';
+        }
+
+        async function doSubmit() {
+            const type = document.getElementById('submitType').value;
+            const nickname = document.getElementById('submitNick').value.trim() || '匿名';
+            if (type === 'chapter') {
+                const title = document.getElementById('submitTitle').value.trim();
+                const body = document.getElementById('submitBody').value.trim();
+                if (!title || !body) return alert('请填写章节标题和正文');
+                await api('/api/submissions', { method: 'POST', body: JSON.stringify({ nickname, type, content: JSON.stringify({ title, body, images: [] }) }) });
+            } else {
+                const suggestion = document.getElementById('submitSuggestion').value.trim();
+                if (!suggestion) return alert('请填写建议内容');
+                await api('/api/suggestions', { method: 'POST', body: JSON.stringify({ nickname, content: suggestion }) });
+            }
+            alert('🎉 投稿成功！等待管理员审核。');
+        }
+
+        // ===== 小说模块（内联）=====
+        registerModule({
+            id: 'novel',
+            name: '小说',
+            icon: '📖',
+            render(data) {
+                const novels = data.novels || [];
+                return `
+                    <div class="generic-page">
+                        <h1>📖 小说天地</h1>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                            <button class="btn-primary" onclick="showNovelForm()">📝 发布小说</button>
+                        </div>
+                        <div id="novelForm" style="display:none; margin-bottom:20px;"></div>
+                        <div id="novelList">
+                            ${(novels || []).map(n => `
+                                <div class="novel-card" id="novel-${n.id}">
+                                    ${n.cover ? `<img class="novel-cover" src="${n.cover}" onclick="openOverlay('${n.cover}')" />` : ''}
+                                    <div class="novel-info">
+                                        <h3 class="novel-title">${escapeHtml(n.title || '无题')}</h3>
+                                        <div class="novel-meta">
+                                            <span>✍️ ${escapeHtml(n.author || '匿名')}</span>
+                                            <span>👍 ${n.likes || 0}</span>
+                                        </div>
+                                        <div class="novel-intro">${escapeHtml(n.intro || '暂无简介')}</div>
+                                        <div class="novel-actions">
+                                            <button class="like-btn" onclick="likeNovel(${n.id})">👍 点赞</button>
+                                            <button onclick="toggleNovelBody(${n.id})">📖 阅读</button>
+                                        </div>
+                                        <div class="novel-body" id="novelBody-${n.id}">${formatText(n.body || '')}</div>
+                                    </div>
+                                </div>
+                            `).join('') || '<div class="empty">暂无小说，快来发布第一篇吧！</div>'}
+                        </div>
+                    </div>
+                `;
+            }
+        });
+
+        function showNovelForm() {
+            const el = document.getElementById('novelForm');
+            if (!el) return;
+            el.style.display = el.style.display === 'none' ? 'block' : 'none';
+            el.innerHTML = `
+                <div class="editor-box">
+                    <label>小说标题</label>
+                    <input id="novelTitle" placeholder="输入标题" />
+                    <label>作者昵称</label>
+                    <input id="novelAuthor" placeholder="你的昵称" />
+                    <label>小说简介</label>
+                    <textarea id="novelIntro" placeholder="一句话介绍..."></textarea>
+                    <label>小说正文</label>
+                    <textarea id="novelBodyInput" class="big" placeholder="开始创作..."></textarea>
+                    <div class="actions">
+                        <button class="btn-primary" onclick="publishNovel()">📨 发布小说</button>
+                        <button onclick="document.getElementById('novelForm').style.display='none'">取消</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function publishNovel() {
+            const title = document.getElementById('novelTitle').value.trim();
+            const author = document.getElementById('novelAuthor').value.trim() || '匿名';
+            const intro = document.getElementById('novelIntro').value.trim();
+            const body = document.getElementById('novelBodyInput').value.trim();
+            if (!title || !body) return alert('请填写标题和正文');
+            await api('/api/novels', { method: 'POST', body: JSON.stringify({ title, author, intro, body, cover: '', likes: 0, comments: [] }) });
+            alert('🎉 小说发布成功！');
+            location.reload();
+        }
+
+        async function likeNovel(id) {
+            const data = getData();
+            const novel = (data.novels || []).find(n => n.id === id);
+            if (!novel) return;
+            novel.likes = (novel.likes || 0) + 1;
+            saveData(data);
+            const btn = document.querySelector(`#novel-${id} .like-btn`);
+            if (btn) btn.innerHTML = `👍 点赞 (${novel.likes})`;
+        }
+
+        function toggleNovelBody(id) {
+            const el = document.getElementById(`novelBody-${id}`);
+            if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // ===== API =====
+        async function api(path, options = {}) {
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    const data = getData();
+                    const method = options.method || 'GET';
+                    const body = options.body ? JSON.parse(options.body) : {};
+
+                    if (path === '/api/config') {
+                        if (method === 'POST' && body.modules) { data.modules = body.modules; saveData(data); }
+                        return resolve({ modules: data.modules || [] });
+                    }
+                    if (path === '/api/book') {
+                        if (method === 'POST') { if (!data.bookChapters) data.bookChapters = []; data.bookChapters.push({ ...body, id: Date.now() }); saveData(data); return resolve({ ok: true }); }
+                        return resolve(data.bookChapters || []);
+                    }
+                    if (path === '/api/notices') {
+                        if (method === 'POST') { if (!data.notices) data.notices = []; data.notices.push({ ...body, id: Date.now() }); saveData(data); return resolve({ ok: true }); }
+                        return resolve(data.notices || []);
+                    }
+                    if (path === '/api/novels') {
+                        if (method === 'POST') { if (!data.novels) data.novels = []; data.novels.push({ ...body, id: Date.now() }); saveData(data); return resolve({ ok: true }); }
+                        return resolve(data.novels || []);
+                    }
+                    if (path === '/api/submissions') {
+                        if (method === 'POST') { if (!data.submissions) data.submissions = []; data.submissions.push({ ...body, id: Date.now(), status: 'pending', created_at: new Date().toISOString() }); saveData(data); return resolve({ ok: true }); }
+                        return resolve(data.submissions || []);
+                    }
+                    if (path === '/api/suggestions') {
+                        if (method === 'POST') { if (!data.suggestions) data.suggestions = []; data.suggestions.push({ ...body, id: Date.now(), is_read: 0, created_at: new Date().toISOString() }); saveData(data); return resolve({ ok: true }); }
+                        return resolve(data.suggestions || []);
+                    }
+                    if (path === '/api/generic') {
+                        if (method === 'POST') { if (!data.genericContent) data.genericContent = {}; data.genericContent[body.moduleId] = body.content; saveData(data); return resolve({ ok: true }); }
+                        return resolve(data.genericContent || {});
+                    }
+                    resolve({});
+                }, 50);
+            });
+        }
+
+        // ===== 导航和路由 =====
+        async function renderNav() {
+            const config = await api('/api/config');
+            document.getElementById('mainNav').innerHTML = (config.modules || []).map(mod => `
+                <div class="nav-item ${location.hash.slice(1) === mod.id ? 'active' : ''}" onclick="switchModule('${mod.id}')">
+                    ${mod.icon} ${mod.name}
+                </div>
+            `).join('');
+        }
+
+        function switchModule(modId) { location.hash = modId; }
+
+        async function loadModule(modId) {
+            const mod = modules[modId];
+            if (!mod) { document.getElementById('moduleContent').innerHTML = '<div class="empty">模块加载失败</div>'; return; }
+            const [config, book, notices, novels, generic] = await Promise.all([
+                api('/api/config'), api('/api/book'), api('/api/notices'), api('/api/novels'), api('/api/generic')
+            ]);
+            const data = { modules: config.modules, bookChapters: book, notices, novels, genericContent: generic };
+            document.getElementById('moduleContent').innerHTML = mod.render(data);
+            if (mod.init) mod.init(data);
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.toggle('active', el.dataset.mod === modId));
+        }
+
+        window.addEventListener('hashchange', () => {
+            const modId = location.hash.slice(1);
+            if (modId && modules[modId]) loadModule(modId);
+        });
+
+        async function init() {
+            await renderNav();
+            const config = await api('/api/config');
+            const hash = location.hash.slice(1);
+            if (hash && modules[hash]) loadModule(hash);
+            else if (config.modules && config.modules.length > 0) loadModule(config.modules[0].id);
+        }
+
+        init();
+    </script>
+</body>
+</html>

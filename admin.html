@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理 - 280班网站</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family: "PingFang SC", "Microsoft YaHei", sans-serif; background: #f0f2f5; }
+        .login-box {
+            max-width: 380px; margin: 120px auto; background: #fff;
+            padding: 40px; border-radius: 12px; text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .login-box h2 { margin-bottom: 20px; color: #2c3e50; }
+        .login-box input {
+            width: 100%; padding: 12px; margin-bottom: 16px;
+            border: 1px solid #ddd; border-radius: 8px; font-size: 1em;
+        }
+        .login-box button {
+            width: 100%; padding: 12px; background: #8d6e63;
+            color: #fff; border: none; border-radius: 8px; font-size: 1em; cursor: pointer;
+        }
+        .hint { margin-top: 10px; font-size: 0.85em; color: #999; }
+        .admin-header {
+            background: #2c3e50; color: #fff;
+            padding: 14px 24px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .admin-header select {
+            padding: 8px 12px; border-radius: 6px; border: none; font-size: 0.95em;
+        }
+        .logout-btn {
+            background: #e74c3c; color: #fff; border: none;
+            padding: 8px 14px; border-radius: 6px; cursor: pointer; margin-left: 10px;
+        }
+        .admin-main { max-width: 900px; margin: 0 auto; padding: 24px; }
+        .admin-section {
+            background: #fff; border-radius: 12px; padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .admin-section h2 { font-size: 1.1em; margin-bottom: 8px; color: #2c3e50; }
+        .desc { color: #666; font-size: 0.9em; margin-bottom: 16px; }
+        label { display: block; margin: 12px 0 4px; font-weight: 600; font-size: 0.88em; color: #555; }
+        input, textarea, select {
+            width: 100%; padding: 10px; border: 1px solid #ddd;
+            border-radius: 6px; font-size: 0.95em; font-family: inherit;
+        }
+        textarea { min-height: 70px; resize: vertical; }
+        textarea.big { min-height: 180px; }
+        .btn-primary {
+            background: #8d6e63; color: #fff; border: none;
+            padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 0.95em;
+        }
+        .btn-primary:hover { background: #6d4c41; }
+        .item-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 14px; background: #f9f9f9;
+            border-radius: 6px; margin-bottom: 6px; font-size: 0.9em;
+        }
+        .item-row button { margin-left: 8px; }
+        .module-row {
+            display: flex; align-items: center; gap: 8px;
+            padding: 10px; background: #f9f9f9; border-radius: 6px; margin-bottom: 6px;
+        }
+        .module-row input { flex: 1; }
+        .mod-icon { font-size: 1.2em; }
+        .editor-box {
+            margin-top: 16px; background: #f9f9f9; padding: 20px; border-radius: 8px;
+        }
+        .actions { margin-top: 14px; display: flex; gap: 10px; }
+        .del-btn {
+            background: #e74c3c !important; color: #fff; border: none;
+            padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85em;
+        }
+    </style>
+</head>
+<body>
+    <div id="loginBox" class="login-box">
+        <h2>🔐 管理登录</h2>
+        <input type="password" id="pwd" placeholder="管理密码" />
+        <button onclick="login()">登录</button>
+        <p class="hint">默认密码：280class</p>
+    </div>
+
+    <div id="panel" style="display:none;">
+        <header class="admin-header">
+            <h1>⚙️ 后台管理</h1>
+            <div>
+                <select id="moduleSelect" onchange="switchAdminModule()">
+                    <option value="modules">📦 模块管理</option>
+                    <option value="book">📖 历史书</option>
+                    <option value="notice">📋 公告栏</option>
+                    <option value="novel">📖 小说管理</option>
+                </select>
+                <button class="logout-btn" onclick="logout()">退出</button>
+            </div>
+        </header>
+        <main class="admin-main" id="adminMain"></main>
+    </div>
+
+    <script>
+        // ===== 内联数据层（不依赖 data.js）=====
+        const STORAGE_KEY = 'class280_site';
+        function getData() {
+            try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
+            catch(e) { return {}; }
+        }
+        function saveData(data) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        }
+
+        // ===== 登录 =====
+        const PASSWORD = '280class';
+        function login() {
+            if (document.getElementById('pwd').value === PASSWORD) {
+                localStorage.setItem('admin_ok', '1');
+                showPanel();
+            } else alert('密码错误');
+        }
+        function logout() { localStorage.removeItem('admin_ok'); location.reload(); }
+        function showPanel() {
+            document.getElementById('loginBox').style.display = 'none';
+            document.getElementById('panel').style.display = 'block';
+            switchAdminModule();
+        }
+        if (localStorage.getItem('admin_ok') === '1') showPanel();
+        document.getElementById('pwd').addEventListener('keypress', e => {
+            if (e.key === 'Enter') login();
+        });
+
+        // ===== 模块管理 =====
+        function switchAdminModule() {
+            const mod = document.getElementById('moduleSelect').value;
+            if (mod === 'modules') renderModuleManager();
+            else if (mod === 'book') renderBookEditor();
+            else if (mod === 'notice') renderNoticeEditor();
+            else if (mod === 'novel') renderNovelManager();
+        }
+
+        function renderModuleManager() {
+            const data = getData();
+            const modules = data.modules || [];
+            document.getElementById('adminMain').innerHTML = `
+                <div class="admin-section">
+                    <h2>📦 模块管理</h2>
+                    <p class="desc">管理前台导航栏显示的模块。</p>
+                    <div id="moduleList"></div>
+                    <button class="btn-primary" onclick="addModule()">＋ 添加模块</button>
+                </div>
+            `;
+            document.getElementById('moduleList').innerHTML = modules.map((mod, idx) => `
+                <div class="module-row">
+                    <span class="mod-icon">${mod.icon}</span>
+                    <input value="${mod.name}" onchange="updateModule(${idx}, 'name', this.value)" />
+                    <input value="${mod.id}" onchange="updateModule(${idx}, 'id', this.value)" />
+                    <button class="del-btn" onclick="deleteModule(${idx})">删除</button>
+                </div>
+            `).join('');
+        }
+
+        function addModule() {
+            const data = getData();
+            if (!data.modules) data.modules = [];
+            data.modules.push({ id: 'module_' + Date.now(), name: '新模块', icon: '📄' });
+            saveData(data);
+            renderModuleManager();
+        }
+
+        function updateModule(idx, key, val) {
+            const data = getData();
+            data.modules[idx][key] = val;
+            saveData(data);
+        }
+
+        function deleteModule(idx) {
+            if (!confirm('确认删除？')) return;
+            const data = getData();
+            data.modules.splice(idx, 1);
+            saveData(data);
+            renderModuleManager();
+        }
+
+        // ===== 历史书管理 =====
+        function renderBookEditor() {
+            const data = getData();
+            const book = data.bookChapters || [];
+            document.getElementById('adminMain').innerHTML = `
+                <div class="admin-section">
+                    <h2>📖 历史书管理</h2>
+                    <button class="btn-primary" onclick="showAddChapter()">＋ 新建章节</button>
+                    <div style="margin-top:16px;">
+                        ${(book || []).map((ch, idx) => `
+                            <div class="item-row">
+                                <span>第${idx+1}章：${escapeHtml(ch.title || '未命名')}</span>
+                                <div>
+                                    <button onclick="editChapter(${ch.id})">编辑</button>
+                                    <button class="del-btn" onclick="deleteChapter(${ch.id})">删除</button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div id="chapterEditor"></div>
+                </div>
+            `;
+        }
+
+        let editingChapter = -1;
+        function showAddChapter() {
+            editingChapter = -1;
+            document.getElementById('chapterEditor').innerHTML = chapterFormHTML({});
+        }
+
+        function editChapter(id) {
+            editingChapter = id;
+            const data = getData();
+            const ch = (data.bookChapters || []).find(c => c.id === id) || {};
+            document.getElementById('chapterEditor').innerHTML = chapterFormHTML(ch);
+        }
+
+        function chapterFormHTML(ch) {
+            return `
+                <div class="editor-box">
+                <label>章节标题</label>
+                <input id="chTitle" value="${escapeHtml(ch.title || '')}" />
+                <label>课前导言</label>
+                <textarea id="chPreface">${(ch.preface || '').replace(/"/g,'&quot;')}</textarea>
+                <label>正文</label>
+                <textarea id="chBody" class="big">${(ch.body || '').replace(/"/g,'&quot;')}</textarea>
+                <label>习题</label>
+                <textarea id="chExercises">${(ch.exercises || '').replace(/"/g,'&quot;')}</textarea>
+                <label>知识扩展</label>
+                <textarea id="chExtension">${(ch.extension || '').replace(/"/g,'&quot;')}</textarea>
+                <label>结尾总结</label>
+                <textarea id="chEnding">${(ch.ending || '').replace(/"/g,'&quot;')}</textarea>
+                <div class="actions">
+                    <button class="btn-primary" onclick="saveChapter()">💾 保存</button>
+                    <button onclick="renderBookEditor()">取消</button>
+                </div>
+                </div>
+            `;
+        }
+
+        function saveChapter() {
+            const data = getData();
+            if (!data.bookChapters) data.bookChapters = [];
+            const chData = {
+                title: document.getElementById('chTitle').value.trim() || '未命名',
+                preface: document.getElementById('chPreface').value.trim(),
+                body: document.getElementById('chBody').value.trim(),
+                exercises: document.getElementById('chExercises').value.trim(),
+                extension: document.getElementById('chExtension').value.trim(),
+                ending: document.getElementById('chEnding').value.trim(),
+                images: []
+            };
+            if (editingChapter === -1) {
+                chData.id = Date.now();
+                data.bookChapters.push(chData);
+            } else {
+                const idx = data.bookChapters.findIndex(c => c.id === editingChapter);
+                if (idx !== -1) data.bookChapters[idx] = { ...data.bookChapters[idx], ...chData, id: editingChapter };
+            }
+            saveData(data);
+            alert('保存成功！');
+            renderBookEditor();
+        }
+
+        function deleteChapter(id) {
+            if (!confirm('确认删除？')) return;
+            const data = getData();
+            data.bookChapters = (data.bookChapters || []).filter(c => c.id !== id);
+            saveData(data);
+            renderBookEditor();
+        }
+
+        // ===== 公告管理 =====
+        function renderNoticeEditor() {
+            const data = getData();
+            const notices = data.notices || [];
+            document.getElementById('adminMain').innerHTML = `
+                <div class="admin-section">
+                    <h2>📋 公告栏管理</h2>
+                    <button class="btn-primary" onclick="showAddNotice()">＋ 发布公告</button>
+                    <div style="margin-top:16px;">
+                        ${(notices || []).map(n => `
+                            <div class="item-row">
+                                <span>${n.date || ''} | ${escapeHtml(n.title || '')}</span>
+                                <button class="del-btn" onclick="deleteNotice(${n.id})">删除</button>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div id="noticeEditor"></div>
+                </div>
+            `;
+        }
+
+        function showAddNotice() {
+            document.getElementById('noticeEditor').innerHTML = `
+                <div class="editor-box">
+                <label>标题</label>
+                <input id="ntTitle" />
+                <label>日期</label>
+                <input id="ntDate" type="date" value="${new Date().toISOString().slice(0,10)}" />
+                <label>内容</label>
+                <textarea id="ntContent" class="big"></textarea>
+                <div class="actions">
+                    <button class="btn-primary" onclick="saveNotice()">💾 保存</button>
+                    <button onclick="renderNoticeEditor()">取消</button>
+                </div>
+                </div>
+            `;
+        }
+
+        function saveNotice() {
+            const data = getData();
+            if (!data.notices) data.notices = [];
+            data.notices.push({
+                id: Date.now(),
+                title: document.getElementById('ntTitle').value.trim(),
+                date: document.getElementById('ntDate').value,
+                content: document.getElementById('ntContent').value.trim()
+            });
+            saveData(data);
+            alert('发布成功！');
+            renderNoticeEditor();
+        }
+
+        function deleteNotice(id) {
+            if (!confirm('确认删除？')) return;
+            const data = getData();
+            data.notices = (data.notices || []).filter(n => n.id !== id);
+            saveData(data);
+            renderNoticeEditor();
+        }
+
+        // ===== 小说管理 =====
+        function renderNovelManager() {
+            const data = getData();
+            const novels = data.novels || [];
+            document.getElementById('adminMain').innerHTML = `
+                <div class="admin-section">
+                    <h2>📖 小说管理</h2>
+                    <p class="desc">管理用户发布的小说，可以删除违规内容。</p>
+                    <div style="margin-top:16px;">
+                        ${(novels || []).map(n => `
+                            <div class="item-row">
+                                <div>
+                                    <strong>${escapeHtml(n.title || '无题')}</strong>
+                                    <span style="margin-left:8px;color:#999;">✍️ ${escapeHtml(n.author || '匿名')}</span>
+                                    <span style="margin-left:8px;color:#999;">👍 ${n.likes || 0}</span>
+                                </div>
+                                <button class="del-btn" onclick="deleteNovel(${n.id})">删除</button>
+                            </div>
+                        `).join('') || '<div style="padding:20px;text-align:center;color:#999;">暂无小说</div>'}
+                    </div>
+                </div>
+            `;
+        }
+
+        function deleteNovel(id) {
+            if (!confirm('确认删除？')) return;
+            const data = getData();
+            data.novels = (data.novels || []).filter(n => n.id !== id);
+            saveData(data);
+            renderNovelManager();
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,31 @@
+/* ===== 小说板块 ===== */
+.novel-card {
+    background: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    display: flex;
+    gap: 16px;
+}
+.novel-cover {
+    width: 120px;
+    height: 160px;
+    object-fit: cover;
+    border-radius: 6px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+.novel-info { flex: 1; }
+.novel-title { font-size: 1.2em; color: #3e2723; margin-bottom: 8px; }
+.novel-meta { font-size: 0.85em; color: #999; margin-bottom: 8px; display: flex; gap: 12px; }
+.novel-intro { color: #666; font-size: 0.95em; line-height: 1.7; margin-bottom: 12px; }
+.novel-actions { display: flex; gap: 10px; }
+.novel-actions button {
+    background: #f5f0e8; border: none; padding: 6px 14px;
+    border-radius: 20px; cursor: pointer; font-size: 0.9em;
+    transition: 0.2s;
+}
+.novel-actions button:hover { background: #e8d5c4; }
+.like-btn { color: #e57373; }
+.novel-body { color: #444; line-height: 1.9; }
