@@ -67,6 +67,16 @@
             background: #e74c3c !important; color: #fff; border: none;
             padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85em;
         }
+        .badge { font-size: 0.75em; padding: 2px 8px; border-radius: 10px; margin-left: 6px; }
+        .badge.pending { background: #fff3e0; color: #e65100; }
+        .badge.approved { background: #e8f5e9; color: #2e7d32; }
+        .badge.rejected { background: #ffebee; color: #c62828; }
+        .sub-pending { border-left: 3px solid #ffb300; }
+        .sub-approved { border-left: 3px solid #4caf50; }
+        .sub-rejected { border-left: 3px solid #e57373; }
+        .sugg-date { font-size: 0.8em; color: #999; margin-left: 8px; }
+        .item-row.unread { background: #fff8e1; border-left: 3px solid #ffb300; }
+        .item-row.read { opacity: 0.6; }
     </style>
 </head>
 <body>
@@ -84,6 +94,8 @@
                 <select id="moduleSelect" onchange="switchAdminModule()">
                     <option value="notices">📋 公告栏</option>
                     <option value="book">📖 历史书</option>
+                    <option value="submissions">✍️ 投稿审核</option>
+                    <option value="suggestions">💡 建议箱</option>
                     <option value="novels">📖 小说管理</option>
                 </select>
                 <button class="logout-btn" onclick="logout()">退出</button>
@@ -126,7 +138,84 @@
             const mod = document.getElementById('moduleSelect').value;
             if (mod === 'notices') renderNoticeEditor();
             else if (mod === 'book') renderBookEditor();
+            else if (mod === 'submissions') renderSubmissions();
+            else if (mod === 'suggestions') renderSuggestions();
             else if (mod === 'novels') renderNovelManager();
+        }
+
+        // ===== 投稿审核 =====
+        async function renderSubmissions() {
+            const submissions = await supabaseRequest('submissions') || [];
+            document.getElementById('adminMain').innerHTML = `
+                <div class="admin-section">
+                    <h2>✍️ 投稿审核</h2>
+                    <p class="desc">审核通过后将自动加入历史书。</p>
+                    ${(submissions || []).map(s => `
+                        <div class="item-row sub-${s.status}">
+                            <div>
+                                <strong>${escapeHtml(s.nickname || '匿名')}</strong>
+                                <span class="badge ${s.status}">${s.status}</span>
+                                <span class="sugg-date">${s.created_at ? s.created_at.slice(0,16) : ''}</span>
+                                <pre style="margin-top:6px;font-size:0.85em;white-space:pre-wrap;">${escapeHtml(s.content)}</pre>
+                            </div>
+                            ${s.status === 'pending' ? `
+                                <div>
+                                    <button class="btn-primary" onclick="approveSub(${s.id})">通过</button>
+                                    <button class="del-btn" onclick="rejectSub(${s.id})">拒绝</button>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `).join('') || '<div class="empty">暂无投稿</div>'}
+                </div>
+            `;
+        }
+
+        async function approveSub(id) {
+            if (!confirm('确认通过并发布？')) return;
+            const submissions = await supabaseRequest('submissions') || [];
+            const sub = submissions.find(s => s.id === id);
+            if (sub) {
+                // 更新投稿状态
+                await supabaseRequest('submissions', 'PATCH', { status: 'approved' }, id);
+                // 解析内容并添加到历史书
+                const content = JSON.parse(sub.content);
+                await DB.addChapter(content);
+                alert('已通过！内容已加入历史书。');
+                renderSubmissions();
+            }
+        }
+
+        async function rejectSub(id) {
+            if (!confirm('确认拒绝？')) return;
+            await supabaseRequest('submissions', 'PATCH', { status: 'rejected' }, id);
+            alert('已拒绝。');
+            renderSubmissions();
+        }
+
+        // ===== 建议箱 =====
+        async function renderSuggestions() {
+            const suggestions = await supabaseRequest('suggestions') || [];
+            document.getElementById('adminMain').innerHTML = `
+                <div class="admin-section">
+                    <h2>💡 建议箱</h2>
+                    <p class="desc">这里是大家给你的建议。</p>
+                    ${(suggestions || []).map(s => `
+                        <div class="item-row ${s.is_read ? 'read' : 'unread'}">
+                            <div>
+                                <strong>${escapeHtml(s.nickname || '匿名')}</strong>
+                                <span class="sugg-date">${s.created_at ? s.created_at.slice(0,16) : ''}</span>
+                                <div style="margin-top:6px;">${escapeHtml(s.content)}</div>
+                            </div>
+                            ${s.is_read ? '' : `<button onclick="markRead(${s.id})">已读</button>`}
+                        </div>
+                    `).join('') || '<div class="empty">暂无建议</div>'}
+                </div>
+            `;
+        }
+
+        async function markRead(id) {
+            await supabaseRequest('suggestions', 'PATCH', { is_read: 1 }, id);
+            renderSuggestions();
         }
 
         // ===== 公告管理 =====
@@ -170,9 +259,7 @@
             const title = document.getElementById('ntTitle').value.trim();
             const date = document.getElementById('ntDate').value;
             const content = document.getElementById('ntContent').value.trim();
-            
             if (!title || !content) return alert('请填写标题和内容');
-            
             await DB.addNotice({ title, date, content });
             alert('发布成功！');
             renderNoticeEditor();
@@ -256,13 +343,11 @@
                 ending: document.getElementById('chEnding').value.trim(),
                 images: []
             };
-
             if (editingChapterId) {
                 await supabaseRequest('chapters', 'PATCH', chapterData, editingChapterId);
             } else {
                 await DB.addChapter(chapterData);
             }
-            
             alert('保存成功！');
             renderBookEditor();
         }
