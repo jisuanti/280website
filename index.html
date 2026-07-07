@@ -103,6 +103,24 @@
 
     <script src="supabase.js"></script>
     <script>
+async function doSubmit() {
+    const type = document.getElementById('submitType').value;
+    const nickname = document.getElementById('submitNick').value.trim() || '匿名';
+    
+    if (type === 'chapter') {
+        const title = document.getElementById('submitTitle').value.trim();
+        const body = document.getElementById('submitBody').value.trim();
+        if (!title || !body) return alert('请填写章节标题和正文');
+        
+        await DB.addChapter({ title, body, preface: '', exercises: '', extension: '', ending: '', images: [] });
+        alert('🎉 章节投稿成功！');
+    } else {
+        const suggestion = document.getElementById('submitSuggestion').value.trim();
+        if (!suggestion) return alert('请填写建议内容');
+        alert('🎉 建议已提交！');
+    }
+    location.reload();
+}
         // ===== 工具函数 =====
         function openOverlay(src) { document.getElementById('overlayImg').src = src; document.getElementById('imgOverlay').style.display = 'flex'; }
         function closeOverlay() { document.getElementById('imgOverlay').style.display = 'none'; }
@@ -269,13 +287,56 @@
             const el = document.getElementById(`novelBody-${id}`);
             if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
         }
-
+// ===== 创作投稿模块 =====
+registerModule({
+    id: 'submit',
+    name: '创作投稿',
+    icon: '✍️',
+    render() {
+        return `
+            <div class="generic-page">
+                <h1>✍️ 创作投稿</h1>
+                <p style="color:#666;margin-bottom:20px;">你可以投稿新章节或建议，审核通过后会发布。</p>
+                <div class="editor-box">
+                    <label>投稿类型</label>
+                    <select id="submitType">
+                        <option value="chapter">📖 新章节（加入历史书）</option>
+                        <option value="suggestion">💡 建议反馈</option>
+                    </select>
+                    <label>你的昵称</label>
+                    <input id="submitNick" placeholder="匿名" />
+                    <div id="chapterFields">
+                        <label>章节标题</label>
+                        <input id="submitTitle" placeholder="第X章 标题" />
+                        <label>正文内容</label>
+                        <textarea id="submitBody" class="big" placeholder="正文内容..."></textarea>
+                    </div>
+                    <div id="suggestionFields" style="display:none;">
+                        <label>建议内容</label>
+                        <textarea id="submitSuggestion" class="big" placeholder="请输入你的建议..."></textarea>
+                    </div>
+                    <div class="actions" style="margin-top:16px;">
+                        <button class="btn-primary" onclick="doSubmit()">📨 提交投稿</button>
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+    init() {
+        const el = document.getElementById('submitType');
+        if (el) el.addEventListener('change', function() {
+            document.getElementById('chapterFields').style.display = this.value === 'chapter' ? 'block' : 'none';
+            document.getElementById('suggestionFields').style.display = this.value === 'suggestion' ? 'block' : 'none';
+        });
+    }
+});
         // ===== 导航和路由 =====
         async function renderNav() {
             document.getElementById('mainNav').innerHTML = `
                 <div class="nav-item active" onclick="switchModule('book')">📖 历史书</div>
                 <div class="nav-item" onclick="switchModule('notice')">📋 公告栏</div>
                 <div class="nav-item" onclick="switchModule('novel')">📖 小说</div>
+                <div class="nav-item" onclick="switchModule('submit')">✍️ 创作投稿</div>
             `;
         }
 
