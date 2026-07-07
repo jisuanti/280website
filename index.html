@@ -101,13 +101,12 @@
         <img id="overlayImg" src="" />
     </div>
 
-    <script src="data.js"></script>
-<script src="supabase.js"></script>
+    <script src="supabase.js"></script>
     <script>
         // ===== 工具函数 =====
         function openOverlay(src) { document.getElementById('overlayImg').src = src; document.getElementById('imgOverlay').style.display = 'flex'; }
         function closeOverlay() { document.getElementById('imgOverlay').style.display = 'none'; }
-        function formatText(text) { if (!text) return ''; return text.split('\n').filter(l => l.trim()).map(l => `<p>${escapeHtml(l)}</p>`).join(''); }
+        function formatText(text) { if (!text) return ''; return text.split('\\n').filter(l => l.trim()).map(l => `<p>${escapeHtml(l)}</p>`).join(''); }
         function escapeHtml(str) { if (!str) return ''; return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
         // ===== 模块注册表 =====
@@ -117,22 +116,20 @@
             modules[mod.id] = mod;
         }
 
-        // ===== 历史书模块（内联）=====
+        // ===== 历史书模块 =====
         registerModule({
             id: 'book',
             name: '历史书',
             icon: '📖',
             _chapters: [],
-            _currentChapterId: null,
             render(data) {
-                this._chapters = data.bookChapters || [];
-                const chapters = this._chapters;
-                if (chapters.length === 0) return '<div class="empty">暂无章节，请通过管理页添加</div>';
+                this._chapters = data.chapters || [];
+                if (this._chapters.length === 0) return '<div class="empty">暂无章节，请通过管理页添加</div>';
                 return `
                     <div class="book-layout">
                         <aside class="book-toc">
                             <h3>目录</h3>
-                            ${chapters.map((ch, idx) => `
+                            ${this._chapters.map((ch, idx) => `
                                 <div class="toc-item" onclick="modules['book'].openChapter(${idx})">
                                     第${idx+1}章 ${escapeHtml(ch.title || '未命名')}
                                 </div>
@@ -145,20 +142,18 @@
                 `;
             },
             init(data) {
-                this._chapters = data.bookChapters || [];
+                this._chapters = data.chapters || [];
                 if (this._chapters.length > 0) this.openChapter(0);
             },
             openChapter(idx) {
                 const ch = this._chapters[idx];
                 if (!ch) return;
-                this._currentChapterId = ch.id;
                 const el = document.getElementById('bookContent');
                 if (!el) return;
                 el.innerHTML = `
                     <h1>${escapeHtml(ch.title || '')}</h1>
                     ${ch.preface ? `<section class="bk-section preface"><h4>📋 课前导言</h4>${formatText(ch.preface)}</section>` : ''}
                     ${ch.body ? `<section class="bk-section body"><h4>📖 正文</h4>${formatText(ch.body)}</section>` : ''}
-                    ${ch.images && ch.images.length ? `<section class="bk-section"><h4>🖼️ 图片资料</h4><div class="bk-images">${ch.images.map(img => `<img src="${img}" onclick="openOverlay('${img}')" />`).join('')}</div></section>` : ''}
                     ${ch.exercises ? `<section class="bk-section exercises"><h4>📝 习题与思考</h4>${formatText(ch.exercises)}</section>` : ''}
                     ${ch.extension ? `<section class="bk-section extension"><h4>🔗 知识扩展</h4>${formatText(ch.extension)}</section>` : ''}
                     ${ch.ending ? `<section class="bk-section ending"><h4>📑 本章总结</h4>${formatText(ch.ending)}</section>` : ''}
@@ -167,7 +162,7 @@
             }
         });
 
-        // ===== 公告栏模块（内联）=====
+        // ===== 公告栏模块 =====
         registerModule({
             id: 'notice',
             name: '公告栏',
@@ -189,73 +184,7 @@
             }
         });
 
-        // ===== 创作投稿模块（内联）=====
-        registerModule({
-            id: 'submit',
-            name: '创作投稿',
-            icon: '✍️',
-            render(data) {
-                return `
-                    <div class="generic-page">
-                        <h1>✍️ 创作投稿</h1>
-                        <p style="color:#666;margin-bottom:20px;">你可以投稿新章节、建议或反馈，审核通过后会发布。</p>
-                        <div class="editor-box">
-                            <label>投稿类型</label>
-                            <select id="submitType" onchange="toggleSubmitFields()">
-                                <option value="chapter">📖 新章节（加入历史书）</option>
-                                <option value="suggestion">💡 建议反馈</option>
-                            </select>
-                            <label>你的昵称</label>
-                            <input id="submitNick" placeholder="匿名" />
-                            <div id="chapterFields">
-                                <label>章节标题</label>
-                                <input id="submitTitle" placeholder="第X章 标题" />
-                                <label>正文内容</label>
-                                <textarea id="submitBody" class="big" placeholder="正文内容..."></textarea>
-                            </div>
-                            <div id="suggestionFields" style="display:none;">
-                                <label>建议内容</label>
-                                <textarea id="submitSuggestion" class="big" placeholder="请输入你的建议..."></textarea>
-                            </div>
-                            <div class="actions" style="margin-top:16px;">
-                                <button class="btn-primary" onclick="doSubmit()">📨 提交投稿</button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            },
-            init() {
-                const el = document.getElementById('submitType');
-                if (el) el.addEventListener('change', function() {
-                    document.getElementById('chapterFields').style.display = this.value === 'chapter' ? 'block' : 'none';
-                    document.getElementById('suggestionFields').style.display = this.value === 'suggestion' ? 'block' : 'none';
-                });
-            }
-        });
-
-        function toggleSubmitFields() {
-            const isChapter = document.getElementById('submitType').value === 'chapter';
-            document.getElementById('chapterFields').style.display = isChapter ? 'block' : 'none';
-            document.getElementById('suggestionFields').style.display = isChapter ? 'none' : 'block';
-        }
-
-        async function doSubmit() {
-            const type = document.getElementById('submitType').value;
-            const nickname = document.getElementById('submitNick').value.trim() || '匿名';
-            if (type === 'chapter') {
-                const title = document.getElementById('submitTitle').value.trim();
-                const body = document.getElementById('submitBody').value.trim();
-                if (!title || !body) return alert('请填写章节标题和正文');
-                await api('/api/submissions', { method: 'POST', body: JSON.stringify({ nickname, type, content: JSON.stringify({ title, body, images: [] }) }) });
-            } else {
-                const suggestion = document.getElementById('submitSuggestion').value.trim();
-                if (!suggestion) return alert('请填写建议内容');
-                await api('/api/suggestions', { method: 'POST', body: JSON.stringify({ nickname, content: suggestion }) });
-            }
-            alert('🎉 投稿成功！等待管理员审核。');
-        }
-
-        // ===== 小说模块（内联）=====
+        // ===== 小说模块 =====
         registerModule({
             id: 'novel',
             name: '小说',
@@ -265,12 +194,10 @@
                 return `
                     <div class="generic-page">
                         <h1>📖 小说天地</h1>
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                            <button class="btn-primary" onclick="showNovelForm()">📝 发布小说</button>
-                        </div>
-                        <div id="novelForm" style="display:none; margin-bottom:20px;"></div>
+                        <button class="btn-primary" onclick="showNovelForm()">📝 发布小说</button>
+                        <div id="novelForm" style="display:none; margin:20px 0;"></div>
                         <div id="novelList">
-                            ${(novels || []).map(n => `
+                            ${novels.map(n => `
                                 <div class="novel-card" id="novel-${n.id}">
                                     ${n.cover ? `<img class="novel-cover" src="${n.cover}" onclick="openOverlay('${n.cover}')" />` : ''}
                                     <div class="novel-info">
@@ -287,7 +214,7 @@
                                         <div class="novel-body" id="novelBody-${n.id}">${formatText(n.body || '')}</div>
                                     </div>
                                 </div>
-                            `).join('') || '<div class="empty">暂无小说，快来发布第一篇吧！</div>'}
+                            `).join('') || '<div class="empty">暂无小说</div>'}
                         </div>
                     </div>
                 `;
@@ -297,7 +224,7 @@
         function showNovelForm() {
             const el = document.getElementById('novelForm');
             if (!el) return;
-            el.style.display = el.style.display === 'none' ? 'block' : 'none';
+            el.style.display = 'block';
             el.innerHTML = `
                 <div class="editor-box">
                     <label>小说标题</label>
@@ -322,19 +249,20 @@
             const intro = document.getElementById('novelIntro').value.trim();
             const body = document.getElementById('novelBodyInput').value.trim();
             if (!title || !body) return alert('请填写标题和正文');
-            await api('/api/novels', { method: 'POST', body: JSON.stringify({ title, author, intro, body, cover: '', likes: 0, comments: [] }) });
+            
+            await DB.addNovel({ title, author, intro, body, cover: '', likes: 0, comments: [] });
             alert('🎉 小说发布成功！');
             location.reload();
         }
 
         async function likeNovel(id) {
-            const data = getData();
-            const novel = (data.novels || []).find(n => n.id === id);
-            if (!novel) return;
-            novel.likes = (novel.likes || 0) + 1;
-            saveData(data);
+            await DB.likeNovel(id);
             const btn = document.querySelector(`#novel-${id} .like-btn`);
-            if (btn) btn.innerHTML = `👍 点赞 (${novel.likes})`;
+            if (btn) {
+                const novels = await DB.getNovels();
+                const novel = novels.find(n => n.id === id);
+                if (novel) btn.innerHTML = `👍 点赞 (${novel.likes})`;
+            }
         }
 
         function toggleNovelBody(id) {
@@ -342,69 +270,36 @@
             if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
         }
 
-        // ===== API =====
-        async function api(path, options = {}) {
-            return new Promise(resolve => {
-                setTimeout(() => {
-                    const data = getData();
-                    const method = options.method || 'GET';
-                    const body = options.body ? JSON.parse(options.body) : {};
-
-                    if (path === '/api/config') {
-                        if (method === 'POST' && body.modules) { data.modules = body.modules; saveData(data); }
-                        return resolve({ modules: data.modules || [] });
-                    }
-                    if (path === '/api/book') {
-                        if (method === 'POST') { if (!data.bookChapters) data.bookChapters = []; data.bookChapters.push({ ...body, id: Date.now() }); saveData(data); return resolve({ ok: true }); }
-                        return resolve(data.bookChapters || []);
-                    }
-                    if (path === '/api/notices') {
-                        if (method === 'POST') { if (!data.notices) data.notices = []; data.notices.push({ ...body, id: Date.now() }); saveData(data); return resolve({ ok: true }); }
-                        return resolve(data.notices || []);
-                    }
-                    if (path === '/api/novels') {
-                        if (method === 'POST') { if (!data.novels) data.novels = []; data.novels.push({ ...body, id: Date.now() }); saveData(data); return resolve({ ok: true }); }
-                        return resolve(data.novels || []);
-                    }
-                    if (path === '/api/submissions') {
-                        if (method === 'POST') { if (!data.submissions) data.submissions = []; data.submissions.push({ ...body, id: Date.now(), status: 'pending', created_at: new Date().toISOString() }); saveData(data); return resolve({ ok: true }); }
-                        return resolve(data.submissions || []);
-                    }
-                    if (path === '/api/suggestions') {
-                        if (method === 'POST') { if (!data.suggestions) data.suggestions = []; data.suggestions.push({ ...body, id: Date.now(), is_read: 0, created_at: new Date().toISOString() }); saveData(data); return resolve({ ok: true }); }
-                        return resolve(data.suggestions || []);
-                    }
-                    if (path === '/api/generic') {
-                        if (method === 'POST') { if (!data.genericContent) data.genericContent = {}; data.genericContent[body.moduleId] = body.content; saveData(data); return resolve({ ok: true }); }
-                        return resolve(data.genericContent || {});
-                    }
-                    resolve({});
-                }, 50);
-            });
-        }
-
         // ===== 导航和路由 =====
         async function renderNav() {
-            const config = await api('/api/config');
-            document.getElementById('mainNav').innerHTML = (config.modules || []).map(mod => `
-                <div class="nav-item ${location.hash.slice(1) === mod.id ? 'active' : ''}" onclick="switchModule('${mod.id}')">
-                    ${mod.icon} ${mod.name}
-                </div>
-            `).join('');
+            document.getElementById('mainNav').innerHTML = `
+                <div class="nav-item active" onclick="switchModule('book')">📖 历史书</div>
+                <div class="nav-item" onclick="switchModule('notice')">📋 公告栏</div>
+                <div class="nav-item" onclick="switchModule('novel')">📖 小说</div>
+            `;
         }
 
-        function switchModule(modId) { location.hash = modId; }
+        function switchModule(modId) {
+            location.hash = modId;
+        }
 
         async function loadModule(modId) {
             const mod = modules[modId];
             if (!mod) { document.getElementById('moduleContent').innerHTML = '<div class="empty">模块加载失败</div>'; return; }
-            const [config, book, notices, novels, generic] = await Promise.all([
-                api('/api/config'), api('/api/book'), api('/api/notices'), api('/api/novels'), api('/api/generic')
+
+            const [chapters, notices, novels] = await Promise.all([
+                DB.getChapters(),
+                DB.getNotices(),
+                DB.getNovels()
             ]);
-            const data = { modules: config.modules, bookChapters: book, notices, novels, genericContent: generic };
+            const data = { chapters, notices, novels };
+
             document.getElementById('moduleContent').innerHTML = mod.render(data);
             if (mod.init) mod.init(data);
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.toggle('active', el.dataset.mod === modId));
+
+            document.querySelectorAll('.nav-item').forEach(el => {
+                el.classList.toggle('active', el.textContent.includes(mod.name));
+            });
         }
 
         window.addEventListener('hashchange', () => {
@@ -414,10 +309,12 @@
 
         async function init() {
             await renderNav();
-            const config = await api('/api/config');
             const hash = location.hash.slice(1);
-            if (hash && modules[hash]) loadModule(hash);
-            else if (config.modules && config.modules.length > 0) loadModule(config.modules[0].id);
+            if (hash && modules[hash]) {
+                loadModule(hash);
+            } else {
+                loadModule('book');
+            }
         }
 
         init();
