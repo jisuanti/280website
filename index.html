@@ -2,64 +2,327 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>280班网站</title>
     <style>
         * { margin:0; padding:0; box-sizing:border-box; }
-        body { font-family: "PingFang SC", "Noto Serif SC", "Microsoft YaHei", serif; background: #f4f1eb; color: #2c2c2c; }
-        .site-header { background: #3e2723; color: #fff; position: sticky; top: 0; z-index: 100; }
-        .header-inner { max-width: 1200px; margin: 0 auto; padding: 12px 24px; display: flex; align-items: center; gap: 20px; }
-        .logo { font-size: 1.2em; font-weight: 600; white-space: nowrap; }
-        .main-nav { display: flex; gap: 4px; flex: 1; }
-        .nav-item { color: rgba(255,255,255,0.75); text-decoration: none; padding: 8px 16px; border-radius: 20px; font-size: 0.9em; transition: 0.2s; white-space: nowrap; cursor: pointer; user-select: none; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; 
+            background: #f4f1eb; 
+            color: #2c2c2c; 
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        /* 头部导航 */
+        .site-header { 
+            background: #3e2723; 
+            color: #fff; 
+            position: sticky; 
+            top: 0; 
+            z-index: 100; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        .header-inner { 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            padding: 12px 16px; 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+        }
+        .logo { 
+            font-size: 1.3em; 
+            font-weight: 700; 
+            white-space: nowrap; 
+            flex-shrink: 0;
+        }
+        .main-nav { 
+            display: flex; 
+            gap: 4px; 
+            flex: 1; 
+            overflow-x: auto; 
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+        .main-nav::-webkit-scrollbar { display: none; }
+        .nav-item { 
+            color: rgba(255,255,255,0.8); 
+            text-decoration: none; 
+            padding: 8px 14px; 
+            border-radius: 20px; 
+            font-size: 0.95em; 
+            transition: 0.2s; 
+            white-space: nowrap; 
+            cursor: pointer; 
+            user-select: none;
+            flex-shrink: 0;
+        }
         .nav-item:hover { background: rgba(255,255,255,0.15); color: #fff; }
-        .nav-item.active { background: rgba(255,255,255,0.22); color: #fff; }
-        .admin-link { color: #ffcc80; text-decoration: none; font-size: 0.85em; border: 1px solid #ffcc80; padding: 6px 14px; border-radius: 20px; white-space: nowrap; transition: 0.2s; }
+        .nav-item.active { background: rgba(255,255,255,0.25); color: #fff; font-weight: 600; }
+        .admin-link { 
+            color: #ffcc80; 
+            text-decoration: none; 
+            font-size: 0.9em; 
+            border: 1px solid #ffcc80; 
+            padding: 6px 12px; 
+            border-radius: 20px; 
+            white-space: nowrap; 
+            transition: 0.2s; 
+            flex-shrink: 0;
+        }
         .admin-link:hover { background: #ffcc80; color: #3e2723; }
-        .module-content { max-width: 1200px; margin: 0 auto; padding: 30px 24px; min-height: calc(100vh - 56px); }
-        .empty { text-align: center; padding: 80px 20px; color: #999; font-size: 1.1em; }
-        .img-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 999; justify-content: center; align-items: center; }
-        .img-overlay img { max-width: 90vw; max-height: 90vh; border-radius: 8px; }
-        .generic-page { background: #fff; border-radius: 10px; padding: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-        .generic-page h1 { font-size: 1.6em; color: #3e2723; border-bottom: 2px solid #d7ccc8; padding-bottom: 12px; margin-bottom: 24px; }
+        
+        /* 主内容区 */
+        .module-content { 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            padding: 20px 16px; 
+            min-height: calc(100vh - 56px); 
+        }
+        .empty { 
+            text-align: center; 
+            padding: 60px 20px; 
+            color: #999; 
+            font-size: 1.1em; 
+        }
+        
+        /* 通用页面 */
+        .generic-page { 
+            background: #fff; 
+            border-radius: 12px; 
+            padding: 24px; 
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08); 
+        }
+        .generic-page h1 { 
+            font-size: 1.6em; 
+            color: #3e2723; 
+            border-bottom: 2px solid #d7ccc8; 
+            padding-bottom: 12px; 
+            margin-bottom: 20px; 
+        }
+        
+        /* 历史书 */
         .book-layout { display: flex; gap: 24px; }
-        .book-toc { width: 240px; background: #fff; border-radius: 10px; padding: 20px; position: sticky; top: 80px; height: fit-content; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .book-toc { 
+            width: 240px; 
+            background: #fff; 
+            border-radius: 12px; 
+            padding: 20px; 
+            position: sticky; 
+            top: 80px; 
+            height: fit-content; 
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08); 
+        }
         .book-toc h3 { font-size: 1em; color: #666; margin-bottom: 12px; }
-        .toc-item { padding: 8px 10px; cursor: pointer; border-radius: 6px; font-size: 0.9em; margin-bottom: 4px; transition: 0.15s; }
+        .toc-item { 
+            padding: 10px 12px; 
+            cursor: pointer; 
+            border-radius: 8px; 
+            font-size: 0.95em; 
+            margin-bottom: 6px; 
+            transition: 0.15s; 
+            line-height: 1.4;
+        }
         .toc-item:hover { background: #f5f0e8; }
         .toc-item.active { background: #e8d5c4; color: #5d4037; font-weight: 600; }
         .book-content { flex: 1; min-width: 0; }
-        .welcome-hint { color: #999; text-align: center; padding: 60px 0; }
-        .bk-section { background: #fff; border-radius: 8px; padding: 20px 24px; margin-bottom: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
-        .bk-section h4 { font-size: 0.85em; color: #8d6e63; margin-bottom: 10px; letter-spacing: 1px; }
-        .bk-section p { margin-bottom: 10px; line-height: 1.9; text-indent: 2em; }
+        .welcome-hint { color: #999; text-align: center; padding: 60px 0; font-size: 1.1em; }
+        .book-content h1 { 
+            font-size: 1.8em; 
+            color: #3e2723; 
+            border-bottom: 2px solid #d7ccc8; 
+            padding-bottom: 12px; 
+            margin-bottom: 24px; 
+        }
+        .bk-section { 
+            background: #fff; 
+            border-radius: 10px; 
+            padding: 20px 24px; 
+            margin-bottom: 20px; 
+            box-shadow: 0 1px 6px rgba(0,0,0,0.06); 
+        }
+        .bk-section h4 { 
+            font-size: 0.9em; 
+            color: #8d6e63; 
+            margin-bottom: 12px; 
+            letter-spacing: 1px; 
+            font-weight: 600;
+        }
+        .bk-section p { 
+            margin-bottom: 12px; 
+            line-height: 1.8; 
+            text-indent: 2em; 
+            font-size: 1em;
+        }
         .bk-section.preface { border-left: 4px solid #81c784; }
         .bk-section.body { border-left: 4px solid #64b5f6; }
         .bk-section.exercises { border-left: 4px solid #ffb74d; }
         .bk-section.extension { border-left: 4px solid #ba68c8; }
+        
+        /* 公告栏 */
         .notice-list { display: flex; flex-direction: column; gap: 16px; }
-        .notice-card { background: #fff; border-radius: 10px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-        .notice-date { font-size: 0.8em; color: #999; margin-bottom: 6px; }
-        .notice-title { font-size: 1.2em; color: #3e2723; margin-bottom: 10px; }
-        .novel-card { background: #fff; border-radius: 10px; padding: 20px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); display: flex; gap: 16px; }
-        .novel-cover { width: 120px; height: 160px; object-fit: cover; border-radius: 6px; cursor: pointer; flex-shrink: 0; }
+        .notice-card { 
+            background: #fff; 
+            border-radius: 12px; 
+            padding: 20px 24px; 
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08); 
+        }
+        .notice-date { font-size: 0.85em; color: #999; margin-bottom: 8px; }
+        .notice-title { font-size: 1.3em; color: #3e2723; margin-bottom: 12px; font-weight: 600; }
+        .notice-body p { line-height: 1.8; margin-bottom: 10px; font-size: 1em; }
+        
+        /* 小说 */
+        .novel-card { 
+            background: #fff; 
+            border-radius: 12px; 
+            padding: 20px; 
+            margin-bottom: 16px; 
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08); 
+            display: flex; 
+            gap: 16px; 
+        }
+        .novel-cover { 
+            width: 120px; 
+            height: 160px; 
+            object-fit: cover; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            flex-shrink: 0; 
+        }
         .novel-info { flex: 1; }
-        .novel-title { font-size: 1.2em; color: #3e2723; margin-bottom: 8px; }
-        .novel-meta { font-size: 0.85em; color: #999; margin-bottom: 8px; display: flex; gap: 12px; }
-        .novel-intro { color: #666; font-size: 0.95em; line-height: 1.7; margin-bottom: 12px; }
-        .novel-actions { display: flex; gap: 10px; }
-        .novel-actions button { background: #f5f0e8; border: none; padding: 6px 14px; border-radius: 20px; cursor: pointer; font-size: 0.9em; }
-        .like-btn { color: #e57373; }
-        .novel-body { color: #444; line-height: 1.9; margin-top: 12px; display:none; }
-        .editor-box { margin-top: 16px; background: #f9f9f9; padding: 20px; border-radius: 8px; }
-        label { display: block; margin: 12px 0 4px; font-weight: 600; font-size: 0.88em; color: #555; }
-        input, textarea, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.95em; font-family: inherit; }
-        textarea { min-height: 70px; resize: vertical; }
-        textarea.big { min-height: 180px; }
-        .btn-primary { background: #8d6e63; color: #fff; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 0.95em; }
-        .actions { margin-top: 14px; display: flex; gap: 10px; }
-        .item-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #f9f9f9; border-radius: 6px; margin-bottom: 6px; font-size: 0.9em; }
-        .sugg-date { font-size: 0.8em; color: #999; margin-left: 8px; }
+        .novel-title { font-size: 1.3em; color: #3e2723; margin-bottom: 8px; font-weight: 600; }
+        .novel-meta { font-size: 0.9em; color: #999; margin-bottom: 10px; display: flex; gap: 12px; }
+        .novel-intro { color: #666; font-size: 1em; line-height: 1.7; margin-bottom: 12px; }
+        .novel-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+        .novel-actions button { 
+            background: #f5f0e8; 
+            border: none; 
+            padding: 8px 16px; 
+            border-radius: 20px; 
+            cursor: pointer; 
+            font-size: 0.95em; 
+            transition: 0.2s; 
+        }
+        .novel-actions button:hover { background: #e8d5c4; }
+        .like-btn { color: #e57373; font-weight: 600; }
+        .novel-body { 
+            color: #444; 
+            line-height: 1.8; 
+            margin-top: 12px; 
+            display: none; 
+            font-size: 1em;
+        }
+        
+        /* 投稿表单 */
+        .editor-box { 
+            margin-top: 16px; 
+            background: #f9f9f9; 
+            padding: 20px; 
+            border-radius: 10px; 
+            border: 1px solid #eee;
+        }
+        label { 
+            display: block; 
+            margin: 14px 0 6px; 
+            font-weight: 600; 
+            font-size: 0.9em; 
+            color: #555; 
+        }
+        input, textarea, select { 
+            width: 100%; 
+            padding: 12px; 
+            border: 1px solid #ddd; 
+            border-radius: 8px; 
+            font-size: 1em; 
+            font-family: inherit; 
+            background: #fff;
+        }
+        textarea { min-height: 80px; resize: vertical; }
+        textarea.big { min-height: 200px; }
+        .btn-primary { 
+            background: #8d6e63; 
+            color: #fff; 
+            border: none; 
+            padding: 12px 24px; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 1em; 
+            font-weight: 600;
+            transition: 0.2s;
+        }
+        .btn-primary:hover { background: #6d4c41; }
+        .actions { margin-top: 16px; display: flex; gap: 12px; flex-wrap: wrap; }
+        
+        /* 讨论区 */
+        .item-row { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: flex-start; 
+            padding: 14px 16px; 
+            background: #f9f9f9; 
+            border-radius: 10px; 
+            margin-bottom: 10px; 
+            font-size: 1em; 
+            line-height: 1.6;
+        }
+        .sugg-date { font-size: 0.85em; color: #999; margin-left: 8px; }
+        
+        /* 图片遮罩 */
+        .img-overlay { 
+            display: none; 
+            position: fixed; 
+            inset: 0; 
+            background: rgba(0,0,0,0.9); 
+            z-index: 999; 
+            justify-content: center; 
+            align-items: center; 
+        }
+        .img-overlay img { max-width: 95vw; max-height: 95vh; border-radius: 8px; }
+        
+        /* ===== 手机端适配 ===== */
+        @media (max-width: 768px) {
+            .header-inner { padding: 10px 12px; }
+            .logo { font-size: 1.1em; }
+            .nav-item { font-size: 0.9em; padding: 6px 10px; }
+            .admin-link { font-size: 0.85em; padding: 5px 10px; }
+            
+            .module-content { padding: 12px; }
+            .generic-page { padding: 16px; }
+            .generic-page h1 { font-size: 1.4em; }
+            
+            .book-layout { flex-direction: column; }
+            .book-toc { 
+                width: 100%; 
+                position: static; 
+                display: flex; 
+                flex-wrap: wrap; 
+                gap: 8px; 
+                padding: 12px; 
+            }
+            .book-toc h3 { width: 100%; margin-bottom: 8px; }
+            .toc-item { 
+                font-size: 0.85em; 
+                padding: 6px 10px; 
+                margin-bottom: 0;
+            }
+            
+            .book-content h1 { font-size: 1.5em; }
+            .bk-section { padding: 16px; }
+            .bk-section p { font-size: 1.05em; line-height: 1.9; }
+            
+            .notice-card { padding: 16px; }
+            .notice-title { font-size: 1.2em; }
+            
+            .novel-card { flex-direction: column; }
+            .novel-cover { width: 100%; height: 200px; }
+            .novel-title { font-size: 1.2em; }
+            
+            .item-row { flex-direction: column; }
+            .item-row > div:last-child { margin-top: 10px; }
+            
+            input, textarea, select { font-size: 16px; } /* 防止iOS缩放 */
+        }
     </style>
 </head>
 <body>
@@ -79,8 +342,8 @@
 
     <script>
         // ===== Supabase 配置 =====
-        const SUPABASE_URL = 'https://gbktpjnitqpwomcprrol.supabase.co';   // ← 替换
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdia3Rwam5pdHFwd29tY3Bycm9sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTk2NDIsImV4cCI6MjA5ODk5NTY0Mn0.TIp9NAdDRZrI16Jq_no7Ga9EpX7ooc6b5Ck7r-sNqww';                // ← 替换
+        const SUPABASE_URL = 'https://你的URL.supabase.co';   // ← 替换
+        const SUPABASE_KEY = '你的AnonKey';                // ← 替换
 
         async function supabaseRequest(table, method = 'GET', data = null, id = null) {
             const url = id 
@@ -104,10 +367,21 @@
         }
 
         // ===== 工具函数 =====
-        function openOverlay(src) { document.getElementById('overlayImg').src = src; document.getElementById('imgOverlay').style.display = 'flex'; }
-        function closeOverlay() { document.getElementById('imgOverlay').style.display = 'none'; }
-        function formatText(text) { if (!text) return ''; return text.split('\n').filter(l => l.trim()).map(l => `<p>${escapeHtml(l)}</p>`).join(''); }
-        function escapeHtml(str) { if (!str) return ''; return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+        function openOverlay(src) { 
+            document.getElementById('overlayImg').src = src; 
+            document.getElementById('imgOverlay').style.display = 'flex'; 
+        }
+        function closeOverlay() { 
+            document.getElementById('imgOverlay').style.display = 'none'; 
+        }
+        function formatText(text) { 
+            if (!text) return ''; 
+            return text.split('\n').filter(l => l.trim()).map(l => `<p>${escapeHtml(l)}</p>`).join(''); 
+        }
+        function escapeHtml(str) { 
+            if (!str) return ''; 
+            return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); 
+        }
 
         // ===== 模块注册 =====
         const modules = {};
@@ -123,7 +397,7 @@
                 return `
                     <div class="book-layout">
                         <aside class="book-toc">
-                            <h3>目录</h3>
+                            <h3>📚 目录</h3>
                             ${this._chapters.map((ch, idx) => `
                                 <div class="toc-item" onclick="modules['book'].openChapter(${idx})">
                                     第${idx+1}章 ${escapeHtml(ch.title || '未命名')}
@@ -131,12 +405,15 @@
                             `).join('')}
                         </aside>
                         <article class="book-content" id="bookContent">
-                            <div class="welcome-hint">请从左侧目录选择章节</div>
+                            <div class="welcome-hint">📖 请从左侧目录选择章节</div>
                         </article>
                     </div>
                 `;
             },
-            init(data) { this._chapters = data.chapters || []; if (this._chapters.length > 0) this.openChapter(0); },
+            init(data) { 
+                this._chapters = data.chapters || []; 
+                if (this._chapters.length > 0) this.openChapter(0); 
+            },
             openChapter(idx) {
                 const ch = this._chapters[idx];
                 if (!ch) return;
@@ -146,8 +423,8 @@
                     <h1>${escapeHtml(ch.title || '')}</h1>
                     ${ch.preface ? `<section class="bk-section preface"><h4>📋 课前导言</h4>${formatText(ch.preface)}</section>` : ''}
                     ${ch.body ? `<section class="bk-section body"><h4>📖 正文</h4>${formatText(ch.body)}</section>` : ''}
-                    ${ch.exercises ? `<section class="bk-section exercises"><h4>📝 习题</h4>${formatText(ch.exercises)}</section>` : ''}
-                    ${ch.extension ? `<section class="bk-section extension"><h4>🔗 扩展</h4>${formatText(ch.extension)}</section>` : ''}
+                    ${ch.exercises ? `<section class="bk-section exercises"><h4>📝 课后习题</h4>${formatText(ch.exercises)}</section>` : ''}
+                    ${ch.extension ? `<section class="bk-section extension"><h4>🔗 知识扩展</h4>${formatText(ch.extension)}</section>` : ''}
                 `;
                 document.querySelectorAll('.toc-item').forEach((el, i) => el.classList.toggle('active', i === idx));
             }
@@ -158,12 +435,12 @@
             id: 'notice', name: '公告栏', icon: '📋',
             render(data) {
                 const notices = data.notices || [];
-                if (notices.length === 0) return '<div class="empty">暂无公告</div>';
+                if (notices.length === 0) return '<div class="empty">📭 暂无公告</div>';
                 return `
                     <div class="notice-list">
                         ${notices.map(n => `
                             <div class="notice-card">
-                                <div class="notice-date">${n.date || ''}</div>
+                                <div class="notice-date">📅 ${n.date || ''}</div>
                                 <h3 class="notice-title">${escapeHtml(n.title || '')}</h3>
                                 <div class="notice-body">${formatText(n.content || '')}</div>
                             </div>
@@ -189,7 +466,10 @@
                                     ${n.cover ? `<img class="novel-cover" src="${n.cover}" onclick="openOverlay('${n.cover}')" />` : ''}
                                     <div class="novel-info">
                                         <h3 class="novel-title">${escapeHtml(n.title || '无题')}</h3>
-                                        <div class="novel-meta"><span>✍️ ${escapeHtml(n.author || '匿名')}</span><span>👍 ${n.likes || 0}</span></div>
+                                        <div class="novel-meta">
+                                            <span>✍️ ${escapeHtml(n.author || '匿名')}</span>
+                                            <span>👍 ${n.likes || 0}</span>
+                                        </div>
                                         <div class="novel-intro">${escapeHtml(n.intro || '暂无简介')}</div>
                                         <div class="novel-actions">
                                             <button class="like-btn" onclick="likeNovel(${n.id})">👍 点赞</button>
@@ -198,7 +478,7 @@
                                         <div class="novel-body" id="novelBody-${n.id}">${formatText(n.body || '')}</div>
                                     </div>
                                 </div>
-                            `).join('') || '<div class="empty">暂无小说</div>'}
+                            `).join('') || '<div class="empty">📚 暂无小说，快来发布吧！</div>'}
                         </div>
                     </div>
                 `;
@@ -211,10 +491,14 @@
             el.style.display = 'block';
             el.innerHTML = `
                 <div class="editor-box">
-                    <label>小说标题</label><input id="novelTitle" placeholder="输入标题" />
-                    <label>作者昵称</label><input id="novelAuthor" placeholder="你的昵称" />
-                    <label>小说简介</label><textarea id="novelIntro" placeholder="一句话介绍..."></textarea>
-                    <label>小说正文</label><textarea id="novelBodyInput" class="big" placeholder="开始创作..."></textarea>
+                    <label>📝 小说标题</label>
+                    <input id="novelTitle" placeholder="输入标题" />
+                    <label>✍️ 作者昵称</label>
+                    <input id="novelAuthor" placeholder="你的昵称" />
+                    <label>📄 小说简介</label>
+                    <textarea id="novelIntro" placeholder="一句话介绍..."></textarea>
+                    <label>📖 小说正文</label>
+                    <textarea id="novelBodyInput" class="big" placeholder="开始创作..."></textarea>
                     <div class="actions">
                         <button class="btn-primary" onclick="publishNovel()">📨 发布小说</button>
                         <button onclick="document.getElementById('novelForm').style.display='none'">取消</button>
@@ -240,7 +524,7 @@
             if (novel) {
                 await supabaseRequest('novels', 'PATCH', { likes: (novel.likes || 0) + 1 }, id);
                 const btn = document.querySelector(`#novel-${id} .like-btn`);
-                if (btn) btn.innerHTML = `👍 点赞 (${novel.likes + 1})`;
+                if (btn) btn.innerHTML = `👍 ${novel.likes + 1}`;
             }
         }
 
@@ -249,26 +533,26 @@
             if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
         }
 
-        // ===== 创作投稿模块（修复版）=====
+        // ===== 创作投稿模块 =====
         registerModule({
             id: 'submit', name: '创作投稿', icon: '✍️',
             render() {
                 return `
                     <div class="generic-page">
                         <h1>✍️ 创作投稿</h1>
-                        <p style="color:#666;margin-bottom:20px;">投稿新章节，审核通过后会发布到历史书。</p>
+                        <p style="color:#666;margin-bottom:20px;">📝 投稿新章节，审核通过后会发布到历史书。</p>
                         <div class="editor-box">
-                            <label>你的昵称</label>
+                            <label>👤 你的昵称</label>
                             <input id="submitNick" placeholder="匿名" />
-                            <label>章节标题</label>
+                            <label>📖 章节标题</label>
                             <input id="submitTitle" placeholder="第X章 标题" />
-                            <label>课前导言</label>
+                            <label>📋 课前导言</label>
                             <textarea id="submitPreface" placeholder="课前导言..."></textarea>
-                            <label>正文内容</label>
+                            <label>📖 正文内容</label>
                             <textarea id="submitBody" class="big" placeholder="正文内容..."></textarea>
-                            <label>课后习题</label>
+                            <label>📝 课后习题</label>
                             <textarea id="submitExercises" placeholder="课后习题..."></textarea>
-                            <label>知识扩展</label>
+                            <label>🔗 知识扩展</label>
                             <textarea id="submitExtension" placeholder="知识扩展..."></textarea>
                             <div class="actions" style="margin-top:16px;">
                                 <button class="btn-primary" onclick="doSubmit()">📨 提交投稿</button>
@@ -299,7 +583,7 @@
             location.reload();
         }
 
-        // ===== 讨论板块（修复版）=====
+        // ===== 讨论板块 =====
         registerModule({
             id: 'discuss', name: '讨论', icon: '💬',
             render() {
@@ -307,9 +591,9 @@
                     <div class="generic-page">
                         <h1>💬 班级讨论</h1>
                         <div class="editor-box" style="margin-bottom:20px;">
-                            <label>你的昵称</label>
+                            <label>👤 你的昵称</label>
                             <input id="discNick" placeholder="匿名" />
-                            <label>说点什么...</label>
+                            <label>💬 说点什么...</label>
                             <textarea id="discContent" class="big" placeholder="分享你的想法..."></textarea>
                             <div class="actions">
                                 <button class="btn-primary" onclick="postDiscussion()">📨 发布</button>
@@ -329,12 +613,12 @@
             document.getElementById('discussList').innerHTML = (list || []).map(d => `
                 <div class="item-row">
                     <div>
-                        <strong>${escapeHtml(d.nickname || '匿名')}</strong>
-                        <span class="sugg-date">${d.created_at ? d.created_at.slice(0,16) : ''}</span>
-                        <div style="margin-top:6px;">${escapeHtml(d.content)}</div>
+                        <strong>👤 ${escapeHtml(d.nickname || '匿名')}</strong>
+                        <span class="sugg-date">🕐 ${d.created_at ? d.created_at.slice(0,16) : ''}</span>
+                        <div style="margin-top:8px; line-height: 1.8;">${escapeHtml(d.content)}</div>
                     </div>
                 </div>
-            `).join('') || '<div class="empty">暂无讨论，来说两句吧！</div>';
+            `).join('') || '<div class="empty">💬 暂无讨论，来说两句吧！</div>';
         }
 
         async function postDiscussion() {
@@ -353,7 +637,7 @@
                 <div class="nav-item active" onclick="switchModule('book')">📖 历史书</div>
                 <div class="nav-item" onclick="switchModule('notice')">📋 公告栏</div>
                 <div class="nav-item" onclick="switchModule('novel')">📖 小说</div>
-                <div class="nav-item" onclick="switchModule('submit')">✍️ 创作投稿</div>
+                <div class="nav-item" onclick="switchModule('submit')">✍️ 投稿</div>
                 <div class="nav-item" onclick="switchModule('discuss')">💬 讨论</div>
             `;
         }
@@ -362,17 +646,27 @@
 
         async function loadModule(modId) {
             const mod = modules[modId];
-            if (!mod) { document.getElementById('moduleContent').innerHTML = '<div class="empty">模块加载失败</div>'; return; }
+            if (!mod) { 
+                document.getElementById('moduleContent').innerHTML = '<div class="empty">⚠️ 模块加载失败</div>'; 
+                return; 
+            }
             const [chapters, notices, novels, discussions] = await Promise.all([
                 supabaseRequest('chapters'),
                 supabaseRequest('notices'),
                 supabaseRequest('novels'),
                 supabaseRequest('discussions')
             ]);
-            const data = { chapters: chapters || [], notices: notices || [], novels: novels || [], discussions: discussions || [] };
+            const data = { 
+                chapters: chapters || [], 
+                notices: notices || [], 
+                novels: novels || [], 
+                discussions: discussions || [] 
+            };
             document.getElementById('moduleContent').innerHTML = mod.render(data);
             if (mod.init) mod.init(data);
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.toggle('active', el.textContent.includes(mod.name)));
+            document.querySelectorAll('.nav-item').forEach(el => 
+                el.classList.toggle('active', el.textContent.includes(mod.name))
+            );
         }
 
         window.addEventListener('hashchange', () => {
