@@ -97,6 +97,7 @@
                     <option value="submissions">✍️ 投稿审核</option>
                     <option value="suggestions">💡 建议箱</option>
                     <option value="novels">📖 小说管理</option>
+                    <option value="discussions">💬 讨论管理</option>
                 </select>
                 <button class="logout-btn" onclick="logout()">退出</button>
             </div>
@@ -104,8 +105,32 @@
         <main class="admin-main" id="adminMain"></main>
     </div>
 
-    <script src="supabase.js"></script>
     <script>
+        // ===== Supabase 配置（内联）=====
+        const SUPABASE_URL = 'https://gbktpjnitqpwomcprrol.supabase.co';   // ← 替换
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdia3Rwam5pdHFwd29tY3Bycm9sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTk2NDIsImV4cCI6MjA5ODk5NTY0Mn0.TIp9NAdDRZrI16Jq_no7Ga9EpX7ooc6b5Ck7r-sNqww';                // ← 替换
+
+        async function supabaseRequest(table, method = 'GET', data = null, id = null) {
+            const url = id 
+                ? `${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`
+                : `${SUPABASE_URL}/rest/v1/${table}`;
+            const options = {
+                method: method,
+                headers: {
+                    'apikey': SUPABASE_KEY,
+                    'Authorization': `Bearer ${SUPABASE_KEY}`,
+                    'Content-Type': 'application/json',
+                    'Prefer': 'return=representation'
+                }
+            };
+            if (data && (method === 'POST' || method === 'PATCH')) {
+                options.body = JSON.stringify(data);
+            }
+            const res = await fetch(url, options);
+            if (method === 'DELETE') return { ok: true };
+            return res.json();
+        }
+
         // ===== 登录 =====
         const PASSWORD = '280class';
         
@@ -141,6 +166,7 @@
             else if (mod === 'submissions') renderSubmissions();
             else if (mod === 'suggestions') renderSuggestions();
             else if (mod === 'novels') renderNovelManager();
+            else if (mod === 'discussions') renderDiscussions();
         }
 
         // ===== 投稿审核 =====
@@ -175,11 +201,9 @@
             const submissions = await supabaseRequest('submissions') || [];
             const sub = submissions.find(s => s.id === id);
             if (sub) {
-                // 更新投稿状态
                 await supabaseRequest('submissions', 'PATCH', { status: 'approved' }, id);
-                // 解析内容并添加到历史书
                 const content = JSON.parse(sub.content);
-                await DB.addChapter(content);
+                await supabaseRequest('chapters', 'POST', content);
                 alert('已通过！内容已加入历史书。');
                 renderSubmissions();
             }
@@ -220,7 +244,7 @@
 
         // ===== 公告管理 =====
         async function renderNoticeEditor() {
-            const notices = await DB.getNotices();
+            const notices = await supabaseRequest('notices') || [];
             document.getElementById('adminMain').innerHTML = `
                 <div class="admin-section">
                     <h2>📋 公告栏管理</h2>
@@ -260,7 +284,7 @@
             const date = document.getElementById('ntDate').value;
             const content = document.getElementById('ntContent').value.trim();
             if (!title || !content) return alert('请填写标题和内容');
-            await DB.addNotice({ title, date, content });
+            await supabaseRequest('notices', 'POST', { title, date, content });
             alert('发布成功！');
             renderNoticeEditor();
         }
@@ -276,7 +300,7 @@
         let editingChapterId = null;
 
         async function renderBookEditor() {
-            const chapters = await DB.getChapters();
+            const chapters = await supabaseRequest('chapters') || [];
             document.getElementById('adminMain').innerHTML = `
                 <div class="admin-section">
                     <h2>📖 历史书管理</h2>
@@ -304,7 +328,7 @@
 
         function editChapter(id) {
             editingChapterId = id;
-            DB.getChapters().then(chapters => {
+            supabaseRequest('chapters').then(chapters => {
                 const ch = chapters.find(c => c.id === id) || {};
                 document.getElementById('chapterEditor').innerHTML = chapterFormHTML(ch);
             });
@@ -346,7 +370,7 @@
             if (editingChapterId) {
                 await supabaseRequest('chapters', 'PATCH', chapterData, editingChapterId);
             } else {
-                await DB.addChapter(chapterData);
+                await supabaseRequest('chapters', 'POST', chapterData);
             }
             alert('保存成功！');
             renderBookEditor();
@@ -361,7 +385,7 @@
 
         // ===== 小说管理 =====
         async function renderNovelManager() {
-            const novels = await DB.getNovels();
+            const novels = await supabaseRequest('novels') || [];
             document.getElementById('adminMain').innerHTML = `
                 <div class="admin-section">
                     <h2>📖 小说管理</h2>
@@ -386,6 +410,36 @@
             await supabaseRequest('novels', 'DELETE', null, id);
             alert('删除成功！');
             renderNovelManager();
+        }
+
+        // ===== 讨论管理 =====
+        async function renderDiscussions() {
+            const discussions = await supabaseRequest('discussions') || [];
+            document.getElementById('adminMain').innerHTML = `
+                <div class="admin-section">
+                    <h2>💬 讨论管理</h2>
+                    <p class="desc">可以删除不当言论。</p>
+                    <div style="margin-top:16px;">
+                        ${(discussions || []).map(d => `
+                            <div class="item-row">
+                                <div>
+                                    <strong>${escapeHtml(d.nickname || '匿名')}</strong>
+                                    <span class="sugg-date">${d.created_at ? d.created_at.slice(0,16) : ''}</span>
+                                    <div style="margin-top:6px;">${escapeHtml(d.content)}</div>
+                                </div>
+                                <button class="del-btn" onclick="deleteDiscussion(${d.id})">删除</button>
+                            </div>
+                        `).join('') || '<div style="padding:20px;text-align:center;color:#999;">暂无讨论</div>'}
+                    </div>
+                </div>
+            `;
+        }
+
+        async function deleteDiscussion(id) {
+            if (!confirm('确认删除？')) return;
+            await supabaseRequest('discussions', 'DELETE', null, id);
+            alert('删除成功！');
+            renderDiscussions();
         }
 
         // ===== 工具函数 =====

@@ -64,6 +64,18 @@
         .btn-primary { background: #8d6e63; color: #fff; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 0.95em; }
         .btn-primary:hover { background: #6d4c41; }
         .actions { margin-top: 14px; display: flex; gap: 10px; }
+        .item-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #f9f9f9; border-radius: 6px; margin-bottom: 6px; font-size: 0.9em; }
+        .sugg-date { font-size: 0.8em; color: #999; margin-left: 8px; }
+        @media (max-width: 768px) {
+            .book-layout { flex-direction: column; }
+            .book-toc { width: 100%; position: static; display: flex; flex-wrap: wrap; gap: 6px; padding: 12px; }
+            .book-toc h3 { width: 100%; }
+            .toc-item { font-size: 0.82em; padding: 6px 8px; }
+            .header-inner { flex-wrap: wrap; }
+            .main-nav { order: 3; width: 100%; overflow-x: auto; }
+            .novel-card { flex-direction: column; }
+            .novel-cover { width: 100%; height: 200px; }
+        }
     </style>
 </head>
 <body>
@@ -120,7 +132,9 @@
                 if (novel) {
                     await supabaseRequest('novels', 'PATCH', { likes: (novel.likes || 0) + 1 }, id);
                 }
-            }
+            },
+            async getDiscussions() { return await supabaseRequest('discussions') || []; },
+            async addDiscussion(disc) { return await supabaseRequest('discussions', 'POST', disc); }
         };
 
         // ===== 工具函数 =====
@@ -335,6 +349,54 @@
             location.reload();
         }
 
+        // ===== 讨论板块 =====
+        registerModule({
+            id: 'discuss', name: '讨论', icon: '💬',
+            render() {
+                return `
+                    <div class="generic-page">
+                        <h1>💬 班级讨论</h1>
+                        <div class="editor-box" style="margin-bottom:20px;">
+                            <label>你的昵称</label>
+                            <input id="discNick" placeholder="匿名" />
+                            <label>说点什么...</label>
+                            <textarea id="discContent" class="big" placeholder="分享你的想法..."></textarea>
+                            <div class="actions">
+                                <button class="btn-primary" onclick="postDiscussion()">📨 发布</button>
+                            </div>
+                        </div>
+                        <div id="discussList"></div>
+                    </div>
+                `;
+            },
+            async init() {
+                await loadDiscussions();
+            }
+        });
+
+        async function loadDiscussions() {
+            const list = await DB.getDiscussions();
+            document.getElementById('discussList').innerHTML = (list || []).map(d => `
+                <div class="item-row">
+                    <div>
+                        <strong>${escapeHtml(d.nickname || '匿名')}</strong>
+                        <span class="sugg-date">${d.created_at ? d.created_at.slice(0,16) : ''}</span>
+                        <div style="margin-top:6px;">${escapeHtml(d.content)}</div>
+                    </div>
+                </div>
+            `).join('') || '<div class="empty">暂无讨论，来说两句吧！</div>';
+        }
+
+        async function postDiscussion() {
+            const nickname = document.getElementById('discNick').value.trim() || '匿名';
+            const content = document.getElementById('discContent').value.trim();
+            if (!content) return alert('说点什么吧！');
+            await DB.addDiscussion({ nickname, content });
+            alert('🎉 发布成功！');
+            document.getElementById('discContent').value = '';
+            await loadDiscussions();
+        }
+
         // ===== 导航和路由 =====
         async function renderNav() {
             document.getElementById('mainNav').innerHTML = `
@@ -342,6 +404,7 @@
                 <div class="nav-item" onclick="switchModule('notice')">📋 公告栏</div>
                 <div class="nav-item" onclick="switchModule('novel')">📖 小说</div>
                 <div class="nav-item" onclick="switchModule('submit')">✍️ 创作投稿</div>
+                <div class="nav-item" onclick="switchModule('discuss')">💬 讨论</div>
             `;
         }
 
@@ -350,10 +413,10 @@
         async function loadModule(modId) {
             const mod = modules[modId];
             if (!mod) { document.getElementById('moduleContent').innerHTML = '<div class="empty">模块加载失败</div>'; return; }
-            const [chapters, notices, novels] = await Promise.all([
-                DB.getChapters(), DB.getNotices(), DB.getNovels()
+            const [chapters, notices, novels, discussions] = await Promise.all([
+                DB.getChapters(), DB.getNotices(), DB.getNovels(), DB.getDiscussions()
             ]);
-            const data = { chapters, notices, novels };
+            const data = { chapters, notices, novels, discussions };
             document.getElementById('moduleContent').innerHTML = mod.render(data);
             if (mod.init) mod.init(data);
             document.querySelectorAll('.nav-item').forEach(el => el.classList.toggle('active', el.textContent.includes(mod.name)));
