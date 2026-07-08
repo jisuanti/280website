@@ -714,7 +714,7 @@
             await loadDiscussions();
         }
 
-        // ===== 日常分享板块（小红书风格）=====
+        // ===== 日常分享板块（小红书风格·支持本地图片上传）=====
         registerModule({
             id: 'share', name: '日常分享', icon: '📸',
             render() {
@@ -742,8 +742,12 @@
                     <input id="postNick" placeholder="匿名" />
                     <label>💬 说点什么...</label>
                     <textarea id="postContent" class="big" placeholder="分享你的日常..."></textarea>
-                    <label>🖼️ 图片链接（每行一个，可选）</label>
-                    <textarea id="postImages" placeholder="https://... 每行一个"></textarea>
+                    
+                    <label>🖼️ 上传图片（可选，可多选）</label>
+                    <input type="file" id="postImageFiles" accept="image/*" multiple 
+                           style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;" />
+                    <div id="imagePreview" style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;"></div>
+                    
                     <label>🎬 视频链接（可选）</label>
                     <input id="postVideo" placeholder="https://...mp4 或 B站链接" />
                     <div class="actions">
@@ -752,13 +756,36 @@
                     </div>
                 </div>
             `;
+            
+            // 图片预览
+            document.getElementById('postImageFiles').addEventListener('change', function() {
+                const preview = document.getElementById('imagePreview');
+                preview.innerHTML = '';
+                Array.from(this.files).forEach(file => {
+                    const reader = new FileReader();
+                    reader.onload = e => {
+                        preview.innerHTML += `<img src="${e.target.result}" style="height:80px;border-radius:6px;object-fit:cover;" />`;
+                    };
+                    reader.readAsDataURL(file);
+                });
+            });
         }
 
         async function publishPost() {
             const nickname = document.getElementById('postNick').value.trim() || '匿名';
             const content = document.getElementById('postContent').value.trim();
-            const images = document.getElementById('postImages').value.trim().split('\n').filter(l => l.trim());
             const video_url = document.getElementById('postVideo').value.trim() || null;
+            
+            // 读取图片文件并转成 Base64
+            const fileInput = document.getElementById('postImageFiles');
+            const imagePromises = Array.from(fileInput.files).map(file => {
+                return new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = e => resolve(e.target.result);
+                    reader.readAsDataURL(file);
+                });
+            });
+            const images = await Promise.all(imagePromises);
             
             if (!content && images.length === 0 && !video_url) return alert('写点内容或上传图片/视频吧！');
             
