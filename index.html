@@ -22,7 +22,6 @@
         .img-overlay img { max-width: 90vw; max-height: 90vh; border-radius: 8px; }
         .generic-page { background: #fff; border-radius: 10px; padding: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
         .generic-page h1 { font-size: 1.6em; color: #3e2723; border-bottom: 2px solid #d7ccc8; padding-bottom: 12px; margin-bottom: 24px; }
-        .generic-body p { margin-bottom: 12px; line-height: 1.9; text-indent: 2em; }
         .book-layout { display: flex; gap: 24px; }
         .book-toc { width: 240px; background: #fff; border-radius: 10px; padding: 20px; position: sticky; top: 80px; height: fit-content; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
         .book-toc h3 { font-size: 1em; color: #666; margin-bottom: 12px; }
@@ -31,7 +30,6 @@
         .toc-item.active { background: #e8d5c4; color: #5d4037; font-weight: 600; }
         .book-content { flex: 1; min-width: 0; }
         .welcome-hint { color: #999; text-align: center; padding: 60px 0; }
-        .book-content h1 { font-size: 1.7em; color: #3e2723; border-bottom: 2px solid #d7ccc8; padding-bottom: 12px; margin-bottom: 28px; }
         .bk-section { background: #fff; border-radius: 8px; padding: 20px 24px; margin-bottom: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
         .bk-section h4 { font-size: 0.85em; color: #8d6e63; margin-bottom: 10px; letter-spacing: 1px; }
         .bk-section p { margin-bottom: 10px; line-height: 1.9; text-indent: 2em; }
@@ -39,12 +37,10 @@
         .bk-section.body { border-left: 4px solid #64b5f6; }
         .bk-section.exercises { border-left: 4px solid #ffb74d; }
         .bk-section.extension { border-left: 4px solid #ba68c8; }
-        .bk-section.ending { border-left: 4px solid #e57373; }
         .notice-list { display: flex; flex-direction: column; gap: 16px; }
         .notice-card { background: #fff; border-radius: 10px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
         .notice-date { font-size: 0.8em; color: #999; margin-bottom: 6px; }
         .notice-title { font-size: 1.2em; color: #3e2723; margin-bottom: 10px; }
-        .notice-body p { line-height: 1.8; margin-bottom: 8px; }
         .novel-card { background: #fff; border-radius: 10px; padding: 20px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); display: flex; gap: 16px; }
         .novel-cover { width: 120px; height: 160px; object-fit: cover; border-radius: 6px; cursor: pointer; flex-shrink: 0; }
         .novel-info { flex: 1; }
@@ -52,8 +48,7 @@
         .novel-meta { font-size: 0.85em; color: #999; margin-bottom: 8px; display: flex; gap: 12px; }
         .novel-intro { color: #666; font-size: 0.95em; line-height: 1.7; margin-bottom: 12px; }
         .novel-actions { display: flex; gap: 10px; }
-        .novel-actions button { background: #f5f0e8; border: none; padding: 6px 14px; border-radius: 20px; cursor: pointer; font-size: 0.9em; transition: 0.2s; }
-        .novel-actions button:hover { background: #e8d5c4; }
+        .novel-actions button { background: #f5f0e8; border: none; padding: 6px 14px; border-radius: 20px; cursor: pointer; font-size: 0.9em; }
         .like-btn { color: #e57373; }
         .novel-body { color: #444; line-height: 1.9; margin-top: 12px; display:none; }
         .editor-box { margin-top: 16px; background: #f9f9f9; padding: 20px; border-radius: 8px; }
@@ -62,20 +57,9 @@
         textarea { min-height: 70px; resize: vertical; }
         textarea.big { min-height: 180px; }
         .btn-primary { background: #8d6e63; color: #fff; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 0.95em; }
-        .btn-primary:hover { background: #6d4c41; }
         .actions { margin-top: 14px; display: flex; gap: 10px; }
         .item-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #f9f9f9; border-radius: 6px; margin-bottom: 6px; font-size: 0.9em; }
         .sugg-date { font-size: 0.8em; color: #999; margin-left: 8px; }
-        @media (max-width: 768px) {
-            .book-layout { flex-direction: column; }
-            .book-toc { width: 100%; position: static; display: flex; flex-wrap: wrap; gap: 6px; padding: 12px; }
-            .book-toc h3 { width: 100%; }
-            .toc-item { font-size: 0.82em; padding: 6px 8px; }
-            .header-inner { flex-wrap: wrap; }
-            .main-nav { order: 3; width: 100%; overflow-x: auto; }
-            .novel-card { flex-direction: column; }
-            .novel-cover { width: 100%; height: 200px; }
-        }
     </style>
 </head>
 <body>
@@ -94,7 +78,7 @@
     </div>
 
     <script>
-        // ===== Supabase 配置（内联）=====
+        // ===== Supabase 配置 =====
         const SUPABASE_URL = 'https://gbktpjnitqpwomcprrol.supabase.co';   // ← 替换
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdia3Rwam5pdHFwd29tY3Bycm9sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTk2NDIsImV4cCI6MjA5ODk5NTY0Mn0.TIp9NAdDRZrI16Jq_no7Ga9EpX7ooc6b5Ck7r-sNqww';                // ← 替换
 
@@ -118,24 +102,6 @@
             if (method === 'DELETE') return { ok: true };
             return res.json();
         }
-
-        const DB = {
-            async getNotices() { return await supabaseRequest('notices') || []; },
-            async addNotice(notice) { return await supabaseRequest('notices', 'POST', notice); },
-            async getChapters() { return await supabaseRequest('chapters') || []; },
-            async addChapter(ch) { return await supabaseRequest('chapters', 'POST', ch); },
-            async getNovels() { return await supabaseRequest('novels') || []; },
-            async addNovel(novel) { return await supabaseRequest('novels', 'POST', novel); },
-            async likeNovel(id) {
-                const novels = await supabaseRequest('novels') || [];
-                const novel = novels.find(n => n.id === id);
-                if (novel) {
-                    await supabaseRequest('novels', 'PATCH', { likes: (novel.likes || 0) + 1 }, id);
-                }
-            },
-            async getDiscussions() { return await supabaseRequest('discussions') || []; },
-            async addDiscussion(disc) { return await supabaseRequest('discussions', 'POST', disc); }
-        };
 
         // ===== 工具函数 =====
         function openOverlay(src) { document.getElementById('overlayImg').src = src; document.getElementById('imgOverlay').style.display = 'flex'; }
@@ -182,7 +148,6 @@
                     ${ch.body ? `<section class="bk-section body"><h4>📖 正文</h4>${formatText(ch.body)}</section>` : ''}
                     ${ch.exercises ? `<section class="bk-section exercises"><h4>📝 习题</h4>${formatText(ch.exercises)}</section>` : ''}
                     ${ch.extension ? `<section class="bk-section extension"><h4>🔗 扩展</h4>${formatText(ch.extension)}</section>` : ''}
-                    ${ch.ending ? `<section class="bk-section ending"><h4>📑 总结</h4>${formatText(ch.ending)}</section>` : ''}
                 `;
                 document.querySelectorAll('.toc-item').forEach((el, i) => el.classList.toggle('active', i === idx));
             }
@@ -264,18 +229,18 @@
             const intro = document.getElementById('novelIntro').value.trim();
             const body = document.getElementById('novelBodyInput').value.trim();
             if (!title || !body) return alert('请填写标题和正文');
-            await DB.addNovel({ title, author, intro, body, cover: '', likes: 0, comments: [] });
+            await supabaseRequest('novels', 'POST', { title, author, intro, body, cover: '', likes: 0, comments: [] });
             alert('🎉 小说发布成功！');
             location.reload();
         }
 
         async function likeNovel(id) {
-            await DB.likeNovel(id);
-            const btn = document.querySelector(`#novel-${id} .like-btn`);
-            if (btn) {
-                const novels = await DB.getNovels();
-                const novel = novels.find(n => n.id === id);
-                if (novel) btn.innerHTML = `👍 点赞 (${novel.likes})`;
+            const novels = await supabaseRequest('novels') || [];
+            const novel = novels.find(n => n.id === id);
+            if (novel) {
+                await supabaseRequest('novels', 'PATCH', { likes: (novel.likes || 0) + 1 }, id);
+                const btn = document.querySelector(`#novel-${id} .like-btn`);
+                if (btn) btn.innerHTML = `👍 点赞 (${novel.likes + 1})`;
             }
         }
 
@@ -284,72 +249,57 @@
             if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
         }
 
-        // ===== 创作投稿模块 =====
+        // ===== 创作投稿模块（修复版）=====
         registerModule({
             id: 'submit', name: '创作投稿', icon: '✍️',
             render() {
                 return `
                     <div class="generic-page">
                         <h1>✍️ 创作投稿</h1>
-                        <p style="color:#666;margin-bottom:20px;">你可以投稿新章节或建议，审核通过后会发布。</p>
+                        <p style="color:#666;margin-bottom:20px;">投稿新章节，审核通过后会发布到历史书。</p>
                         <div class="editor-box">
-                            <label>投稿类型</label>
-                            <select id="submitType">
-                                <option value="chapter">📖 新章节（加入历史书）</option>
-                                <option value="suggestion">💡 建议反馈</option>
-                            </select>
                             <label>你的昵称</label>
                             <input id="submitNick" placeholder="匿名" />
-                            <div id="chapterFields">
-                                <label>章节标题</label><input id="submitTitle" placeholder="第X章 标题" />
-                                <label>正文内容</label><textarea id="submitBody" class="big" placeholder="正文内容..."></textarea>
-                            </div>
-                            <div id="suggestionFields" style="display:none;">
-                                <label>建议内容</label><textarea id="submitSuggestion" class="big" placeholder="请输入你的建议..."></textarea>
-                            </div>
+                            <label>章节标题</label>
+                            <input id="submitTitle" placeholder="第X章 标题" />
+                            <label>课前导言</label>
+                            <textarea id="submitPreface" placeholder="课前导言..."></textarea>
+                            <label>正文内容</label>
+                            <textarea id="submitBody" class="big" placeholder="正文内容..."></textarea>
+                            <label>课后习题</label>
+                            <textarea id="submitExercises" placeholder="课后习题..."></textarea>
+                            <label>知识扩展</label>
+                            <textarea id="submitExtension" placeholder="知识扩展..."></textarea>
                             <div class="actions" style="margin-top:16px;">
                                 <button class="btn-primary" onclick="doSubmit()">📨 提交投稿</button>
                             </div>
                         </div>
                     </div>
                 `;
-            },
-            init() {
-                const el = document.getElementById('submitType');
-                if (el) el.addEventListener('change', function() {
-                    document.getElementById('chapterFields').style.display = this.value === 'chapter' ? 'block' : 'none';
-                    document.getElementById('suggestionFields').style.display = this.value === 'suggestion' ? 'block' : 'none';
-                });
             }
         });
 
         async function doSubmit() {
-            const type = document.getElementById('submitType').value;
             const nickname = document.getElementById('submitNick').value.trim() || '匿名';
-            if (type === 'chapter') {
-                const title = document.getElementById('submitTitle').value.trim();
-                const body = document.getElementById('submitBody').value.trim();
-                if (!title || !body) return alert('请填写章节标题和正文');
-                await supabaseRequest('submissions', 'POST', {
-                    nickname,
-                    content: JSON.stringify({ title, body, images: [] }),
-                    status: 'pending'
-                });
-                alert('🎉 投稿成功！等待管理员审核。');
-            } else {
-                const suggestion = document.getElementById('submitSuggestion').value.trim();
-                if (!suggestion) return alert('请填写建议内容');
-                await supabaseRequest('suggestions', 'POST', {
-                    nickname,
-                    content: suggestion,
-                    is_read: 0
-                });
-                alert('🎉 建议已提交！');
-            }
+            const title = document.getElementById('submitTitle').value.trim();
+            const preface = document.getElementById('submitPreface').value.trim();
+            const body = document.getElementById('submitBody').value.trim();
+            const exercises = document.getElementById('submitExercises').value.trim();
+            const extension = document.getElementById('submitExtension').value.trim();
+            
+            if (!title || !body) return alert('请填写章节标题和正文');
+            
+            await supabaseRequest('submissions', 'POST', {
+                nickname,
+                content: JSON.stringify({ title, preface, body, exercises, extension, images: [] }),
+                status: 'pending'
+            });
+            
+            alert('🎉 投稿成功！等待管理员审核。');
             location.reload();
         }
 
-        // ===== 讨论板块 =====
+        // ===== 讨论板块（修复版）=====
         registerModule({
             id: 'discuss', name: '讨论', icon: '💬',
             render() {
@@ -375,7 +325,7 @@
         });
 
         async function loadDiscussions() {
-            const list = await DB.getDiscussions();
+            const list = await supabaseRequest('discussions') || [];
             document.getElementById('discussList').innerHTML = (list || []).map(d => `
                 <div class="item-row">
                     <div>
@@ -391,7 +341,7 @@
             const nickname = document.getElementById('discNick').value.trim() || '匿名';
             const content = document.getElementById('discContent').value.trim();
             if (!content) return alert('说点什么吧！');
-            await DB.addDiscussion({ nickname, content });
+            await supabaseRequest('discussions', 'POST', { nickname, content });
             alert('🎉 发布成功！');
             document.getElementById('discContent').value = '';
             await loadDiscussions();
@@ -414,9 +364,12 @@
             const mod = modules[modId];
             if (!mod) { document.getElementById('moduleContent').innerHTML = '<div class="empty">模块加载失败</div>'; return; }
             const [chapters, notices, novels, discussions] = await Promise.all([
-                DB.getChapters(), DB.getNotices(), DB.getNovels(), DB.getDiscussions()
+                supabaseRequest('chapters'),
+                supabaseRequest('notices'),
+                supabaseRequest('novels'),
+                supabaseRequest('discussions')
             ]);
-            const data = { chapters, notices, novels, discussions };
+            const data = { chapters: chapters || [], notices: notices || [], novels: novels || [], discussions: discussions || [] };
             document.getElementById('moduleContent').innerHTML = mod.render(data);
             if (mod.init) mod.init(data);
             document.querySelectorAll('.nav-item').forEach(el => el.classList.toggle('active', el.textContent.includes(mod.name)));
