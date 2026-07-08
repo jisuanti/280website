@@ -714,7 +714,7 @@
             await loadDiscussions();
         }
 
-        // ===== 日常分享板块（小红书风格·支持本地图片上传）=====
+        // ===== 日常分享板块（小红书风格·支持本地图片+视频上传）=====
         registerModule({
             id: 'share', name: '日常分享', icon: '📸',
             render() {
@@ -748,8 +748,11 @@
                            style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;" />
                     <div id="imagePreview" style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;"></div>
                     
-                    <label>🎬 视频链接（可选）</label>
-                    <input id="postVideo" placeholder="https://...mp4 或 B站链接" />
+                    <label>🎬 上传视频（可选）</label>
+                    <input type="file" id="postVideoFile" accept="video/*" 
+                           style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;" />
+                    <div id="videoPreview" style="margin-top:10px;"></div>
+                    
                     <div class="actions">
                         <button class="btn-primary" onclick="publishPost()">📨 发布</button>
                         <button onclick="document.getElementById('postForm').style.display='none'">取消</button>
@@ -769,12 +772,25 @@
                     reader.readAsDataURL(file);
                 });
             });
+            
+            // 视频预览
+            document.getElementById('postVideoFile').addEventListener('change', function() {
+                const preview = document.getElementById('videoPreview');
+                preview.innerHTML = '';
+                if (this.files.length > 0) {
+                    const file = this.files[0];
+                    const reader = new FileReader();
+                    reader.onload = e => {
+                        preview.innerHTML = `<video controls style="width:100%;border-radius:8px;"><source src="${e.target.result}" type="video/mp4" /></video>`;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
         }
 
         async function publishPost() {
             const nickname = document.getElementById('postNick').value.trim() || '匿名';
             const content = document.getElementById('postContent').value.trim();
-            const video_url = document.getElementById('postVideo').value.trim() || null;
             
             // 读取图片文件并转成 Base64
             const fileInput = document.getElementById('postImageFiles');
@@ -786,6 +802,17 @@
                 });
             });
             const images = await Promise.all(imagePromises);
+            
+            // 读取视频文件并转成 Base64
+            let video_url = null;
+            const videoInput = document.getElementById('postVideoFile');
+            if (videoInput.files.length > 0) {
+                video_url = await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = e => resolve(e.target.result);
+                    reader.readAsDataURL(videoInput.files[0]);
+                });
+            }
             
             if (!content && images.length === 0 && !video_url) return alert('写点内容或上传图片/视频吧！');
             
@@ -816,7 +843,7 @@
                         ${p.video_url ? `
                             <div class="post-video">
                                 <video controls style="width:100%;border-radius:8px;margin-top:10px;">
-                                    <source src="${p.video_url}" />
+                                    <source src="${p.video_url}" type="video/mp4" />
                                 </video>
                             </div>
                         ` : ''}
