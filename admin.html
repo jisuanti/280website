@@ -69,7 +69,6 @@
         }
         .badge { font-size: 0.75em; padding: 2px 8px; border-radius: 10px; margin-left: 6px; }
         .badge.pending { background: #fff3e0; color: #e65100; }
-        .badge.approved { background: #e8f5e9; color: #2e7d32; }
         .sugg-date { font-size: 0.8em; color: #999; margin-left: 8px; }
         pre { white-space: pre-wrap; font-size: 0.85em; margin-top: 6px; }
     </style>
@@ -101,8 +100,8 @@
 
     <script>
         // ===== Supabase 配置 =====
-        const SUPABASE_URL = 'https://gbktpjnitqpwomcprrol.supabase.co';   // ← 替换
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdia3Rwam5pdHFwd29tY3Bycm9sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTk2NDIsImV4cCI6MjA5ODk5NTY0Mn0.TIp9NAdDRZrI16Jq_no7Ga9EpX7ooc6b5Ck7r-sNqww';                // ← 替换
+        const SUPABASE_URL = 'https://你的URL.supabase.co';   // ← 替换
+        const SUPABASE_KEY = '你的AnonKey';                // ← 替换
 
         async function supabaseRequest(table, method = 'GET', data = null, id = null) {
             const url = id 
@@ -126,7 +125,7 @@
         }
 
         // ===== 登录 =====
-        const PASSWORD = 'hanliupiannuan';
+        const PASSWORD = '280class';
         
         function login() {
             if (document.getElementById('pwd').value === PASSWORD) {
@@ -162,21 +161,21 @@
             else if (mod === 'discussions') renderDiscussions();
         }
 
-        // ===== 投稿审核（修复版）=====
+        // ===== 投稿审核（批改后直接消失）=====
         async function renderSubmissions() {
             const submissions = await supabaseRequest('submissions') || [];
             document.getElementById('adminMain').innerHTML = `
                 <div class="admin-section">
                     <h2>✍️ 投稿审核</h2>
-                    <p class="desc">审核通过后将自动加入历史书。</p>
+                    <p class="desc">审核通过后将自动加入历史书，并立即从列表消失。</p>
                     ${(submissions || []).map(s => {
                         let content = {};
-                        try { content = JSON.parse(s.content); } catch(e) { content = { title: '解析失败', body: s.content }; }
+                        try { content = JSON.parse(s.content); } catch(e) {}
                         return `
-                        <div class="item-row" style="border-left: 3px solid #ffb300;">
+                        <div class="item-row sub-${s.status}">
                             <div>
                                 <strong>${escapeHtml(s.nickname || '匿名')}</strong>
-                                <span class="badge pending">${s.status}</span>
+                                <span class="badge ${s.status}">${s.status}</span>
                                 <span class="sugg-date">${s.created_at ? s.created_at.slice(0,16) : ''}</span>
                                 <pre>标题：${escapeHtml(content.title || '')}\n\n课前导言：\n${escapeHtml(content.preface || '')}\n\n正文：\n${escapeHtml(content.body || '')}\n\n课后习题：\n${escapeHtml(content.exercises || '')}\n\n知识扩展：\n${escapeHtml(content.extension || '')}</pre>
                             </div>
@@ -194,10 +193,10 @@
 
         async function approveSub(id) {
             if (!confirm('确认通过并发布？')) return;
+            // 发布到历史书
             const submissions = await supabaseRequest('submissions') || [];
             const sub = submissions.find(s => s.id === id);
             if (sub) {
-                await supabaseRequest('submissions', 'PATCH', { status: 'approved' }, id);
                 const content = JSON.parse(sub.content);
                 await supabaseRequest('chapters', 'POST', {
                     title: content.title,
@@ -207,14 +206,17 @@
                     extension: content.extension || '',
                     images: []
                 });
-                alert('已通过！内容已加入历史书。');
-                renderSubmissions();
             }
+            // 删除投稿记录（直接消失）
+            await supabaseRequest('submissions', 'DELETE', null, id);
+            alert('已通过！内容已加入历史书。');
+            renderSubmissions();
         }
 
         async function rejectSub(id) {
             if (!confirm('确认拒绝？')) return;
-            await supabaseRequest('submissions', 'PATCH', { status: 'rejected' }, id);
+            // 直接删除（拒绝后消失）
+            await supabaseRequest('submissions', 'DELETE', null, id);
             alert('已拒绝。');
             renderSubmissions();
         }
@@ -423,3 +425,4 @@
         }
     </script>
 </body>
+</html>
