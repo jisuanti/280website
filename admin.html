@@ -91,6 +91,7 @@
                     <option value="submissions">✍️ 投稿审核</option>
                     <option value="novels">📖 小说管理</option>
                     <option value="discussions">💬 讨论管理</option>
+                    <option value="posts">📸 日常管理</option>
                 </select>
                 <button class="logout-btn" onclick="logout()">退出</button>
             </div>
@@ -159,9 +160,10 @@
             else if (mod === 'submissions') renderSubmissions();
             else if (mod === 'novels') renderNovelManager();
             else if (mod === 'discussions') renderDiscussions();
+            else if (mod === 'posts') renderPosts();
         }
 
-        // ===== 投稿审核（批改后直接消失）=====
+        // ===== 投稿审核 =====
         async function renderSubmissions() {
             const submissions = await supabaseRequest('submissions') || [];
             document.getElementById('adminMain').innerHTML = `
@@ -193,7 +195,6 @@
 
         async function approveSub(id) {
             if (!confirm('确认通过并发布？')) return;
-            // 发布到历史书
             const submissions = await supabaseRequest('submissions') || [];
             const sub = submissions.find(s => s.id === id);
             if (sub) {
@@ -207,7 +208,6 @@
                     images: []
                 });
             }
-            // 删除投稿记录（直接消失）
             await supabaseRequest('submissions', 'DELETE', null, id);
             alert('已通过！内容已加入历史书。');
             renderSubmissions();
@@ -215,7 +215,6 @@
 
         async function rejectSub(id) {
             if (!confirm('确认拒绝？')) return;
-            // 直接删除（拒绝后消失）
             await supabaseRequest('submissions', 'DELETE', null, id);
             alert('已拒绝。');
             renderSubmissions();
@@ -416,6 +415,36 @@
             await supabaseRequest('discussions', 'DELETE', null, id);
             alert('删除成功！');
             renderDiscussions();
+        }
+
+        // ===== 日常管理（新增）=====
+        async function renderPosts() {
+            const posts = await supabaseRequest('posts') || [];
+            document.getElementById('adminMain').innerHTML = `
+                <div class="admin-section">
+                    <h2>📸 日常管理</h2>
+                    <p class="desc">可以删除违规帖子。</p>
+                    <div style="margin-top:16px;">
+                        ${(posts || []).map(p => `
+                            <div class="item-row">
+                                <div>
+                                    <strong>${escapeHtml(p.nickname || '匿名')}</strong>
+                                    <span class="sugg-date">${p.created_at ? p.created_at.slice(0,16) : ''}</span>
+                                    <div style="margin-top:6px;">${escapeHtml(p.content || '')}</div>
+                                </div>
+                                <button class="del-btn" onclick="deletePost(${p.id})">删除</button>
+                            </div>
+                        `).join('') || '<div style="padding:20px;text-align:center;color:#999;">暂无帖子</div>'}
+                    </div>
+                </div>
+            `;
+        }
+
+        async function deletePost(id) {
+            if (!confirm('确认删除？')) return;
+            await supabaseRequest('posts', 'DELETE', null, id);
+            alert('删除成功！');
+            renderPosts();
         }
 
         // ===== 工具函数 =====

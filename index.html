@@ -280,6 +280,85 @@
         }
         .img-overlay img { max-width: 95vw; max-height: 95vh; border-radius: 8px; }
         
+        /* ===== 日常分享板块样式 ===== */
+        .post-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        }
+        .post-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .post-content {
+            line-height: 1.8;
+            margin-bottom: 12px;
+            font-size: 1em;
+            white-space: pre-wrap;
+        }
+        .post-images {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+            -webkit-overflow-scrolling: touch;
+        }
+        .post-images img {
+            height: 200px;
+            border-radius: 8px;
+            cursor: pointer;
+            flex-shrink: 0;
+            object-fit: cover;
+        }
+        .post-video {
+            margin-top: 12px;
+        }
+        .post-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 14px;
+            flex-wrap: wrap;
+        }
+        .post-actions button {
+            background: #f5f0e8;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.95em;
+            transition: 0.2s;
+        }
+        .post-actions button:hover {
+            background: #e8d5c4;
+        }
+        .like-btn {
+            color: #e57373;
+            font-weight: 600;
+        }
+        .post-comments {
+            margin-top: 14px;
+            border-top: 1px solid #eee;
+            padding-top: 14px;
+        }
+        .comment-item {
+            background: #f9f9f9;
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 6px;
+            font-size: 0.9em;
+        }
+        .comment-item strong {
+            font-size: 0.95em;
+        }
+        .comment-item div {
+            margin-top: 4px;
+            line-height: 1.6;
+        }
+        
         /* ===== 手机端适配 ===== */
         @media (max-width: 768px) {
             .header-inner { padding: 10px 12px; }
@@ -321,7 +400,11 @@
             .item-row { flex-direction: column; }
             .item-row > div:last-child { margin-top: 10px; }
             
-            input, textarea, select { font-size: 16px; } /* 防止iOS缩放 */
+            input, textarea, select { font-size: 16px; }
+            
+            .post-images img {
+                height: 150px;
+            }
         }
     </style>
 </head>
@@ -631,6 +714,133 @@
             await loadDiscussions();
         }
 
+        // ===== 日常分享板块（小红书风格）=====
+        registerModule({
+            id: 'share', name: '日常分享', icon: '📸',
+            render() {
+                return `
+                    <div class="generic-page">
+                        <h1>📸 日常分享</h1>
+                        <button class="btn-primary" onclick="showPostForm()">📝 发帖</button>
+                        <div id="postForm" style="display:none; margin:20px 0;"></div>
+                        <div id="postList"></div>
+                    </div>
+                `;
+            },
+            async init() {
+                await loadPosts();
+            }
+        });
+
+        function showPostForm() {
+            const el = document.getElementById('postForm');
+            if (!el) return;
+            el.style.display = 'block';
+            el.innerHTML = `
+                <div class="editor-box">
+                    <label>👤 你的昵称</label>
+                    <input id="postNick" placeholder="匿名" />
+                    <label>💬 说点什么...</label>
+                    <textarea id="postContent" class="big" placeholder="分享你的日常..."></textarea>
+                    <label>🖼️ 图片链接（每行一个，可选）</label>
+                    <textarea id="postImages" placeholder="https://... 每行一个"></textarea>
+                    <label>🎬 视频链接（可选）</label>
+                    <input id="postVideo" placeholder="https://...mp4 或 B站链接" />
+                    <div class="actions">
+                        <button class="btn-primary" onclick="publishPost()">📨 发布</button>
+                        <button onclick="document.getElementById('postForm').style.display='none'">取消</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function publishPost() {
+            const nickname = document.getElementById('postNick').value.trim() || '匿名';
+            const content = document.getElementById('postContent').value.trim();
+            const images = document.getElementById('postImages').value.trim().split('\n').filter(l => l.trim());
+            const video_url = document.getElementById('postVideo').value.trim() || null;
+            
+            if (!content && images.length === 0 && !video_url) return alert('写点内容或上传图片/视频吧！');
+            
+            await supabaseRequest('posts', 'POST', { nickname, content, images, video_url, likes: 0 });
+            alert('🎉 发布成功！');
+            document.getElementById('postForm').style.display = 'none';
+            await loadPosts();
+        }
+
+        async function loadPosts() {
+            const posts = await supabaseRequest('posts') || [];
+            const allComments = await supabaseRequest('comments') || [];
+            
+            document.getElementById('postList').innerHTML = (posts || []).map(p => {
+                const postComments = allComments.filter(c => c.post_id === p.id);
+                return `
+                    <div class="post-card" id="post-${p.id}">
+                        <div class="post-header">
+                            <strong>👤 ${escapeHtml(p.nickname || '匿名')}</strong>
+                            <span class="sugg-date">🕐 ${p.created_at ? p.created_at.slice(0,16) : ''}</span>
+                        </div>
+                        ${p.content ? `<div class="post-content">${escapeHtml(p.content)}</div>` : ''}
+                        ${p.images && p.images.length > 0 ? `
+                            <div class="post-images">
+                                ${p.images.map(img => `<img src="${img}" onclick="openOverlay('${img}')" />`).join('')}
+                            </div>
+                        ` : ''}
+                        ${p.video_url ? `
+                            <div class="post-video">
+                                <video controls style="width:100%;border-radius:8px;margin-top:10px;">
+                                    <source src="${p.video_url}" />
+                                </video>
+                            </div>
+                        ` : ''}
+                        <div class="post-actions">
+                            <button class="like-btn" onclick="likePost(${p.id})">❤️ 点赞 (${p.likes || 0})</button>
+                            <button onclick="toggleComments(${p.id})">💬 评论 (${postComments.length})</button>
+                        </div>
+                        <div class="post-comments" id="comments-${p.id}" style="display:none;">
+                            <div id="commentList-${p.id}">
+                                ${postComments.map(c => `
+                                    <div class="comment-item">
+                                        <strong>${escapeHtml(c.nickname || '匿名')}</strong>
+                                        <span class="sugg-date">${c.created_at ? c.created_at.slice(0,16) : ''}</span>
+                                        <div>${escapeHtml(c.content)}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <div style="margin-top:10px;">
+                                <input id="commentNick-${p.id}" placeholder="你的昵称" style="width:48%;padding:8px;" />
+                                <input id="commentContent-${p.id}" placeholder="写评论..." style="width:48%;padding:8px;" />
+                                <button class="btn-primary" style="padding:8px 16px;margin-top:6px;" onclick="addComment(${p.id})">发送</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('') || '<div class="empty">📸 暂无分享，来发第一帖吧！</div>';
+        }
+
+        async function likePost(id) {
+            const posts = await supabaseRequest('posts') || [];
+            const post = posts.find(p => p.id === id);
+            if (post) {
+                await supabaseRequest('posts', 'PATCH', { likes: (post.likes || 0) + 1 }, id);
+                await loadPosts();
+            }
+        }
+
+        function toggleComments(id) {
+            const el = document.getElementById(`comments-${id}`);
+            if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+        }
+
+        async function addComment(postId) {
+            const nickname = document.getElementById(`commentNick-${postId}`).value.trim() || '匿名';
+            const content = document.getElementById(`commentContent-${postId}`).value.trim();
+            if (!content) return alert('写点评论吧！');
+            await supabaseRequest('comments', 'POST', { post_id: postId, nickname, content });
+            alert('💬 评论成功！');
+            await loadPosts();
+        }
+
         // ===== 导航和路由 =====
         async function renderNav() {
             document.getElementById('mainNav').innerHTML = `
@@ -639,6 +849,7 @@
                 <div class="nav-item" onclick="switchModule('novel')">📖 小说</div>
                 <div class="nav-item" onclick="switchModule('submit')">✍️ 投稿</div>
                 <div class="nav-item" onclick="switchModule('discuss')">💬 讨论</div>
+                <div class="nav-item" onclick="switchModule('share')">📸 日常</div>
             `;
         }
 
@@ -650,17 +861,19 @@
                 document.getElementById('moduleContent').innerHTML = '<div class="empty">⚠️ 模块加载失败</div>'; 
                 return; 
             }
-            const [chapters, notices, novels, discussions] = await Promise.all([
+            const [chapters, notices, novels, discussions, posts] = await Promise.all([
                 supabaseRequest('chapters'),
                 supabaseRequest('notices'),
                 supabaseRequest('novels'),
-                supabaseRequest('discussions')
+                supabaseRequest('discussions'),
+                supabaseRequest('posts')
             ]);
             const data = { 
                 chapters: chapters || [], 
                 notices: notices || [], 
                 novels: novels || [], 
-                discussions: discussions || [] 
+                discussions: discussions || [],
+                posts: posts || []
             };
             document.getElementById('moduleContent').innerHTML = mod.render(data);
             if (mod.init) mod.init(data);
