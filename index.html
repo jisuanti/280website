@@ -467,19 +467,21 @@
         }
         
         // ===== 时间转换函数（UTC → 北京时间）=====
-        function formatTime(isoString) {
-            if (!isoString) return '';
-            // Supabase 存的是 UTC，转成北京时间（UTC+8）
-            const d = new Date(isoString + 'Z');
-            const beijingTime = new Date(d.getTime() + 8 * 60 * 60 * 1000);
-            const Y = beijingTime.getFullYear();
-            const M = String(beijingTime.getMonth() + 1).padStart(2, '0');
-            const D = String(beijingTime.getDate()).padStart(2, '0');
-            const h = String(beijingTime.getHours()).padStart(2, '0');
-            const m = String(beijingTime.getMinutes()).padStart(2, '0');
-            return `${Y}-${M}-${D} ${h}:${m}`;
-        }
-
+       function formatTime(isoString) {
+    if (!isoString) return '';
+    // Supabase 返回的是 UTC 时间（带 Z 或不带）
+    // 直接 new Date(isoString) 后，用 toLocaleString 转成北京时间
+    const d = new Date(isoString);
+    return d.toLocaleString('zh-CN', {
+        timeZone: 'Asia/Shanghai',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+    }).replace(/\//g, '-');
+}
         // ===== 模块注册 =====
         const modules = {};
         function registerModule(mod) { modules[mod.id] = mod; }
