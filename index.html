@@ -398,6 +398,16 @@
             background:#fff;border-radius:12px;padding:24px;width:90%;max-width:400px;
         }
         
+        /* 头像预览 */
+        .avatar-preview {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #ddd;
+            margin-bottom: 10px;
+        }
+        
         /* ===== 手机端适配 ===== */
         @media (max-width: 768px) {
             .header-inner { padding: 10px 12px; }
@@ -495,9 +505,15 @@
             if (data && (method === 'POST' || method === 'PATCH')) {
                 options.body = JSON.stringify(data);
             }
-            const res = await fetch(url, options);
-            if (method === 'DELETE') return { ok: true };
-            return res.json();
+            try {
+                const res = await fetch(url, options);
+                if (method === 'DELETE') return { ok: true };
+                const result = await res.json();
+                return result;
+            } catch(e) {
+                console.error('Supabase 请求失败：', e);
+                return [];
+            }
         }
 
         // ===== 工具函数 =====
@@ -523,7 +539,7 @@
             return isoString.replace('T', ' ').slice(0, 16);
         }
         
-        // ===== 在线用户功能 =====
+        // ===== 在线用户功能（含错误处理）=====
         let myNickname = localStorage.getItem('myNickname') || '';
 
         async function registerOnline() {
@@ -532,40 +548,49 @@
                 localStorage.setItem('myNickname', myNickname);
             }
             
-            // 先删除旧的
-            const users = await supabaseRequest('online_users') || [];
-            const me = users.find(u => u.nickname === myNickname);
-            if (me) {
-                await supabaseRequest('online_users', 'DELETE', null, me.id).catch(() => {});
+            try {
+                // 先删除旧的
+                const users = Array.isArray(await supabaseRequest('online_users')) ? await supabaseRequest('online_users') : [];
+                const me = users.find(u => u.nickname === myNickname);
+                if (me) {
+                    await supabaseRequest('online_users', 'DELETE', null, me.id).catch(() => {});
+                }
+                
+                // 插入新的
+                await supabaseRequest('online_users', 'POST', {
+                    nickname: myNickname,
+                    last_active: new Date().toISOString()
+                }).catch(() => {});
+                
+                // 每30秒刷新在线人数
+                setInterval(async () => {
+                    const users = Array.isArray(await supabaseRequest('online_users')) ? await supabaseRequest('online_users') : [];
+                    document.getElementById('onlineCount').textContent = users.length;
+                }, 30000);
+            } catch(e) {
+                console.error('在线用户功能出错：', e);
+                document.getElementById('onlineCount').textContent = '?';
             }
-            
-            // 插入新的
-            await supabaseRequest('online_users', 'POST', {
-                nickname: myNickname,
-                last_active: new Date().toISOString()
-            }).catch(() => {});
-            
-            // 每30秒刷新在线人数
-            setInterval(async () => {
-                const users = await supabaseRequest('online_users') || [];
-                document.getElementById('onlineCount').textContent = users.length;
-            }, 30000);
         }
 
         async function showOnlineUsers() {
-            const users = await supabaseRequest('online_users') || [];
+            const users = Array.isArray(await supabaseRequest('online_users')) ? await supabaseRequest('online_users') : [];
+            if (users.length === 0) {
+                alert('暂无在线用户');
+                return;
+            }
             alert('当前在线：\n' + users.map(u => u.nickname).join('\n'));
         }
 
         window.addEventListener('beforeunload', async () => {
-            const users = await supabaseRequest('online_users') || [];
+            const users = Array.isArray(await supabaseRequest('online_users')) ? await supabaseRequest('online_users') : [];
             const me = users.find(u => u.nickname === myNickname);
             if (me) {
                 await supabaseRequest('online_users', 'DELETE', null, me.id).catch(() => {});
             }
         });
 
-        // ===== 账号系统 =====
+        // ===== 账号系统（含错误处理）=====
         function showLogin() {
             document.getElementById('authModal').style.display = 'flex';
             document.getElementById('authTitle').textContent = '🔐 登录';
@@ -589,7 +614,9 @@
                 <input id="regNick" placeholder="设置昵称" />
                 <label>密码</label>
                 <input id="regPwd" type="password" placeholder="设置密码" />
-                <label>头像（Emoji）</label>
+                <label>头像（上传照片或输入Emoji）</label>
+                <input type="file" id="regAvatarFile" accept="image/*" 
+                       style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;margin-bottom:8px;" />
                 <input id="regAvatar" placeholder="😊" value="😊" />
                 <div class="actions">
                     <button class="btn-primary" onclick="doRegister()">注册</button>
@@ -597,6 +624,18 @@
                     <button onclick="closeAuth()">取消</button>
                 </div>
             `;
+            
+            // 头像预览
+            document.getElementById('regAvatarFile').addEventListener('change', function() {
+                const file = this.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = e => {
+                        document.getElementById('regAvatar').value = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
         }
 
         function closeAuth() {
@@ -608,7 +647,7 @@
             const password = document.getElementById('loginPwd').value.trim();
             if (!nickname || !password) return alert('请填写昵称和密码');
             
-            const users = await supabaseRequest('users') || [];
+            const users = Array.isArray(await supabaseRequest('users')) ? await supabaseRequest('users') : [];
             const user = users.find(u => u.nickname === nickname && u.password === password);
             if (!user) return alert('昵称或密码错误');
             
@@ -627,7 +666,7 @@
             const avatar = document.getElementById('regAvatar').value.trim() || '😊';
             if (!nickname || !password) return alert('请填写昵称和密码');
             
-            const users = await supabaseRequest('users') || [];
+            const users = Array.isArray(await supabaseRequest('users')) ? await supabaseRequest('users') : [];
             if (users.find(u => u.nickname === nickname)) return alert('昵称已存在');
             
             await supabaseRequest('users', 'POST', { nickname, password, avatar, is_public: true });
@@ -647,13 +686,17 @@
         async function loadProfileInfo() {
             const userId = localStorage.getItem('userId');
             if (!userId) return;
-            const users = await supabaseRequest('users') || [];
+            const users = Array.isArray(await supabaseRequest('users')) ? await supabaseRequest('users') : [];
             const user = users.find(u => u.id == userId);
             if (!user) return;
             
+            const avatarHtml = user.avatar && user.avatar.startsWith('data:image') 
+                ? `<img src="${user.avatar}" class="avatar-preview" />`
+                : `<div style="font-size:3em;">${escapeHtml(user.avatar || '😊')}</div>`;
+            
             document.getElementById('profileInfo').innerHTML = `
                 <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;">
-                    <div style="font-size:3em;">${escapeHtml(user.avatar || '😊')}</div>
+                    ${avatarHtml}
                     <div>
                         <h2>${escapeHtml(user.nickname)}</h2>
                         <label style="margin-top:8px;">
@@ -665,11 +708,25 @@
                 <div class="editor-box">
                     <label>修改昵称</label>
                     <input id="newNick" value="${escapeHtml(user.nickname)}" />
-                    <label>修改头像（Emoji）</label>
+                    <label>修改头像（上传照片或输入Emoji）</label>
+                    <input type="file" id="newAvatarFile" accept="image/*" 
+                           style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;margin-bottom:8px;" />
                     <input id="newAvatar" value="${escapeHtml(user.avatar || '😊')}" />
                     <button class="btn-primary" onclick="updateProfile(${user.id})">保存修改</button>
                 </div>
             `;
+            
+            // 头像预览
+            document.getElementById('newAvatarFile').addEventListener('change', function() {
+                const file = this.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = e => {
+                        document.getElementById('newAvatar').value = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
         }
 
         async function togglePublic(userId, isPublic) {
@@ -693,7 +750,7 @@
             const userId = localStorage.getItem('userId');
             if (!userId) return;
             
-            const users = await supabaseRequest('users') || [];
+            const users = Array.isArray(await supabaseRequest('users')) ? await supabaseRequest('users') : [];
             const user = users.find(u => u.id == userId);
             if (!user) return;
             
@@ -706,9 +763,9 @@
                 supabaseRequest('submissions')
             ]);
             
-            const myPosts = (posts || []).filter(p => p.nickname === nickname);
-            const myNovels = (novels || []).filter(n => n.author === nickname);
-            const mySubs = (submissions || []).filter(s => s.nickname === nickname);
+            const myPosts = (Array.isArray(posts) ? posts : []).filter(p => p.nickname === nickname);
+            const myNovels = (Array.isArray(novels) ? novels : []).filter(n => n.author === nickname);
+            const mySubs = (Array.isArray(submissions) ? submissions : []).filter(s => s.nickname === nickname);
             
             document.getElementById('profileData').innerHTML = `
                 <h3 style="margin-top:20px;">📸 我的说说 (${myPosts.length})</h3>
@@ -733,7 +790,7 @@
                 ${mySubs.length > 0 ? mySubs.map(s => `
                     <div class="item-row">
                         <div>${escapeHtml(JSON.parse(s.content).title || '')}</div>
-                        <span class="badge ${s.status}" style="padding:2px 8px;border-radius:10px;font-size:0.75em;background:#fff3e0;color:#e65100;">${s.status}</span>
+                        <span style="padding:2px 8px;border-radius:10px;font-size:0.75em;background:#fff3e0;color:#e65100;">${s.status}</span>
                     </div>
                 `).join('') : '<div class="empty">暂无投稿</div>'}
             `;
@@ -900,7 +957,7 @@
         }
 
         async function likeNovel(id) {
-            const novels = await supabaseRequest('novels') || [];
+            const novels = Array.isArray(await supabaseRequest('novels')) ? await supabaseRequest('novels') : [];
             const novel = novels.find(n => n.id === id);
             if (novel) {
                 await supabaseRequest('novels', 'PATCH', { likes: (novel.likes || 0) + 1 }, id);
@@ -997,7 +1054,7 @@
         });
 
         async function loadDiscussions() {
-            const list = await supabaseRequest('discussions') || [];
+            const list = Array.isArray(await supabaseRequest('discussions')) ? await supabaseRequest('discussions') : [];
             document.getElementById('discussList').innerHTML = (list || []).map(d => `
                 <div class="item-row">
                     <div>
@@ -1143,8 +1200,8 @@
         }
 
         async function loadPosts() {
-            const posts = await supabaseRequest('posts') || [];
-            const allComments = await supabaseRequest('comments') || [];
+            const posts = Array.isArray(await supabaseRequest('posts')) ? await supabaseRequest('posts') : [];
+            const allComments = Array.isArray(await supabaseRequest('comments')) ? await supabaseRequest('comments') : [];
             allPosts = posts;
             renderPostList(posts, allComments);
         }
@@ -1201,7 +1258,7 @@
         }
 
         async function likePost(id) {
-            const posts = await supabaseRequest('posts') || [];
+            const posts = Array.isArray(await supabaseRequest('posts')) ? await supabaseRequest('posts') : [];
             const post = posts.find(p => p.id === id);
             if (post) {
                 await supabaseRequest('posts', 'PATCH', { likes: (post.likes || 0) + 1 }, id);
@@ -1288,14 +1345,14 @@
                 supabaseRequest('discussions'),
                 supabaseRequest('posts')
             ]);
-            allNovels = novels || [];
-            allPosts = posts || [];
+            allNovels = Array.isArray(novels) ? novels : [];
+            allPosts = Array.isArray(posts) ? posts : [];
             const data = { 
-                chapters: chapters || [], 
-                notices: notices || [], 
-                novels: novels || [], 
-                discussions: discussions || [],
-                posts: posts || []
+                chapters: Array.isArray(chapters) ? chapters : [], 
+                notices: Array.isArray(notices) ? notices : [], 
+                novels: allNovels, 
+                discussions: Array.isArray(discussions) ? discussions : [],
+                posts: allPosts
             };
             document.getElementById('moduleContent').innerHTML = mod.render(data);
             if (mod.init) mod.init(data);
