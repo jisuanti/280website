@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>280班网站</title>
     <style>
         * { margin:0; padding:0; box-sizing:border-box; }
@@ -486,8 +486,8 @@
 
     <script>
         // ===== Supabase 配置 =====
-        const SUPABASE_URL = 'https://gbktpjnitqpwomcprrol.supabase.co';   // ← 替换
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdia3Rwam5pdHFwd29tY3Bycm9sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTk2NDIsImV4cCI6MjA5ODk5NTY0Mn0.TIp9NAdDRZrI16Jq_no7Ga9EpX7ooc6b5Ck7r-sNqww';                // ← 替换
+        const SUPABASE_URL = 'https://gbktpjnitqpwomcprrol.supabase.co';   // ← 你的 URL
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdia3Rwam5pdHFwd29tY3Bycm9sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTk2NDIsImV4cCI6MjA5ODk5NTY0Mn0.TIp9NAdDRZrI16Jq_no7Ga9EpX7ooc6b5Ck7r-sNqww';                // ← 你的 anon key
 
         async function supabaseRequest(table, method = 'GET', data = null, id = null) {
             const url = id 
@@ -549,20 +549,17 @@
             }
             
             try {
-                // 先删除旧的
                 const users = Array.isArray(await supabaseRequest('online_users')) ? await supabaseRequest('online_users') : [];
                 const me = users.find(u => u.nickname === myNickname);
                 if (me) {
                     await supabaseRequest('online_users', 'DELETE', null, me.id).catch(() => {});
                 }
                 
-                // 插入新的
                 await supabaseRequest('online_users', 'POST', {
                     nickname: myNickname,
                     last_active: new Date().toISOString()
                 }).catch(() => {});
                 
-                // 每30秒刷新在线人数
                 setInterval(async () => {
                     const users = Array.isArray(await supabaseRequest('online_users')) ? await supabaseRequest('online_users') : [];
                     document.getElementById('onlineCount').textContent = users.length;
@@ -625,7 +622,6 @@
                 </div>
             `;
             
-            // 头像预览
             document.getElementById('regAvatarFile').addEventListener('change', function() {
                 const file = this.files[0];
                 if (file) {
@@ -716,7 +712,6 @@
                 </div>
             `;
             
-            // 头像预览
             document.getElementById('newAvatarFile').addEventListener('change', function() {
                 const file = this.files[0];
                 if (file) {
@@ -756,7 +751,6 @@
             
             const nickname = user.nickname;
             
-            // 获取用户的帖子、小说、投稿
             const [posts, novels, submissions] = await Promise.all([
                 supabaseRequest('posts'),
                 supabaseRequest('novels'),
@@ -863,7 +857,7 @@
             }
         });
 
-        // ===== 小说模块（含搜索+热门排序+删除）=====
+        // ===== 小说模块 =====
         registerModule({
             id: 'novel', name: '小说', icon: '📖',
             render(data) {
@@ -902,7 +896,7 @@
         function renderNovelCard(n) {
             return `
                 <div class="novel-card" id="novel-${n.id}">
-                    ${n.cover ? `<img class="novel-cover" src="${n.cover}" onclick="openOverlay('${n.cover}')" />` : ''}
+                    ${n.cover ? `<img class="novel-cover" src="${n.cover}" onclick="openOverlay('${n.cover}')" alt="封面" />` : ''}
                     <div class="novel-info">
                         <h3 class="novel-title">${escapeHtml(n.title || '无题')}</h3>
                         <div class="novel-meta">
@@ -1076,7 +1070,7 @@
             await loadDiscussions();
         }
 
-        // ===== 日常分享板块（含搜索+热门+编辑删除）=====
+        // ===== 日常分享板块 =====
         registerModule({
             id: 'share', name: '日常分享', icon: '📸',
             render() {
@@ -1147,7 +1141,7 @@
                 Array.from(this.files).forEach(file => {
                     const reader = new FileReader();
                     reader.onload = e => {
-                        preview.innerHTML += `<img src="${e.target.result}" style="height:80px;border-radius:6px;object-fit:cover;" />`;
+                        preview.innerHTML += `<img src="${e.target.result}" style="height:80px;border-radius:6px;object-fit:cover;" alt="图片" />`;
                     };
                     reader.readAsDataURL(file);
                 });
@@ -1219,7 +1213,7 @@
                         ${p.content ? `<div class="post-content">${escapeHtml(p.content)}</div>` : ''}
                         ${p.images && p.images.length > 0 ? `
                             <div class="post-images">
-                                ${p.images.map(img => `<img src="${img}" onclick="openOverlay('${img}')" />`).join('')}
+                                ${p.images.map(img => `<img src="${img}" onclick="openOverlay('${img}')" alt="图片" />`).join('')}
                             </div>
                         ` : ''}
                         ${p.video_url ? `
@@ -1338,27 +1332,32 @@
                 document.getElementById('moduleContent').innerHTML = '<div class="empty">⚠️ 模块加载失败</div>'; 
                 return; 
             }
-            const [chapters, notices, novels, discussions, posts] = await Promise.all([
-                supabaseRequest('chapters'),
-                supabaseRequest('notices'),
-                supabaseRequest('novels'),
-                supabaseRequest('discussions'),
-                supabaseRequest('posts')
-            ]);
-            allNovels = Array.isArray(novels) ? novels : [];
-            allPosts = Array.isArray(posts) ? posts : [];
-            const data = { 
-                chapters: Array.isArray(chapters) ? chapters : [], 
-                notices: Array.isArray(notices) ? notices : [], 
-                novels: allNovels, 
-                discussions: Array.isArray(discussions) ? discussions : [],
-                posts: allPosts
-            };
-            document.getElementById('moduleContent').innerHTML = mod.render(data);
-            if (mod.init) mod.init(data);
-            document.querySelectorAll('.nav-item').forEach(el => 
-                el.classList.toggle('active', el.textContent.includes(mod.name))
-            );
+            try {
+                const [chapters, notices, novels, discussions, posts] = await Promise.all([
+                    supabaseRequest('chapters'),
+                    supabaseRequest('notices'),
+                    supabaseRequest('novels'),
+                    supabaseRequest('discussions'),
+                    supabaseRequest('posts')
+                ]);
+                allNovels = Array.isArray(novels) ? novels : [];
+                allPosts = Array.isArray(posts) ? posts : [];
+                const data = { 
+                    chapters: Array.isArray(chapters) ? chapters : [], 
+                    notices: Array.isArray(notices) ? notices : [], 
+                    novels: allNovels, 
+                    discussions: Array.isArray(discussions) ? discussions : [],
+                    posts: allPosts
+                };
+                document.getElementById('moduleContent').innerHTML = mod.render(data);
+                if (mod.init) mod.init(data);
+                document.querySelectorAll('.nav-item').forEach(el => 
+                    el.classList.toggle('active', el.textContent.includes(mod.name))
+                );
+            } catch(e) {
+                console.error('加载模块失败：', e);
+                document.getElementById('moduleContent').innerHTML = '<div class="empty">⚠️ 数据加载失败</div>';
+            }
         }
 
         window.addEventListener('hashchange', () => {
@@ -1367,14 +1366,39 @@
         });
 
         async function init() {
-            await registerOnline();  // 注册在线状态
+            console.log('开始初始化...');
+            try {
+                await registerOnline();
+                console.log('在线用户注册成功');
+            } catch(e) {
+                console.error('在线用户功能出错：', e);
+            }
+            
             await renderNav();
-            const hash = location.hash.slice(1);
-            if (hash && modules[hash]) loadModule(hash);
-            else loadModule('book');
+            console.log('导航栏渲染成功');
+            
+            const hash = location.hash.slice(1) || 'book';
+            console.log('准备加载模块：', hash);
+            
+            if (modules[hash]) {
+                try {
+                    await loadModule(hash);
+                    console.log('模块加载成功：', hash);
+                } catch(e) {
+                    console.error('模块加载失败：', e);
+                    document.getElementById('moduleContent').innerHTML = '<div class="empty">⚠️ 模块加载失败：' + e.message + '</div>';
+                }
+            } else {
+                console.error('模块不存在：', hash);
+                document.getElementById('moduleContent').innerHTML = '<div class="empty">⚠️ 模块不存在</div>';
+            }
         }
 
-        init();
+        // ===== 等页面加载完再初始化（修复 loadModule is not defined）=====
+        window.addEventListener('DOMContentLoaded', function() {
+            console.log('页面加载完成，开始初始化...');
+            init();
+        });
     </script>
 </body>
 </html>
