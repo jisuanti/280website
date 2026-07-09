@@ -465,6 +465,20 @@
             if (!str) return ''; 
             return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); 
         }
+        
+        // ===== 时间转换函数（UTC → 北京时间）=====
+        function formatTime(isoString) {
+            if (!isoString) return '';
+            // Supabase 存的是 UTC，转成北京时间（UTC+8）
+            const d = new Date(isoString + 'Z');
+            const beijingTime = new Date(d.getTime() + 8 * 60 * 60 * 1000);
+            const Y = beijingTime.getFullYear();
+            const M = String(beijingTime.getMonth() + 1).padStart(2, '0');
+            const D = String(beijingTime.getDate()).padStart(2, '0');
+            const h = String(beijingTime.getHours()).padStart(2, '0');
+            const m = String(beijingTime.getMinutes()).padStart(2, '0');
+            return `${Y}-${M}-${D} ${h}:${m}`;
+        }
 
         // ===== 模块注册 =====
         const modules = {};
@@ -697,7 +711,7 @@
                 <div class="item-row">
                     <div>
                         <strong>👤 ${escapeHtml(d.nickname || '匿名')}</strong>
-                        <span class="sugg-date">🕐 ${d.created_at ? d.created_at.slice(0,16) : ''}</span>
+                        <span class="sugg-date">🕐 ${formatTime(d.created_at)}</span>
                         <div style="margin-top:8px; line-height: 1.8;">${escapeHtml(d.content)}</div>
                     </div>
                 </div>
@@ -832,7 +846,7 @@
                     <div class="post-card" id="post-${p.id}">
                         <div class="post-header">
                             <strong>👤 ${escapeHtml(p.nickname || '匿名')}</strong>
-                            <span class="sugg-date">🕐 ${p.created_at ? p.created_at.slice(0,16) : ''}</span>
+                            <span class="sugg-date">🕐 ${formatTime(p.created_at)}</span>
                         </div>
                         ${p.content ? `<div class="post-content">${escapeHtml(p.content)}</div>` : ''}
                         ${p.images && p.images.length > 0 ? `
@@ -856,7 +870,7 @@
                                 ${postComments.map(c => `
                                     <div class="comment-item">
                                         <strong>${escapeHtml(c.nickname || '匿名')}</strong>
-                                        <span class="sugg-date">${c.created_at ? c.created_at.slice(0,16) : ''}</span>
+                                        <span class="sugg-date">🕐 ${formatTime(c.created_at)}</span>
                                         <div>${escapeHtml(c.content)}</div>
                                     </div>
                                 `).join('')}
