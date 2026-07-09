@@ -390,23 +390,8 @@
             padding: 4px 10px !important;
         }
         
-        /* 登录弹窗 */
-        #authModal {
-            display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1000;justify-content:center;align-items:center;
-        }
-        #authModal > div {
-            background:#fff;border-radius:12px;padding:24px;width:90%;max-width:400px;
-        }
-        
-        /* 头像预览 */
-        .avatar-preview {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 2px solid #ddd;
-            margin-bottom: 10px;
-        }
+        /* 登录弹窗（已删除账号系统，保留空壳） */
+        #authModal { display:none; }
         
         /* ===== 手机端适配 ===== */
         @media (max-width: 768px) {
@@ -470,14 +455,6 @@
         </div>
     </header>
 
-    <!-- 登录/注册弹窗 -->
-    <div id="authModal">
-        <div>
-            <h2 id="authTitle" style="margin-bottom:16px;">🔐 登录</h2>
-            <div id="authForm"></div>
-        </div>
-    </div>
-
     <main class="module-content" id="moduleContent"></main>
 
     <div class="img-overlay" id="imgOverlay" onclick="closeOverlay()">
@@ -533,13 +510,12 @@
             return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); 
         }
         
-        // ===== 时间转换函数 =====
         function formatTime(isoString) {
             if (!isoString) return '';
             return isoString.replace('T', ' ').slice(0, 16);
         }
         
-        // ===== 在线用户功能（含错误处理）=====
+        // ===== 在线用户功能 =====
         let myNickname = localStorage.getItem('myNickname') || '';
 
         async function registerOnline() {
@@ -586,209 +562,6 @@
                 await supabaseRequest('online_users', 'DELETE', null, me.id).catch(() => {});
             }
         });
-
-        // ===== 账号系统（含错误处理）=====
-        function showLogin() {
-            document.getElementById('authModal').style.display = 'flex';
-            document.getElementById('authTitle').textContent = '🔐 登录';
-            document.getElementById('authForm').innerHTML = `
-                <label>昵称</label>
-                <input id="loginNick" placeholder="你的昵称" />
-                <label>密码</label>
-                <input id="loginPwd" type="password" placeholder="密码" />
-                <div class="actions">
-                    <button class="btn-primary" onclick="doLogin()">登录</button>
-                    <button onclick="showRegister()">注册</button>
-                    <button onclick="closeAuth()">取消</button>
-                </div>
-            `;
-        }
-
-        function showRegister() {
-            document.getElementById('authTitle').textContent = '📝 注册';
-            document.getElementById('authForm').innerHTML = `
-                <label>昵称</label>
-                <input id="regNick" placeholder="设置昵称" />
-                <label>密码</label>
-                <input id="regPwd" type="password" placeholder="设置密码" />
-                <label>头像（上传照片或输入Emoji）</label>
-                <input type="file" id="regAvatarFile" accept="image/*" 
-                       style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;margin-bottom:8px;" />
-                <input id="regAvatar" placeholder="😊" value="😊" />
-                <div class="actions">
-                    <button class="btn-primary" onclick="doRegister()">注册</button>
-                    <button onclick="showLogin()">返回登录</button>
-                    <button onclick="closeAuth()">取消</button>
-                </div>
-            `;
-            
-            document.getElementById('regAvatarFile').addEventListener('change', function() {
-                const file = this.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = e => {
-                        document.getElementById('regAvatar').value = e.target.result;
-                    };
-                    reader.readAsDataURL(file);
-                }
-            });
-        }
-
-        function closeAuth() {
-            document.getElementById('authModal').style.display = 'none';
-        }
-
-        async function doLogin() {
-            const nickname = document.getElementById('loginNick').value.trim();
-            const password = document.getElementById('loginPwd').value.trim();
-            if (!nickname || !password) return alert('请填写昵称和密码');
-            
-            const users = Array.isArray(await supabaseRequest('users')) ? await supabaseRequest('users') : [];
-            const user = users.find(u => u.nickname === nickname && u.password === password);
-            if (!user) return alert('昵称或密码错误');
-            
-            localStorage.setItem('userId', user.id);
-            localStorage.setItem('myNickname', user.nickname);
-            localStorage.setItem('myAvatar', user.avatar || '😊');
-            closeAuth();
-            alert('登录成功！');
-            renderNav();
-            switchModule('profile');
-        }
-
-        async function doRegister() {
-            const nickname = document.getElementById('regNick').value.trim();
-            const password = document.getElementById('regPwd').value.trim();
-            const avatar = document.getElementById('regAvatar').value.trim() || '😊';
-            if (!nickname || !password) return alert('请填写昵称和密码');
-            
-            const users = Array.isArray(await supabaseRequest('users')) ? await supabaseRequest('users') : [];
-            if (users.find(u => u.nickname === nickname)) return alert('昵称已存在');
-            
-            await supabaseRequest('users', 'POST', { nickname, password, avatar, is_public: true });
-            alert('注册成功！请登录');
-            showLogin();
-        }
-
-        function logoutUser() {
-            localStorage.removeItem('userId');
-            localStorage.removeItem('myNickname');
-            localStorage.removeItem('myAvatar');
-            alert('已退出登录');
-            renderNav();
-            switchModule('book');
-        }
-
-        async function loadProfileInfo() {
-            const userId = localStorage.getItem('userId');
-            if (!userId) return;
-            const users = Array.isArray(await supabaseRequest('users')) ? await supabaseRequest('users') : [];
-            const user = users.find(u => u.id == userId);
-            if (!user) return;
-            
-            const avatarHtml = user.avatar && user.avatar.startsWith('data:image') 
-                ? `<img src="${user.avatar}" class="avatar-preview" />`
-                : `<div style="font-size:3em;">${escapeHtml(user.avatar || '😊')}</div>`;
-            
-            document.getElementById('profileInfo').innerHTML = `
-                <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;">
-                    ${avatarHtml}
-                    <div>
-                        <h2>${escapeHtml(user.nickname)}</h2>
-                        <label style="margin-top:8px;">
-                            <input type="checkbox" ${user.is_public ? 'checked' : ''} onchange="togglePublic(${user.id}, this.checked)" />
-                            公开个人中心
-                        </label>
-                    </div>
-                </div>
-                <div class="editor-box">
-                    <label>修改昵称</label>
-                    <input id="newNick" value="${escapeHtml(user.nickname)}" />
-                    <label>修改头像（上传照片或输入Emoji）</label>
-                    <input type="file" id="newAvatarFile" accept="image/*" 
-                           style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;margin-bottom:8px;" />
-                    <input id="newAvatar" value="${escapeHtml(user.avatar || '😊')}" />
-                    <button class="btn-primary" onclick="updateProfile(${user.id})">保存修改</button>
-                </div>
-            `;
-            
-            document.getElementById('newAvatarFile').addEventListener('change', function() {
-                const file = this.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = e => {
-                        document.getElementById('newAvatar').value = e.target.result;
-                    };
-                    reader.readAsDataURL(file);
-                }
-            });
-        }
-
-        async function togglePublic(userId, isPublic) {
-            await supabaseRequest('users', 'PATCH', { is_public: isPublic }, userId);
-            alert('设置已保存');
-        }
-
-        async function updateProfile(userId) {
-            const newNick = document.getElementById('newNick').value.trim();
-            const newAvatar = document.getElementById('newAvatar').value.trim();
-            if (!newNick) return alert('昵称不能为空');
-            
-            await supabaseRequest('users', 'PATCH', { nickname: newNick, avatar: newAvatar }, userId);
-            localStorage.setItem('myNickname', newNick);
-            localStorage.setItem('myAvatar', newAvatar);
-            alert('修改成功！');
-            loadProfileInfo();
-        }
-
-        async function loadProfileData() {
-            const userId = localStorage.getItem('userId');
-            if (!userId) return;
-            
-            const users = Array.isArray(await supabaseRequest('users')) ? await supabaseRequest('users') : [];
-            const user = users.find(u => u.id == userId);
-            if (!user) return;
-            
-            const nickname = user.nickname;
-            
-            const [posts, novels, submissions] = await Promise.all([
-                supabaseRequest('posts'),
-                supabaseRequest('novels'),
-                supabaseRequest('submissions')
-            ]);
-            
-            const myPosts = (Array.isArray(posts) ? posts : []).filter(p => p.nickname === nickname);
-            const myNovels = (Array.isArray(novels) ? novels : []).filter(n => n.author === nickname);
-            const mySubs = (Array.isArray(submissions) ? submissions : []).filter(s => s.nickname === nickname);
-            
-            document.getElementById('profileData').innerHTML = `
-                <h3 style="margin-top:20px;">📸 我的说说 (${myPosts.length})</h3>
-                ${myPosts.length > 0 ? myPosts.map(p => `
-                    <div class="post-card">
-                        <div>${escapeHtml(p.content || '')}</div>
-                        <div class="sugg-date">🕐 ${formatTime(p.created_at)}</div>
-                    </div>
-                `).join('') : '<div class="empty">暂无说说</div>'}
-                
-                <h3 style="margin-top:20px;">📖 我的小说 (${myNovels.length})</h3>
-                ${myNovels.length > 0 ? myNovels.map(n => `
-                    <div class="novel-card">
-                        <div class="novel-info">
-                            <h3>${escapeHtml(n.title)}</h3>
-                            <div>👍 ${n.likes || 0}</div>
-                        </div>
-                    </div>
-                `).join('') : '<div class="empty">暂无小说</div>'}
-                
-                <h3 style="margin-top:20px;">✍️ 我的投稿 (${mySubs.length})</h3>
-                ${mySubs.length > 0 ? mySubs.map(s => `
-                    <div class="item-row">
-                        <div>${escapeHtml(JSON.parse(s.content).title || '')}</div>
-                        <span style="padding:2px 8px;border-radius:10px;font-size:0.75em;background:#fff3e0;color:#e65100;">${s.status}</span>
-                    </div>
-                `).join('') : '<div class="empty">暂无投稿</div>'}
-            `;
-        }
 
         // ===== 模块注册 =====
         const modules = {};
@@ -907,9 +680,7 @@
                         <div class="novel-actions">
                             <button class="like-btn" onclick="likeNovel(${n.id})">👍 点赞</button>
                             <button onclick="toggleNovelBody(${n.id})">📖 阅读</button>
-                            ${myNickname && n.author === myNickname ? `
-                                <button class="delete-btn" onclick="deleteNovel(${n.id})">🗑️ 删除</button>
-                            ` : ''}
+                            <button class="delete-btn" onclick="deleteNovel(${n.id})">🗑️ 删除</button>
                         </div>
                         <div class="novel-body" id="novelBody-${n.id}">${formatText(n.body || '')}</div>
                     </div>
@@ -1226,9 +997,7 @@
                         <div class="post-actions">
                             <button class="like-btn" onclick="likePost(${p.id})">❤️ 点赞 (${p.likes || 0})</button>
                             <button onclick="toggleComments(${p.id})">💬 评论 (${postComments.length})</button>
-                            ${myNickname && p.nickname === myNickname ? `
-                                <button class="delete-btn" onclick="deletePost(${p.id})">🗑️ 删除</button>
-                            ` : ''}
+                            <button class="delete-btn" onclick="deletePost(${p.id})">🗑️ 删除</button>
                         </div>
                         <div class="post-comments" id="comments-${p.id}" style="display:none;">
                             <div id="commentList-${p.id}">
@@ -1281,34 +1050,8 @@
             await loadPosts();
         }
 
-        // ===== 个人中心模块 =====
-        registerModule({
-            id: 'profile', name: '个人中心', icon: '👤',
-            render() {
-                const userId = localStorage.getItem('userId');
-                if (!userId) return '<div class="empty">请先登录</div>';
-                
-                return `
-                    <div class="generic-page">
-                        <h1>👤 个人中心</h1>
-                        <div id="profileInfo"></div>
-                        <div style="margin-top:20px;">
-                            <button class="btn-primary" onclick="loadProfileData()">📂 我的投稿</button>
-                            <button class="btn-primary" style="margin-left:8px;" onclick="logoutUser()">🚪 退出登录</button>
-                        </div>
-                        <div id="profileData"></div>
-                    </div>
-                `;
-            },
-            async init() {
-                await loadProfileInfo();
-                await loadProfileData();
-            }
-        });
-
         // ===== 导航和路由 =====
-        async function renderNav() {
-            const isLoggedIn = localStorage.getItem('userId');
+        function renderNav() {
             document.getElementById('mainNav').innerHTML = `
                 <div class="nav-item active" onclick="switchModule('book')">📖 历史书</div>
                 <div class="nav-item" onclick="switchModule('notice')">📋 公告栏</div>
@@ -1316,11 +1059,6 @@
                 <div class="nav-item" onclick="switchModule('submit')">✍️ 投稿</div>
                 <div class="nav-item" onclick="switchModule('discuss')">💬 讨论</div>
                 <div class="nav-item" onclick="switchModule('share')">📸 日常</div>
-                ${isLoggedIn ? `
-                    <div class="nav-item" onclick="switchModule('profile')">👤 个人中心</div>
-                ` : `
-                    <div class="nav-item" onclick="showLogin()">🔐 登录</div>
-                `}
             `;
         }
 
@@ -1374,7 +1112,7 @@
                 console.error('在线用户功能出错：', e);
             }
             
-            await renderNav();
+            renderNav();
             console.log('导航栏渲染成功');
             
             const hash = location.hash.slice(1) || 'book';
@@ -1394,7 +1132,6 @@
             }
         }
 
-        // ===== 等页面加载完再初始化（修复 loadModule is not defined）=====
         window.addEventListener('DOMContentLoaded', function() {
             console.log('页面加载完成，开始初始化...');
             init();
