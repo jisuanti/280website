@@ -425,8 +425,8 @@
 
     <script>
         // ===== Supabase 配置 =====
-        const SUPABASE_URL = 'https://gbktpjnitqpwomcprrol.supabase.co';   // ← 替换
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdia3Rwam5pdHFwd29tY3Bycm9sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTk2NDIsImV4cCI6MjA5ODk5NTY0Mn0.TIp9NAdDRZrI16Jq_no7Ga9EpX7ooc6b5Ck7r-sNqww';                // ← 替换
+        const SUPABASE_URL = 'https://你的URL.supabase.co';   // ← 替换
+        const SUPABASE_KEY = '你的AnonKey';                // ← 替换
 
         async function supabaseRequest(table, method = 'GET', data = null, id = null) {
             const url = id 
@@ -467,10 +467,19 @@
         }
         
         // ===== 时间转换函数（UTC → 北京时间）=====
-     function formatTime(isoString) {
-    if (!isoString) return '';
-    return isoString.replace('T', ' ').slice(0, 16);
-}
+        function formatTime(isoString) {
+            if (!isoString) return '';
+            // Supabase 存的是 UTC，转成北京时间（UTC+8）
+            const d = new Date(isoString + 'Z');
+            const beijingTime = new Date(d.getTime() + 8 * 60 * 60 * 1000);
+            const Y = beijingTime.getFullYear();
+            const M = String(beijingTime.getMonth() + 1).padStart(2, '0');
+            const D = String(beijingTime.getDate()).padStart(2, '0');
+            const h = String(beijingTime.getHours()).padStart(2, '0');
+            const m = String(beijingTime.getMinutes()).padStart(2, '0');
+            return `${Y}-${M}-${D} ${h}:${m}`;
+        }
+
         // ===== 模块注册 =====
         const modules = {};
         function registerModule(mod) { modules[mod.id] = mod; }
