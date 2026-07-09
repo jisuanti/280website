@@ -73,6 +73,20 @@
         }
         .admin-link:hover { background: #ffcc80; color: #3e2723; }
         
+        /* 在线用户 */
+        #onlineUsers {
+            display:flex;align-items:center;gap:6px;font-size:0.85em;color:rgba(255,255,255,0.8);margin-left:12px;cursor:pointer;
+        }
+        .online-dot {
+            width:8px;height:8px;background:#4caf50;border-radius:50%;display:inline-block;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
         /* 主内容区 */
         .module-content { 
             max-width: 1200px; 
@@ -100,6 +114,17 @@
             border-bottom: 2px solid #d7ccc8; 
             padding-bottom: 12px; 
             margin-bottom: 20px; 
+        }
+        
+        /* 搜索框 */
+        .search-box {
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            padding: 8px 16px;
+            width: 100%;
+            margin-bottom: 16px;
+            font-size: 0.95em;
         }
         
         /* 历史书 */
@@ -358,6 +383,20 @@
             margin-top: 4px;
             line-height: 1.6;
         }
+        .delete-btn {
+            background: #ffcdd2 !important;
+            color: #c62828;
+            font-size: 0.85em;
+            padding: 4px 10px !important;
+        }
+        
+        /* 登录弹窗 */
+        #authModal {
+            display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1000;justify-content:center;align-items:center;
+        }
+        #authModal > div {
+            background:#fff;border-radius:12px;padding:24px;width:90%;max-width:400px;
+        }
         
         /* ===== 手机端适配 ===== */
         @media (max-width: 768px) {
@@ -413,9 +452,21 @@
         <div class="header-inner">
             <h1 class="logo">🏫 280班</h1>
             <nav class="main-nav" id="mainNav"></nav>
+            <div id="onlineUsers" onclick="showOnlineUsers()">
+                <span class="online-dot"></span>
+                <span id="onlineCount">1</span> 人在线
+            </div>
             <a href="admin.html" class="admin-link">管理</a>
         </div>
     </header>
+
+    <!-- 登录/注册弹窗 -->
+    <div id="authModal">
+        <div>
+            <h2 id="authTitle" style="margin-bottom:16px;">🔐 登录</h2>
+            <div id="authForm"></div>
+        </div>
+    </div>
 
     <main class="module-content" id="moduleContent"></main>
 
@@ -437,7 +488,7 @@
                 headers: {
                     'apikey': SUPABASE_KEY,
                     'Authorization': `Bearer ${SUPABASE_KEY}`,
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'application/json; charset=utf-8',
                     'Prefer': 'return=representation'
                 }
             };
@@ -466,18 +517,226 @@
             return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); 
         }
         
-        // ===== 时间转换函数（UTC → 北京时间）=====
+        // ===== 时间转换函数 =====
         function formatTime(isoString) {
             if (!isoString) return '';
-            // Supabase 存的是 UTC，转成北京时间（UTC+8）
-            const d = new Date(isoString + 'Z');
-            const beijingTime = new Date(d.getTime() + 8 * 60 * 60 * 1000);
-            const Y = beijingTime.getFullYear();
-            const M = String(beijingTime.getMonth() + 1).padStart(2, '0');
-            const D = String(beijingTime.getDate()).padStart(2, '0');
-            const h = String(beijingTime.getHours()).padStart(2, '0');
-            const m = String(beijingTime.getMinutes()).padStart(2, '0');
-            return `${Y}-${M}-${D} ${h}:${m}`;
+            return isoString.replace('T', ' ').slice(0, 16);
+        }
+        
+        // ===== 在线用户功能 =====
+        let myNickname = localStorage.getItem('myNickname') || '';
+
+        async function registerOnline() {
+            if (!myNickname) {
+                myNickname = prompt('请输入你的昵称（用于显示在线状态）：') || '匿名';
+                localStorage.setItem('myNickname', myNickname);
+            }
+            
+            // 先删除旧的
+            const users = await supabaseRequest('online_users') || [];
+            const me = users.find(u => u.nickname === myNickname);
+            if (me) {
+                await supabaseRequest('online_users', 'DELETE', null, me.id).catch(() => {});
+            }
+            
+            // 插入新的
+            await supabaseRequest('online_users', 'POST', {
+                nickname: myNickname,
+                last_active: new Date().toISOString()
+            }).catch(() => {});
+            
+            // 每30秒刷新在线人数
+            setInterval(async () => {
+                const users = await supabaseRequest('online_users') || [];
+                document.getElementById('onlineCount').textContent = users.length;
+            }, 30000);
+        }
+
+        async function showOnlineUsers() {
+            const users = await supabaseRequest('online_users') || [];
+            alert('当前在线：\n' + users.map(u => u.nickname).join('\n'));
+        }
+
+        window.addEventListener('beforeunload', async () => {
+            const users = await supabaseRequest('online_users') || [];
+            const me = users.find(u => u.nickname === myNickname);
+            if (me) {
+                await supabaseRequest('online_users', 'DELETE', null, me.id).catch(() => {});
+            }
+        });
+
+        // ===== 账号系统 =====
+        function showLogin() {
+            document.getElementById('authModal').style.display = 'flex';
+            document.getElementById('authTitle').textContent = '🔐 登录';
+            document.getElementById('authForm').innerHTML = `
+                <label>昵称</label>
+                <input id="loginNick" placeholder="你的昵称" />
+                <label>密码</label>
+                <input id="loginPwd" type="password" placeholder="密码" />
+                <div class="actions">
+                    <button class="btn-primary" onclick="doLogin()">登录</button>
+                    <button onclick="showRegister()">注册</button>
+                    <button onclick="closeAuth()">取消</button>
+                </div>
+            `;
+        }
+
+        function showRegister() {
+            document.getElementById('authTitle').textContent = '📝 注册';
+            document.getElementById('authForm').innerHTML = `
+                <label>昵称</label>
+                <input id="regNick" placeholder="设置昵称" />
+                <label>密码</label>
+                <input id="regPwd" type="password" placeholder="设置密码" />
+                <label>头像（Emoji）</label>
+                <input id="regAvatar" placeholder="😊" value="😊" />
+                <div class="actions">
+                    <button class="btn-primary" onclick="doRegister()">注册</button>
+                    <button onclick="showLogin()">返回登录</button>
+                    <button onclick="closeAuth()">取消</button>
+                </div>
+            `;
+        }
+
+        function closeAuth() {
+            document.getElementById('authModal').style.display = 'none';
+        }
+
+        async function doLogin() {
+            const nickname = document.getElementById('loginNick').value.trim();
+            const password = document.getElementById('loginPwd').value.trim();
+            if (!nickname || !password) return alert('请填写昵称和密码');
+            
+            const users = await supabaseRequest('users') || [];
+            const user = users.find(u => u.nickname === nickname && u.password === password);
+            if (!user) return alert('昵称或密码错误');
+            
+            localStorage.setItem('userId', user.id);
+            localStorage.setItem('myNickname', user.nickname);
+            localStorage.setItem('myAvatar', user.avatar || '😊');
+            closeAuth();
+            alert('登录成功！');
+            renderNav();
+            switchModule('profile');
+        }
+
+        async function doRegister() {
+            const nickname = document.getElementById('regNick').value.trim();
+            const password = document.getElementById('regPwd').value.trim();
+            const avatar = document.getElementById('regAvatar').value.trim() || '😊';
+            if (!nickname || !password) return alert('请填写昵称和密码');
+            
+            const users = await supabaseRequest('users') || [];
+            if (users.find(u => u.nickname === nickname)) return alert('昵称已存在');
+            
+            await supabaseRequest('users', 'POST', { nickname, password, avatar, is_public: true });
+            alert('注册成功！请登录');
+            showLogin();
+        }
+
+        function logoutUser() {
+            localStorage.removeItem('userId');
+            localStorage.removeItem('myNickname');
+            localStorage.removeItem('myAvatar');
+            alert('已退出登录');
+            renderNav();
+            switchModule('book');
+        }
+
+        async function loadProfileInfo() {
+            const userId = localStorage.getItem('userId');
+            if (!userId) return;
+            const users = await supabaseRequest('users') || [];
+            const user = users.find(u => u.id == userId);
+            if (!user) return;
+            
+            document.getElementById('profileInfo').innerHTML = `
+                <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;">
+                    <div style="font-size:3em;">${escapeHtml(user.avatar || '😊')}</div>
+                    <div>
+                        <h2>${escapeHtml(user.nickname)}</h2>
+                        <label style="margin-top:8px;">
+                            <input type="checkbox" ${user.is_public ? 'checked' : ''} onchange="togglePublic(${user.id}, this.checked)" />
+                            公开个人中心
+                        </label>
+                    </div>
+                </div>
+                <div class="editor-box">
+                    <label>修改昵称</label>
+                    <input id="newNick" value="${escapeHtml(user.nickname)}" />
+                    <label>修改头像（Emoji）</label>
+                    <input id="newAvatar" value="${escapeHtml(user.avatar || '😊')}" />
+                    <button class="btn-primary" onclick="updateProfile(${user.id})">保存修改</button>
+                </div>
+            `;
+        }
+
+        async function togglePublic(userId, isPublic) {
+            await supabaseRequest('users', 'PATCH', { is_public: isPublic }, userId);
+            alert('设置已保存');
+        }
+
+        async function updateProfile(userId) {
+            const newNick = document.getElementById('newNick').value.trim();
+            const newAvatar = document.getElementById('newAvatar').value.trim();
+            if (!newNick) return alert('昵称不能为空');
+            
+            await supabaseRequest('users', 'PATCH', { nickname: newNick, avatar: newAvatar }, userId);
+            localStorage.setItem('myNickname', newNick);
+            localStorage.setItem('myAvatar', newAvatar);
+            alert('修改成功！');
+            loadProfileInfo();
+        }
+
+        async function loadProfileData() {
+            const userId = localStorage.getItem('userId');
+            if (!userId) return;
+            
+            const users = await supabaseRequest('users') || [];
+            const user = users.find(u => u.id == userId);
+            if (!user) return;
+            
+            const nickname = user.nickname;
+            
+            // 获取用户的帖子、小说、投稿
+            const [posts, novels, submissions] = await Promise.all([
+                supabaseRequest('posts'),
+                supabaseRequest('novels'),
+                supabaseRequest('submissions')
+            ]);
+            
+            const myPosts = (posts || []).filter(p => p.nickname === nickname);
+            const myNovels = (novels || []).filter(n => n.author === nickname);
+            const mySubs = (submissions || []).filter(s => s.nickname === nickname);
+            
+            document.getElementById('profileData').innerHTML = `
+                <h3 style="margin-top:20px;">📸 我的说说 (${myPosts.length})</h3>
+                ${myPosts.length > 0 ? myPosts.map(p => `
+                    <div class="post-card">
+                        <div>${escapeHtml(p.content || '')}</div>
+                        <div class="sugg-date">🕐 ${formatTime(p.created_at)}</div>
+                    </div>
+                `).join('') : '<div class="empty">暂无说说</div>'}
+                
+                <h3 style="margin-top:20px;">📖 我的小说 (${myNovels.length})</h3>
+                ${myNovels.length > 0 ? myNovels.map(n => `
+                    <div class="novel-card">
+                        <div class="novel-info">
+                            <h3>${escapeHtml(n.title)}</h3>
+                            <div>👍 ${n.likes || 0}</div>
+                        </div>
+                    </div>
+                `).join('') : '<div class="empty">暂无小说</div>'}
+                
+                <h3 style="margin-top:20px;">✍️ 我的投稿 (${mySubs.length})</h3>
+                ${mySubs.length > 0 ? mySubs.map(s => `
+                    <div class="item-row">
+                        <div>${escapeHtml(JSON.parse(s.content).title || '')}</div>
+                        <span class="badge ${s.status}" style="padding:2px 8px;border-radius:10px;font-size:0.75em;background:#fff3e0;color:#e65100;">${s.status}</span>
+                    </div>
+                `).join('') : '<div class="empty">暂无投稿</div>'}
+            `;
         }
 
         // ===== 模块注册 =====
@@ -547,7 +806,7 @@
             }
         });
 
-        // ===== 小说模块 =====
+        // ===== 小说模块（含搜索+热门排序+删除）=====
         registerModule({
             id: 'novel', name: '小说', icon: '📖',
             render(data) {
@@ -555,32 +814,57 @@
                 return `
                     <div class="generic-page">
                         <h1>📖 小说天地</h1>
-                        <button class="btn-primary" onclick="showNovelForm()">📝 发布小说</button>
+                        <input class="search-box" placeholder="🔍 搜索小说标题..." oninput="searchNovels(this.value)" />
+                        <div style="margin-bottom:12px;">
+                            <button class="btn-primary" onclick="showNovelForm()">📝 发布小说</button>
+                            <button class="btn-primary" style="margin-left:8px;" onclick="sortNovelsByLikes()">🔥 按热度排序</button>
+                        </div>
                         <div id="novelForm" style="display:none; margin:20px 0;"></div>
                         <div id="novelList">
-                            ${novels.map(n => `
-                                <div class="novel-card" id="novel-${n.id}">
-                                    ${n.cover ? `<img class="novel-cover" src="${n.cover}" onclick="openOverlay('${n.cover}')" />` : ''}
-                                    <div class="novel-info">
-                                        <h3 class="novel-title">${escapeHtml(n.title || '无题')}</h3>
-                                        <div class="novel-meta">
-                                            <span>✍️ ${escapeHtml(n.author || '匿名')}</span>
-                                            <span>👍 ${n.likes || 0}</span>
-                                        </div>
-                                        <div class="novel-intro">${escapeHtml(n.intro || '暂无简介')}</div>
-                                        <div class="novel-actions">
-                                            <button class="like-btn" onclick="likeNovel(${n.id})">👍 点赞</button>
-                                            <button onclick="toggleNovelBody(${n.id})">📖 阅读</button>
-                                        </div>
-                                        <div class="novel-body" id="novelBody-${n.id}">${formatText(n.body || '')}</div>
-                                    </div>
-                                </div>
-                            `).join('') || '<div class="empty">📚 暂无小说，快来发布吧！</div>'}
+                            ${novels.map(n => renderNovelCard(n)).join('') || '<div class="empty">📚 暂无小说，快来发布吧！</div>'}
                         </div>
                     </div>
                 `;
             }
         });
+
+        let allNovels = [];
+        
+        function searchNovels(keyword) {
+            const filtered = allNovels.filter(n => 
+                n.title.includes(keyword) || n.intro.includes(keyword)
+            );
+            document.getElementById('novelList').innerHTML = filtered.map(n => renderNovelCard(n)).join('') || '<div class="empty">未找到相关小说</div>';
+        }
+        
+        function sortNovelsByLikes() {
+            allNovels.sort((a, b) => (b.likes || 0) - (a.likes || 0));
+            document.getElementById('novelList').innerHTML = allNovels.map(n => renderNovelCard(n)).join('');
+        }
+        
+        function renderNovelCard(n) {
+            return `
+                <div class="novel-card" id="novel-${n.id}">
+                    ${n.cover ? `<img class="novel-cover" src="${n.cover}" onclick="openOverlay('${n.cover}')" />` : ''}
+                    <div class="novel-info">
+                        <h3 class="novel-title">${escapeHtml(n.title || '无题')}</h3>
+                        <div class="novel-meta">
+                            <span>✍️ ${escapeHtml(n.author || '匿名')}</span>
+                            <span>👍 ${n.likes || 0}</span>
+                        </div>
+                        <div class="novel-intro">${escapeHtml(n.intro || '暂无简介')}</div>
+                        <div class="novel-actions">
+                            <button class="like-btn" onclick="likeNovel(${n.id})">👍 点赞</button>
+                            <button onclick="toggleNovelBody(${n.id})">📖 阅读</button>
+                            ${myNickname && n.author === myNickname ? `
+                                <button class="delete-btn" onclick="deleteNovel(${n.id})">🗑️ 删除</button>
+                            ` : ''}
+                        </div>
+                        <div class="novel-body" id="novelBody-${n.id}">${formatText(n.body || '')}</div>
+                    </div>
+                </div>
+            `;
+        }
 
         function showNovelForm() {
             const el = document.getElementById('novelForm');
@@ -623,6 +907,13 @@
                 const btn = document.querySelector(`#novel-${id} .like-btn`);
                 if (btn) btn.innerHTML = `👍 ${novel.likes + 1}`;
             }
+        }
+
+        async function deleteNovel(id) {
+            if (!confirm('确认删除？')) return;
+            await supabaseRequest('novels', 'DELETE', null, id);
+            alert('删除成功！');
+            location.reload();
         }
 
         function toggleNovelBody(id) {
@@ -728,14 +1019,18 @@
             await loadDiscussions();
         }
 
-        // ===== 日常分享板块（小红书风格·支持本地图片+视频上传）=====
+        // ===== 日常分享板块（含搜索+热门+编辑删除）=====
         registerModule({
             id: 'share', name: '日常分享', icon: '📸',
             render() {
                 return `
                     <div class="generic-page">
                         <h1>📸 日常分享</h1>
-                        <button class="btn-primary" onclick="showPostForm()">📝 发帖</button>
+                        <input class="search-box" placeholder="🔍 搜索帖子内容..." oninput="searchPosts(this.value)" />
+                        <div style="margin-bottom:12px;">
+                            <button class="btn-primary" onclick="showPostForm()">📝 发帖</button>
+                            <button class="btn-primary" style="margin-left:8px;" onclick="sortPostsByLikes()">🔥 按热度排序</button>
+                        </div>
                         <div id="postForm" style="display:none; margin:20px 0;"></div>
                         <div id="postList"></div>
                     </div>
@@ -745,6 +1040,21 @@
                 await loadPosts();
             }
         });
+
+        let allPosts = [];
+
+        function searchPosts(keyword) {
+            const filtered = allPosts.filter(p => 
+                (p.content && p.content.includes(keyword)) || 
+                (p.nickname && p.nickname.includes(keyword))
+            );
+            renderPostList(filtered);
+        }
+
+        function sortPostsByLikes() {
+            allPosts.sort((a, b) => (b.likes || 0) - (a.likes || 0));
+            renderPostList(allPosts);
+        }
 
         function showPostForm() {
             const el = document.getElementById('postForm');
@@ -774,7 +1084,6 @@
                 </div>
             `;
             
-            // 图片预览
             document.getElementById('postImageFiles').addEventListener('change', function() {
                 const preview = document.getElementById('imagePreview');
                 preview.innerHTML = '';
@@ -787,7 +1096,6 @@
                 });
             });
             
-            // 视频预览
             document.getElementById('postVideoFile').addEventListener('change', function() {
                 const preview = document.getElementById('videoPreview');
                 preview.innerHTML = '';
@@ -806,7 +1114,6 @@
             const nickname = document.getElementById('postNick').value.trim() || '匿名';
             const content = document.getElementById('postContent').value.trim();
             
-            // 读取图片文件并转成 Base64
             const fileInput = document.getElementById('postImageFiles');
             const imagePromises = Array.from(fileInput.files).map(file => {
                 return new Promise((resolve) => {
@@ -817,7 +1124,6 @@
             });
             const images = await Promise.all(imagePromises);
             
-            // 读取视频文件并转成 Base64
             let video_url = null;
             const videoInput = document.getElementById('postVideoFile');
             if (videoInput.files.length > 0) {
@@ -839,7 +1145,12 @@
         async function loadPosts() {
             const posts = await supabaseRequest('posts') || [];
             const allComments = await supabaseRequest('comments') || [];
-            
+            allPosts = posts;
+            renderPostList(posts, allComments);
+        }
+
+        function renderPostList(posts, allComments) {
+            if (!allComments) allComments = [];
             document.getElementById('postList').innerHTML = (posts || []).map(p => {
                 const postComments = allComments.filter(c => c.post_id === p.id);
                 return `
@@ -864,6 +1175,9 @@
                         <div class="post-actions">
                             <button class="like-btn" onclick="likePost(${p.id})">❤️ 点赞 (${p.likes || 0})</button>
                             <button onclick="toggleComments(${p.id})">💬 评论 (${postComments.length})</button>
+                            ${myNickname && p.nickname === myNickname ? `
+                                <button class="delete-btn" onclick="deletePost(${p.id})">🗑️ 删除</button>
+                            ` : ''}
                         </div>
                         <div class="post-comments" id="comments-${p.id}" style="display:none;">
                             <div id="commentList-${p.id}">
@@ -895,6 +1209,13 @@
             }
         }
 
+        async function deletePost(id) {
+            if (!confirm('确认删除？')) return;
+            await supabaseRequest('posts', 'DELETE', null, id);
+            alert('删除成功！');
+            await loadPosts();
+        }
+
         function toggleComments(id) {
             const el = document.getElementById(`comments-${id}`);
             if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
@@ -909,8 +1230,34 @@
             await loadPosts();
         }
 
+        // ===== 个人中心模块 =====
+        registerModule({
+            id: 'profile', name: '个人中心', icon: '👤',
+            render() {
+                const userId = localStorage.getItem('userId');
+                if (!userId) return '<div class="empty">请先登录</div>';
+                
+                return `
+                    <div class="generic-page">
+                        <h1>👤 个人中心</h1>
+                        <div id="profileInfo"></div>
+                        <div style="margin-top:20px;">
+                            <button class="btn-primary" onclick="loadProfileData()">📂 我的投稿</button>
+                            <button class="btn-primary" style="margin-left:8px;" onclick="logoutUser()">🚪 退出登录</button>
+                        </div>
+                        <div id="profileData"></div>
+                    </div>
+                `;
+            },
+            async init() {
+                await loadProfileInfo();
+                await loadProfileData();
+            }
+        });
+
         // ===== 导航和路由 =====
         async function renderNav() {
+            const isLoggedIn = localStorage.getItem('userId');
             document.getElementById('mainNav').innerHTML = `
                 <div class="nav-item active" onclick="switchModule('book')">📖 历史书</div>
                 <div class="nav-item" onclick="switchModule('notice')">📋 公告栏</div>
@@ -918,6 +1265,11 @@
                 <div class="nav-item" onclick="switchModule('submit')">✍️ 投稿</div>
                 <div class="nav-item" onclick="switchModule('discuss')">💬 讨论</div>
                 <div class="nav-item" onclick="switchModule('share')">📸 日常</div>
+                ${isLoggedIn ? `
+                    <div class="nav-item" onclick="switchModule('profile')">👤 个人中心</div>
+                ` : `
+                    <div class="nav-item" onclick="showLogin()">🔐 登录</div>
+                `}
             `;
         }
 
@@ -936,6 +1288,8 @@
                 supabaseRequest('discussions'),
                 supabaseRequest('posts')
             ]);
+            allNovels = novels || [];
+            allPosts = posts || [];
             const data = { 
                 chapters: chapters || [], 
                 notices: notices || [], 
@@ -956,6 +1310,7 @@
         });
 
         async function init() {
+            await registerOnline();  // 注册在线状态
             await renderNav();
             const hash = location.hash.slice(1);
             if (hash && modules[hash]) loadModule(hash);
