@@ -14,6 +14,26 @@
             -webkit-font-smoothing: antialiased;
         }
         
+        /* 昵称弹窗 */
+        #nicknameModal {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 10000;
+            display: flex; justify-content: center; align-items: center;
+        }
+        #nicknameModal > div {
+            background: #fff; border-radius: 16px; padding: 40px; width: 90%; max-width: 400px;
+            text-align: center; box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+        }
+        #nicknameModal h2 { margin-bottom: 20px; color: #3e2723; }
+        #nicknameModal input {
+            width: 100%; padding: 14px; border: 2px solid #ddd; border-radius: 10px;
+            font-size: 1.1em; text-align: center; margin-bottom: 20px;
+        }
+        #nicknameModal button {
+            background: #8d6e63; color: #fff; border: none; padding: 14px 40px;
+            border-radius: 10px; font-size: 1.1em; cursor: pointer; font-weight: 600;
+        }
+        #nicknameModal button:hover { background: #6d4c41; }
+        
         /* 头部导航 */
         .site-header { 
             background: #3e2723; 
@@ -390,9 +410,6 @@
             padding: 4px 10px !important;
         }
         
-        /* 登录弹窗（已删除账号系统，保留空壳） */
-        #authModal { display:none; }
-        
         /* ===== 手机端适配 ===== */
         @media (max-width: 768px) {
             .header-inner { padding: 10px 12px; }
@@ -443,6 +460,17 @@
     </style>
 </head>
 <body>
+    <!-- 昵称弹窗（必须输入才能进入） -->
+    <div id="nicknameModal">
+        <div>
+            <h2>👋 欢迎来到280班网站</h2>
+            <p style="color:#666;margin-bottom:20px;">请输入你的昵称，进入网站</p>
+            <input id="nicknameInput" placeholder="你的昵称" maxlength="20" />
+            <br />
+            <button onclick="confirmNickname()">进入网站</button>
+        </div>
+    </div>
+
     <header class="site-header">
         <div class="header-inner">
             <h1 class="logo">🏫 280班</h1>
@@ -451,6 +479,7 @@
                 <span class="online-dot"></span>
                 <span id="onlineCount">1</span> 人在线
             </div>
+            <div id="currentUser" style="color:rgba(255,255,255,0.9);font-size:0.9em;margin-left:8px;"></div>
             <a href="admin.html" class="admin-link">管理</a>
         </div>
     </header>
@@ -462,6 +491,38 @@
     </div>
 
     <script>
+        // ===== 全局昵称 =====
+        let myNickname = localStorage.getItem('myNickname') || '';
+        
+        // 如果没昵称，显示弹窗，隐藏主内容
+        if (!myNickname) {
+            document.querySelector('.site-header').style.display = 'none';
+            document.querySelector('.module-content').style.display = 'none';
+        } else {
+            document.getElementById('nicknameModal').style.display = 'none';
+        }
+        
+        function confirmNickname() {
+            const nick = document.getElementById('nicknameInput').value.trim();
+            if (!nick) return alert('请输入昵称');
+            if (nick.length < 2) return alert('昵称至少2个字符');
+            myNickname = nick;
+            localStorage.setItem('myNickname', myNickname);
+            
+            // 显示主内容
+            document.getElementById('nicknameModal').style.display = 'none';
+            document.querySelector('.site-header').style.display = 'flex';
+            document.querySelector('.module-content').style.display = 'block';
+            
+            // 初始化
+            init();
+        }
+        
+        // 回车确认
+        document.getElementById('nicknameInput').addEventListener('keypress', e => {
+            if (e.key === 'Enter') confirmNickname();
+        });
+        
         // ===== Supabase 配置 =====
         const SUPABASE_URL = 'https://gbktpjnitqpwomcprrol.supabase.co';   // ← 你的 URL
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdia3Rwam5pdHFwd29tY3Bycm9sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTk2NDIsImV4cCI6MjA5ODk5NTY0Mn0.TIp9NAdDRZrI16Jq_no7Ga9EpX7ooc6b5Ck7r-sNqww';                // ← 你的 anon key
@@ -516,14 +577,7 @@
         }
         
         // ===== 在线用户功能 =====
-        let myNickname = localStorage.getItem('myNickname') || '';
-
         async function registerOnline() {
-            if (!myNickname) {
-                myNickname = prompt('请输入你的昵称（用于显示在线状态）：') || '匿名';
-                localStorage.setItem('myNickname', myNickname);
-            }
-            
             try {
                 const users = Array.isArray(await supabaseRequest('online_users')) ? await supabaseRequest('online_users') : [];
                 const me = users.find(u => u.nickname === myNickname);
@@ -680,7 +734,9 @@
                         <div class="novel-actions">
                             <button class="like-btn" onclick="likeNovel(${n.id})">👍 点赞</button>
                             <button onclick="toggleNovelBody(${n.id})">📖 阅读</button>
-                            <button class="delete-btn" onclick="deleteNovel(${n.id})">🗑️ 删除</button>
+                            ${myNickname && n.author === myNickname ? `
+                                <button class="delete-btn" onclick="deleteNovel(${n.id})">🗑️ 删除</button>
+                            ` : ''}
                         </div>
                         <div class="novel-body" id="novelBody-${n.id}">${formatText(n.body || '')}</div>
                     </div>
@@ -696,8 +752,6 @@
                 <div class="editor-box">
                     <label>📝 小说标题</label>
                     <input id="novelTitle" placeholder="输入标题" />
-                    <label>✍️ 作者昵称</label>
-                    <input id="novelAuthor" placeholder="你的昵称" />
                     <label>📄 小说简介</label>
                     <textarea id="novelIntro" placeholder="一句话介绍..."></textarea>
                     <label>📖 小说正文</label>
@@ -712,11 +766,10 @@
 
         async function publishNovel() {
             const title = document.getElementById('novelTitle').value.trim();
-            const author = document.getElementById('novelAuthor').value.trim() || '匿名';
             const intro = document.getElementById('novelIntro').value.trim();
             const body = document.getElementById('novelBodyInput').value.trim();
             if (!title || !body) return alert('请填写标题和正文');
-            await supabaseRequest('novels', 'POST', { title, author, intro, body, cover: '', likes: 0, comments: [] });
+            await supabaseRequest('novels', 'POST', { title, author: myNickname, intro, body, cover: '', likes: 0, comments: [] });
             alert('🎉 小说发布成功！');
             location.reload();
         }
@@ -752,8 +805,6 @@
                         <h1>✍️ 创作投稿</h1>
                         <p style="color:#666;margin-bottom:20px;">📝 投稿新章节，审核通过后会发布到历史书。</p>
                         <div class="editor-box">
-                            <label>👤 你的昵称</label>
-                            <input id="submitNick" placeholder="匿名" />
                             <label>📖 章节标题</label>
                             <input id="submitTitle" placeholder="第X章 标题" />
                             <label>📋 课前导言</label>
@@ -774,7 +825,6 @@
         });
 
         async function doSubmit() {
-            const nickname = document.getElementById('submitNick').value.trim() || '匿名';
             const title = document.getElementById('submitTitle').value.trim();
             const preface = document.getElementById('submitPreface').value.trim();
             const body = document.getElementById('submitBody').value.trim();
@@ -784,7 +834,7 @@
             if (!title || !body) return alert('请填写章节标题和正文');
             
             await supabaseRequest('submissions', 'POST', {
-                nickname,
+                nickname: myNickname,
                 content: JSON.stringify({ title, preface, body, exercises, extension, images: [] }),
                 status: 'pending'
             });
@@ -801,8 +851,6 @@
                     <div class="generic-page">
                         <h1>💬 班级讨论</h1>
                         <div class="editor-box" style="margin-bottom:20px;">
-                            <label>👤 你的昵称</label>
-                            <input id="discNick" placeholder="匿名" />
                             <label>💬 说点什么...</label>
                             <textarea id="discContent" class="big" placeholder="分享你的想法..."></textarea>
                             <div class="actions">
@@ -832,10 +880,9 @@
         }
 
         async function postDiscussion() {
-            const nickname = document.getElementById('discNick').value.trim() || '匿名';
             const content = document.getElementById('discContent').value.trim();
             if (!content) return alert('说点什么吧！');
-            await supabaseRequest('discussions', 'POST', { nickname, content });
+            await supabaseRequest('discussions', 'POST', { nickname: myNickname, content });
             alert('🎉 发布成功！');
             document.getElementById('discContent').value = '';
             await loadDiscussions();
@@ -884,8 +931,6 @@
             el.style.display = 'block';
             el.innerHTML = `
                 <div class="editor-box">
-                    <label>👤 你的昵称</label>
-                    <input id="postNick" placeholder="匿名" />
                     <label>💬 说点什么...</label>
                     <textarea id="postContent" class="big" placeholder="分享你的日常..."></textarea>
                     
@@ -933,7 +978,6 @@
         }
 
         async function publishPost() {
-            const nickname = document.getElementById('postNick').value.trim() || '匿名';
             const content = document.getElementById('postContent').value.trim();
             
             const fileInput = document.getElementById('postImageFiles');
@@ -958,7 +1002,7 @@
             
             if (!content && images.length === 0 && !video_url) return alert('写点内容或上传图片/视频吧！');
             
-            await supabaseRequest('posts', 'POST', { nickname, content, images, video_url, likes: 0 });
+            await supabaseRequest('posts', 'POST', { nickname: myNickname, content, images, video_url, likes: 0 });
             alert('🎉 发布成功！');
             document.getElementById('postForm').style.display = 'none';
             await loadPosts();
@@ -997,7 +1041,9 @@
                         <div class="post-actions">
                             <button class="like-btn" onclick="likePost(${p.id})">❤️ 点赞 (${p.likes || 0})</button>
                             <button onclick="toggleComments(${p.id})">💬 评论 (${postComments.length})</button>
-                            <button class="delete-btn" onclick="deletePost(${p.id})">🗑️ 删除</button>
+                            ${myNickname && p.nickname === myNickname ? `
+                                <button class="delete-btn" onclick="deletePost(${p.id})">🗑️ 删除</button>
+                            ` : ''}
                         </div>
                         <div class="post-comments" id="comments-${p.id}" style="display:none;">
                             <div id="commentList-${p.id}">
@@ -1010,8 +1056,8 @@
                                 `).join('')}
                             </div>
                             <div style="margin-top:10px;">
-                                <input id="commentNick-${p.id}" placeholder="你的昵称" style="width:48%;padding:8px;" />
-                                <input id="commentContent-${p.id}" placeholder="写评论..." style="width:48%;padding:8px;" />
+                                <input id="commentNick-${p.id}" value="${myNickname}" type="hidden" />
+                                <input id="commentContent-${p.id}" placeholder="写评论..." style="width:70%;padding:8px;" />
                                 <button class="btn-primary" style="padding:8px 16px;margin-top:6px;" onclick="addComment(${p.id})">发送</button>
                             </div>
                         </div>
@@ -1042,16 +1088,16 @@
         }
 
         async function addComment(postId) {
-            const nickname = document.getElementById(`commentNick-${postId}`).value.trim() || '匿名';
             const content = document.getElementById(`commentContent-${postId}`).value.trim();
             if (!content) return alert('写点评论吧！');
-            await supabaseRequest('comments', 'POST', { post_id: postId, nickname, content });
+            await supabaseRequest('comments', 'POST', { post_id: postId, nickname: myNickname, content });
             alert('💬 评论成功！');
             await loadPosts();
         }
 
         // ===== 导航和路由 =====
         function renderNav() {
+            document.getElementById('currentUser').textContent = `👤 ${myNickname}`;
             document.getElementById('mainNav').innerHTML = `
                 <div class="nav-item active" onclick="switchModule('book')">📖 历史书</div>
                 <div class="nav-item" onclick="switchModule('notice')">📋 公告栏</div>
@@ -1132,10 +1178,12 @@
             }
         }
 
-        window.addEventListener('DOMContentLoaded', function() {
-            console.log('页面加载完成，开始初始化...');
-            init();
-        });
+        // 如果已经有昵称，直接初始化
+        if (myNickname) {
+            window.addEventListener('DOMContentLoaded', function() {
+                init();
+            });
+        }
     </script>
 </body>
 </html>
