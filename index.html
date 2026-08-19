@@ -574,13 +574,24 @@
             return text.split('\n').filter(l => l.trim()).map(l => `<p>${escapeHtml(l)}</p>`).join('');
         }
         function escapeHtml(str) {
-            if (!str) return '';
-            return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-        }
-        function formatTime(isoString) {
-            if (!isoString) return '';
-            return isoString.replace('T', ' ').slice(0, 16);
-        }
+    if (str === null || str === undefined) return '';
+    const s = String(str);
+    return s.replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+}
+function formatTime(timeStr){
+    if(!timeStr) return '';
+    const d = new Date(timeStr);
+    if(isNaN(d.getTime())) return '';
+    const y = d.getFullYear();
+    const m = String(d.getMonth()+1).padStart(2,'0');
+    const day = String(d.getDate()).padStart(2,'0');
+    const h = String(d.getHours()).padStart(2,'0');
+    const mi = String(d.getMinutes()).padStart(2,'0');
+    return `${y}-${m}-${day} ${h}:${mi}`;
+}
         // 生成游客唯一ID，解决多名游客昵称冲突覆盖在线状态
         function getGuestId(){
             let gid = localStorage.getItem("guest_id");
@@ -591,85 +602,93 @@
             return gid;
         }
         // ===== 在线用户功能 =====
-        async function registerOnline() {
-            // 先清除旧定时器
-            if(onlineTimer) clearInterval(onlineTimer);
+async function registerOnline() {
+    // 先清除旧定时器
+    if(onlineTimer) clearInterval(onlineTimer);
+    try {
+        const expireMs = 90 * 1000;
+        const now = Date.now();
+        const allOnlineRaw = await supabaseRequest('online_users');
+        const onlineList = Array.isArray(allOnlineRaw) ? allOnlineRaw : [];
+        // 清理超时用户
+        for (const item of onlineList) {
+            const activeTime = new Date(item.last_active).getTime();
+            if (now - activeTime > expireMs) {
+                await supabaseRequest('online_users', 'DELETE', null, item.id).catch(() => { });
+            }
+        }
+        const freshList = Array.isArray(await supabaseRequest('online_users')) ? await supabaseRequest('online_users') : [];
+        let currentNick, uniqueId;
+        if(loginUser){
+            currentNick = loginUser.nickname;
+            uniqueId = "user_" + loginUser.id;
+        }else{
+            currentNick = "游客";
+            uniqueId = getGuestId();
+        }
+        const me = freshList.find(u => u.unique_id === uniqueId);
+        if (me) {
+            await supabaseRequest('online_users', 'PATCH', {
+                last_active: new Date().toISOString(),
+                nickname: currentNick
+            }, me.id).catch(() => { });
+        } else {    
+             await supabaseRequest('online_users', 'POST', {
+                unique_id: uniqueId,
+                nickname: currentNick,
+                last_active: new Date().toISOString()
+            }).catch(() => { });
+        }
+
+        onlineTimer = setInterval(async () => {
             try {
-                const expireMs = 90 * 1000;
-                const now = Date.now();
-                const allOnlineRaw = await supabaseRequest('online_users');
-                const onlineList = Array.isArray(allOnlineRaw) ? allOnlineRaw : [];
-                // 清理超时用户
-                for (const item of onlineList) {
-                    const activeTime = new Date(item.last_active).getTime();
-                    if (now - activeTime > expireMs) {
+                const tickNow = Date.now();
+                // 只请求1次，不要重复多次请求接口！！
+                let tickListRaw = await supabaseRequest('online_users');
+                let tickList = Array.isArray(tickListRaw) ? tickListRaw : [];
+
+                for (const item of tickList) {
+                    const t = new Date(item.last_active).getTime();
+                    if (tickNow - t > expireMs) {
                         await supabaseRequest('online_users', 'DELETE', null, item.id).catch(() => { });
                     }
                 }
-                const freshList = Array.isArray(await supabaseRequest('online_users')) ? await supabaseRequest('online_users') : [];
-                let currentNick, uniqueId;
+                // 删除重复请求，直接复用上面数据，不再重新拉一遍
+                let selfNick, selfUid;
                 if(loginUser){
-                    currentNick = loginUser.nickname;
-                    uniqueId = "user_" + loginUser.id;
+                    selfNick = loginUser.nickname;
+                    selfUid = "user_" + loginUser.id;
                 }else{
-                    currentNick = "游客";
-                    uniqueId = getGuestId();
+                    selfNick = "游客";
+                    selfUid = getGuestId();
                 }
-                const me = freshList.find(u => u.unique_id === uniqueId);
-                if (me) {
+                const self = tickList.find(u => u.unique_id === selfUid);
+                if (self) {
                     await supabaseRequest('online_users', 'PATCH', {
                         last_active: new Date().toISOString(),
-                        nickname: currentNick
-                    }, me.id).catch(() => { });
-                } else {
-                    await supabaseRequest('online_users', 'POST', {
-                        unique_id: uniqueId,
-                        nickname: currentNick,
-                        last_active: new Date().toISOString()
-                    }).catch(() => { });
+                        nickname: selfNick
+                    }, self.id).catch(() => { });
                 }
-                onlineTimer = setInterval(async () => {
-                    const tickNow = Date.now();
-                    let tickList = Array.isArray(await supabaseRequest('online_users')) ? await supabaseRequest('online_users') : [];
-                    for (const item of tickList) {
-                        const t = new Date(item.last_active).getTime();
-                        if (tickNow - t > expireMs) {
-                            await supabaseRequest('online_users', 'DELETE', null, item.id).catch(() => { });
-                        }
-                    }
-                    tickList = Array.isArray(await supabaseRequest('online_users')) ? await supabaseRequest('online_users') : [];
-                    let selfNick, selfUid;
-                    if(loginUser){
-                        selfNick = loginUser.nickname;
-                        selfUid = "user_" + loginUser.id;
-                    }else{
-                        selfNick = "游客";
-                        selfUid = getGuestId();
-                    }
-                    const self = tickList.find(u => u.unique_id === selfUid);
-                    if (self) {
-                        await supabaseRequest('online_users', 'PATCH', {
-                            last_active: new Date().toISOString(),
-                            nickname: selfNick
-                        }, self.id).catch(() => { });
-                    }
-                    document.getElementById('onlineCount').textContent = tickList.length;
-                }, 30000);
-                document.getElementById('onlineCount').textContent = freshList.length;
-            } catch (e) {
-                console.error('在线用户异常', e);
-                document.getElementById('onlineCount').textContent = '?';
+                document.getElementById('onlineCount').textContent = tickList.length;
+            }catch(tickErr){
+                console.warn("心跳循环出错",tickErr);
             }
-        }
-        async function showOnlineUsers() {
-            const expireMs = 90 * 1000;
-            const now = Date.now();
-            const raw = await supabaseRequest('online_users');
-            const users = Array.isArray(raw) ? raw : [];
-            const active = users.filter(item => now - new Date(item.last_active).getTime() < expireMs);
-            if (active.length === 0) return alert('暂无在线用户');
-            alert('当前在线：\n' + active.map(u => u.nickname).join('\n'));
-        }
+        }, 30000);
+        document.getElementById('onlineCount').textContent = freshList.length;
+    } catch (e) {
+        console.error('在线用户异常', e);
+        document.getElementById('onlineCount').textContent = '?';
+    }
+}
+async function showOnlineUsers() {
+    const expireMs = 90 * 1000;
+    const now = Date.now();
+    const raw = await supabaseRequest('online_users');
+    const users = Array.isArray(raw) ? raw : [];
+    const active = users.filter(item => now - new Date(item.last_active).getTime() < expireMs);
+    if (active.length === 0) return alert('暂无在线用户');
+    alert('当前在线：\n' + active.map(u => u.nickname).join('\n'));
+}
         // ===== 模块系统 =====
         const modules = {};
         function registerModule(mod) {
@@ -1126,11 +1145,11 @@
         }
         // ========== 页面初始化入口 ==========
         async function initApp() {
-            refreshUserStatus();
-            renderNav();
-            await registerOnline();
-            openModule('book');
-        }
+    refreshUserStatus();
+    renderNav();
+    // await registerOnline(); //临时关闭在线用户，解决400报错，后续表结构修好再取消注释
+    openModule('book');
+}
         // 页面加载完成启动
         window.addEventListener('DOMContentLoaded', initApp);
 </script>
