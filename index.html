@@ -103,6 +103,19 @@
             background:rgba(255,255,255,0.15);
             color:#fff;
         }
+        /*导航栏用户头像*/
+        .nav-avatar{
+            width:28px;
+            height:28px;
+            border-radius:50%;
+            object-fit:cover;
+            flex-shrink:0;
+        }
+        .user-bar-logged{
+            display:flex;
+            align-items:center;
+            gap:8px;
+        }
         
         /* 主内容区 */
         .module-content { 
@@ -490,8 +503,15 @@
                     <a href="register.html">注册</a>
                 `;
             }else{
+                // 如果用户没有设置头像，使用默认占位图标
+                const avatarSrc = loginUser.avatar ? escapeHtml(loginUser.avatar) : "";
                 bar.innerHTML = `
-                    <span>👤 ${escapeHtml(loginUser.nickname)}</span>
+                    <div class="user-bar-logged">
+    <a href="profile.html" style="display:flex;align-items:center;gap:6px;color:unset;text-decoration:none;">
+        ${avatarSrc ? `<img class="nav-avatar" src="${avatarSrc}" alt="头像">` : "👤"}
+        <span>${escapeHtml(loginUser.nickname)}</span>
+    </a>
+</div>
                     <a href="profile.html">个人主页</a>
                     <a href="javascript:logout()">退出</a>
                 `;
@@ -772,7 +792,7 @@
                     <div class="novel-info">
                         <h3 class="novel-title">${escapeHtml(n.title || '无题')}</h3>
                         <div class="novel-meta">
-                            <span>✍️ ${escapeHtml(n.author || '匿名')}</span>
+                            <span>✍️ ${n.user_id ? `<a href="profile.html?uid=${escapeHtml(n.user_id)}" style="color:#2563eb">${escapeHtml(n.author || '匿名')}</a>` : escapeHtml(n.author||'匿名')}</span>
                             <span>👍 ${n.likes || 0}</span>
                         </div>
                         <div class="novel-intro">${escapeHtml(n.intro || '暂无简介')}</div>
@@ -919,7 +939,7 @@
                 ? data.map(d => `
                     <div class="item-row">
                         <div>
-                            <strong>👤 ${escapeHtml(d.nickname || '匿名')}</strong>
+                            <strong>👤 ${d.user_id ? `<a href="profile.html?uid=${escapeHtml(d.user_id)}" style="color:#2563eb">${escapeHtml(d.nickname || '匿名')}</a>` : escapeHtml(d.nickname||'匿名')}</strong>
                             <span class="sugg-date">🕐 ${formatTime(d.created_at)}</span>
                             <div style="margin-top:8px; line-height: 1.8;">${escapeHtml(d.content)}</div>
                         </div>
@@ -1048,7 +1068,7 @@
                 return `
                 <div class="post-card" id="post-${p.id}">
                     <div class="post-header">
-                        <strong>👤 ${escapeHtml(p.nickname || '匿名')}</strong>
+                        <strong>👤 ${p.user_id ? `<a href="profile.html?uid=${escapeHtml(p.user_id)}" style="color:#2563eb">${escapeHtml(p.nickname || '匿名')}</a>` : escapeHtml(p.nickname||'匿名')}</strong>
                         <span class="sugg-date">🕐 ${formatTime(p.created_at)}</span>
                     </div>
                     ${p.content ? `<div class="post-content">${escapeHtml(p.content)}</div>` : ''}
@@ -1062,7 +1082,7 @@
                     <div class="post-comments" id="comments-${p.id}" style="display:none;">
                         ${pc.map(cm => `
                             <div class="comment-item">
-                                <strong>${escapeHtml(cm.nickname)}</strong>
+                                <strong>${cm.user_id ? `<a href="profile.html?uid=${escapeHtml(cm.user_id)}" style="color:#2563eb">${escapeHtml(cm.nickname)}</a>` : escapeHtml(cm.nickname)}</strong>
                                 <div>${escapeHtml(cm.content)}</div>
                             </div>
                         `).join('')}
@@ -1094,7 +1114,7 @@
         }
         async function likePost(id) {
             const list = await supabaseRequest('posts');
-                       const post = Array.isArray(list) && list.find(x => x.id === id);
+            const post = Array.isArray(list) && list.find(x => x.id === id);
             if (!post) return;
             await supabaseRequest('posts', 'PATCH', { likes: (post.likes || 0) + 1 }, id);
             await loadPosts();
@@ -1104,7 +1124,6 @@
             await supabaseRequest('posts', 'DELETE', null, id);
             await loadPosts();
         }
-
         // ========== 页面初始化入口 ==========
         async function initApp() {
             refreshUserStatus();
@@ -1112,7 +1131,6 @@
             await registerOnline();
             openModule('book');
         }
-
         // 页面加载完成启动
         window.addEventListener('DOMContentLoaded', initApp);
 </script>
