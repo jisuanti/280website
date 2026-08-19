@@ -1,502 +1,582 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>管理 - 280班网站</title>
-    <style>
-        * { margin:0; padding:0; box-sizing:border-box; }
-        body { font-family: "PingFang SC", "Microsoft YaHei", sans-serif; background: #f0f2f5; }
-        .login-box {
-            max-width: 380px; margin: 120px auto; background: #fff;
-            padding: 40px; border-radius: 12px; text-align: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-        .login-box h2 { margin-bottom: 20px; color: #2c3e50; }
-        .login-box input {
-            width: 100%; padding: 12px; margin-bottom: 16px;
-            border: 1px solid #ddd; border-radius: 8px; font-size: 1em;
-        }
-        .login-box button {
-            width: 100%; padding: 12px; background: #8d6e63;
-            color: #fff; border: none; border-radius: 8px; font-size: 1em; cursor: pointer;
-        }
-        .hint { margin-top: 10px; font-size: 0.85em; color: #999; }
-        .admin-header {
-            background: #2c3e50; color: #fff;
-            padding: 14px 24px;
-            display: flex; justify-content: space-between; align-items: center;
-        }
-        .admin-header select {
-            padding: 8px 12px; border-radius: 6px; border: none; font-size: 0.95em;
-        }
-        .logout-btn {
-            background: #e74c3c; color: #fff; border: none;
-            padding: 8px 14px; border-radius: 6px; cursor: pointer; margin-left: 10px;
-        }
-        .admin-main { max-width: 900px; margin: 0 auto; padding: 24px; }
-        .admin-section {
-            background: #fff; border-radius: 12px; padding: 24px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        }
-        .admin-section h2 { font-size: 1.1em; margin-bottom: 8px; color: #2c3e50; }
-        .desc { color: #666; font-size: 0.9em; margin-bottom: 16px; }
-        label { display: block; margin: 12px 0 4px; font-weight: 600; font-size: 0.88em; color: #555; }
-        input, textarea, select {
-            width: 100%; padding: 10px; border: 1px solid #ddd;
-            border-radius: 6px; font-size: 0.95em; font-family: inherit;
-        }
-        textarea { min-height: 70px; resize: vertical; }
-        textarea.big { min-height: 180px; }
-        .btn-primary {
-            background: #8d6e63; color: #fff; border: none;
-            padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 0.95em;
-        }
-        .btn-primary:hover { background: #6d4c41; }
-        .item-row {
-            display: flex; justify-content: space-between; align-items: flex-start;
-            padding: 10px 14px; background: #f9f9f9;
-            border-radius: 6px; margin-bottom: 6px; font-size: 0.9em;
-        }
-        .item-row button { margin-left: 8px; flex-shrink: 0; }
-        .editor-box {
-            margin-top: 16px; background: #f9f9f9; padding: 20px; border-radius: 8px;
-            border: 1px solid #eee;
-        }
-        .actions { margin-top: 14px; display: flex; gap: 10px; }
-        .del-btn {
-            background: #e74c3c !important; color: #fff; border: none;
-            padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85em;
-        }
-        .badge { font-size: 0.75em; padding: 2px 8px; border-radius: 10px; margin-left: 6px; }
-        .badge.pending { background: #fff3e0; color: #e65100; }
-        .sugg-date { font-size: 0.8em; color: #999; margin-left: 8px; }
-        pre { white-space: pre-wrap; font-size: 0.85em; margin-top: 6px; }
-        
-        /* 图片预览 */
-        .image-preview {
-            display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px;
-        }
-        .image-preview img {
-            height: 80px; border-radius: 6px; object-fit: cover;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>后台管理 - 280班网站</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{
+    font-family: "Microsoft YaHei",sans-serif;
+    background:#f4f1eb;
+    color:#333;
+    line-height:1.6;
+}
+header{
+    background:#3e2723;
+    color:#fff;
+    padding:14px 20px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    box-shadow:0 2px 8px rgba(0,0,0,0.15);
+}
+header h1{font-size:1.4em;}
+header a{
+    color:#ffcc80;
+    text-decoration:none;
+    border:1px solid #ffcc80;
+    padding:6px 14px;
+    border-radius:20px;
+}
+header a:hover{background:#ffcc80;color:#3e2723;}
+.container{
+    max-width:1240px;
+    margin:24px auto;
+    padding:0 16px;
+}
+.tab-bar{
+    display:flex;
+    gap:8px;
+    margin-bottom:20px;
+    flex-wrap:wrap;
+}
+.tab{
+    padding:10px 16px;
+    background:#fff;
+    border-radius:8px;
+    cursor:pointer;
+    border:1px solid #ddd;
+    user-select:none;
+}
+.tab.active{
+    background:#8d6e63;
+    color:#fff;
+    border-color:#8d6e63;
+}
+.panel{
+    background:#fff;
+    border-radius:12px;
+    padding:24px;
+    box-shadow:0 2px 12px rgba(0,0,0,0.08);
+    display:none;
+}
+.panel.show{display:block;}
+h2{
+    margin-bottom:18px;
+    color:#3e2723;
+    padding-bottom:10px;
+    border-bottom:2px solid #d7ccc8;
+}
+label{
+    display:block;
+    margin:14px 0 6px;
+    font-weight:600;
+}
+input,textarea,select{
+    width:100%;
+    padding:12px;
+    border:1px solid #ddd;
+    border-radius:8px;
+    font-size:1em;
+    font-family:inherit;
+}
+textarea{min-height:100px;resize:vertical;}
+textarea.big{min-height:220px;}
+.btns{
+    margin-top:20px;
+    display:flex;
+    gap:12px;
+    flex-wrap:wrap;
+}
+button{
+    padding:10px 22px;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+    font-size:1em;
+}
+.btn-primary{background:#8d6e63;color:#fff;}
+.btn-success{background:#43a047;color:#fff;}
+.btn-danger{background:#c62828;color:#fff;}
+.btn-default{background:#bbbbbb;color:#fff;}
+.btn-primary:hover{background:#6d4c41;}
+.list-item{
+    background:#f9f9f9;
+    padding:16px;
+    border-radius:8px;
+    margin-bottom:12px;
+}
+.list-item h4{margin-bottom:6px;color:#3e2723;}
+.list-actions{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;}
+.info-text{color:#666;margin:10px 0;}
+pre{
+    background:#efefef;
+    padding:10px;
+    border-radius:6px;
+    white-space:pre-wrap;
+    max-height:300px;
+    overflow:auto;
+    margin:8px 0;
+}
+/* 登录弹窗样式 */
+.login-wrap{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.6);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:999;
+}
+.login-box{
+    background:#fff;
+    padding:32px;
+    border-radius:12px;
+    width:min(90%,420px);
+}
+@media(max-width:768px){
+    .tab-bar{gap:6px;}
+    .tab{padding:8px 12px;font-size:0.9em;}
+}
+</style>
 </head>
 <body>
-    <div id="loginBox" class="login-box">
-        <h2>🔐 管理登录</h2>
-        <input type="password" id="pwd" placeholder="管理密码" />
-        <button onclick="login()">登录</button>
-        <p class="hint">默认密码：280class</p>
+<!-- 登录界面 -->
+<div class="login-wrap" id="loginBox">
+    <div class="login-box">
+        <h2>管理员登录</h2>
+        <label>请输入管理密码</label>
+        <input type="password" id="adminPwd" placeholder="输入密码">
+        <div class="btns">
+            <button class="btn-primary" onclick="loginCheck()">登录后台</button>
+        </div>
+        <p class="info-text" id="loginTip" style="color:red;display:none;">密码错误，请重试</p>
+    </div>
+</div>
+
+<div id="adminMain" style="display:none;">
+<header>
+    <h1>⚙️ 280班网站后台管理中心</h1>
+    <a href="index.html">← 返回前台主页</a>
+</header>
+<div class="container">
+    <div class="tab-bar">
+        <div class="tab active" data-target="tab-chapter">📖历史书章节管理</div>
+        <div class="tab" data-target="tab-notice">📋公告管理</div>
+        <div class="tab" data-target="tab-submit">📨投稿审核</div>
+        <div class="tab" data-target="tab-online">🟢在线用户</div>
+        <div class="tab" data-target="tab-novel">📖小说管理</div>
+        <div class="tab" data-target="tab-discuss">💬讨论管理</div>
+        <div class="tab" data-target="tab-share">📸日常分享管理</div>
     </div>
 
-    <div id="panel" style="display:none;">
-        <header class="admin-header">
-            <h1>⚙️ 后台管理</h1>
-            <div>
-                <select id="moduleSelect" onchange="switchAdminModule()">
-                    <option value="notices">📋 公告栏</option>
-                    <option value="book">📖 历史书</option>
-                    <option value="submissions">✍️ 投稿审核</option>
-                    <option value="novels">📖 小说管理</option>
-                    <option value="discussions">💬 讨论管理</option>
-                    <option value="posts">📸 日常管理</option>
-                    <option value="users">👤 用户管理</option>
-                </select>
-                <button class="logout-btn" onclick="logout()">退出</button>
+    <!-- ========== 1.历史书章节管理 ========== -->
+    <div class="panel show" id="tab-chapter">
+        <h2>新增 / 编辑章节</h2>
+        <input type="hidden" id="editChapterId" value="">
+        <label>章节标题</label>
+        <input id="chTitle" placeholder="第X章 XXXXX">
+        <label>课前导言</label>
+        <textarea id="chPreface"></textarea>
+        <label>正文内容</label>
+        <textarea id="chBody" class="big"></textarea>
+        <label>课后习题</label>
+        <textarea id="chExercises"></textarea>
+        <label>知识扩展</label>
+        <textarea id="chExtension"></textarea>
+        <div class="btns">
+            <button class="btn-primary" onclick="saveChapter()">保存章节</button>
+            <button class="btn-default" onclick="clearChapterForm()">清空表单</button>
+        </div>
+        <h2 style="margin-top:30px;">已有章节列表</h2>
+        <div id="chapterList"></div>
+    </div>
+
+    <!-- ========== 2.公告管理 ========== -->
+    <div class="panel" id="tab-notice">
+        <h2>发布新公告</h2>
+        <input type="hidden" id="editNoticeId" value="">
+        <label>公告标题</label>
+        <input id="noticeTitle" placeholder="公告标题">
+        <label>公告内容</label>
+        <textarea id="noticeContent" class="big"></textarea>
+        <div class="btns">
+            <button class="btn-primary" onclick="saveNotice()">保存公告</button>
+            <button class="btn-default" onclick="clearNoticeForm()">清空</button>
+        </div>
+        <h2 style="margin-top:30px;">全部公告列表</h2>
+        <div id="noticeList"></div>
+    </div>
+
+    <!-- ========== 3.投稿审核 ========== -->
+    <div class="panel" id="tab-submit">
+        <h2>待审核用户投稿（可通过转为章节 / 驳回）</h2>
+        <div id="submitList"></div>
+    </div>
+
+    <!-- ========== 4.在线用户 ========== -->
+    <div class="panel" id="tab-online">
+        <h2>当前在线用户（90秒无操作自动离线）</h2>
+        <div id="onlineUserList"></div>
+        <div class="btns" style="margin-top:15px;">
+            <button class="btn-primary" onclick="loadOnlineUsers()">刷新列表</button>
+        </div>
+    </div>
+
+    <!-- ========== 5.小说管理 ========== -->
+    <div class="panel" id="tab-novel">
+        <h2>全部小说管理（可删除违规小说）</h2>
+        <div id="novelAdminList"></div>
+    </div>
+
+    <!-- ========== 6.讨论区管理 ========== -->
+    <div class="panel" id="tab-discuss">
+        <h2>班级讨论内容管理</h2>
+        <div id="discussAdminList"></div>
+    </div>
+
+    <!-- ========== 7.日常分享管理 ========== -->
+    <div class="panel" id="tab-share">
+        <h2>日常分享帖子管理（帖子+评论）</h2>
+        <div id="shareAdminList"></div>
+    </div>
+</div>
+</div>
+
+<script>
+// =====================【数据库配置，与前台保持一致】=====================
+const SUPABASE_URL = "https://gbktpjnitqpwomcprrol.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdia3Rwam5pdHFwd29tY3Bycm9sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTk2NDIsImV4cCI6MjA5ODk5NTY0Mn0.TIp9NAdDRZrI16Jq_no7Ga9EpX7ooc6b5Ck7r-sNqww";
+// 管理员密码【无空格】
+const ADMIN_PASSWORD = "280class";
+
+// 登录校验
+function loginCheck(){
+    const input = document.getElementById("adminPwd").value;
+    const tip = document.getElementById("loginTip");
+    if(input === ADMIN_PASSWORD){
+        document.getElementById("loginBox").style.display = "none";
+        document.getElementById("adminMain").style.display = "block";
+        loadCurrentTabData();
+    }else{
+        tip.style.display = "block";
+    }
+}
+
+// 回车快速登录
+document.getElementById("adminPwd").addEventListener("keydown",e=>{
+    if(e.key === "Enter") loginCheck();
+})
+
+// 通用请求函数（与 index.html 完全兼容）
+async function supabaseRequest(table, method = 'GET', data = null, id = null) {
+    const url = id
+        ? `${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`
+        : `${SUPABASE_URL}/rest/v1/${table}`;
+    const options = {
+        method: method,
+        headers: {
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'Content-Type': 'application/json; charset=utf-8',
+            'Prefer': 'return=representation'
+        }
+    };
+    if (data && (method === 'POST' || method === 'PATCH')) {
+        options.body = JSON.stringify(data);
+    }
+    try {
+        const res = await fetch(url, options);
+        if (method === 'DELETE') return { ok: true };
+        const result = await res.json();
+        return result;
+    } catch (e) {
+        console.error('请求失败：', e);
+        alert("网络或数据库请求异常");
+        return [];
+    }
+}
+
+// Tab切换逻辑
+document.querySelectorAll('.tab').forEach(tab=>{
+    tab.onclick = ()=>{
+        const target = tab.getAttribute("data-target");
+        document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+        document.querySelectorAll('.panel').forEach(p=>p.classList.remove('show'));
+        tab.classList.add('active');
+        document.getElementById(target).classList.add('show');
+        loadCurrentTabData();
+    }
+})
+
+function loadCurrentTabData(){
+    const activeTab = document.querySelector('.tab.active').dataset.target;
+    switch(activeTab){
+        case "tab-chapter": loadChapterList(); break;
+        case "tab-notice": loadNoticeList(); break;
+        case "tab-submit": loadSubmitList(); break;
+        case "tab-online": loadOnlineUsers(); break;
+        case "tab-novel": loadNovelAdminList(); break;
+        case "tab-discuss": loadDiscussAdminList(); break;
+        case "tab-share": loadShareAdminList(); break;
+    }
+}
+
+// ======================【章节管理】======================
+async function loadChapterList(){
+    const list = await supabaseRequest("chapters");
+    const wrap = document.getElementById("chapterList");
+    if(!Array.isArray(list) || list.length===0){
+        wrap.innerHTML = "<div class='info-text'>暂无章节</div>";
+        return;
+    }
+    wrap.innerHTML = list.map(item=>`
+    <div class="list-item">
+        <h4>${escapeHtml(item.title)}</h4>
+        <div class="list-actions">
+            <button class="btn-primary" onclick="editChapter(${JSON.stringify(item).replace(/"/g,'&quot;')})">编辑</button>
+            <button class="btn-danger" onclick="delChapter(${item.id})">删除</button>
+        </div>
+    </div>`).join('');
+}
+function clearChapterForm(){
+    document.getElementById('editChapterId').value="";
+    document.getElementById('chTitle').value="";
+    document.getElementById('chPreface').value="";
+    document.getElementById('chBody').value="";
+    document.getElementById('chExercises').value="";
+    document.getElementById('chExtension').value="";
+}
+function editChapter(data){
+    document.getElementById('editChapterId').value = data.id;
+    document.getElementById('chTitle').value = data.title||"";
+    document.getElementById('chPreface').value = data.preface||"";
+    document.getElementById('chBody').value = data.body||"";
+    document.getElementById('chExercises').value = data.exercises||"";
+    document.getElementById('chExtension').value = data.extension||"";
+}
+async function saveChapter(){
+    const id = document.getElementById('editChapterId').value;
+    const data = {
+        title: document.getElementById('chTitle').value.trim(),
+        preface: document.getElementById('chPreface').value.trim(),
+        body: document.getElementById('chBody').value.trim(),
+        exercises: document.getElementById('chExercises').value.trim(),
+        extension: document.getElementById('chExtension').value.trim()
+    }
+    if(!data.title || !data.body) return alert("标题和正文不能为空");
+    if(id){
+        await supabaseRequest("chapters","PATCH",data,id);
+        alert("修改成功");
+    }else{
+        await supabaseRequest("chapters","POST",data);
+        alert("新增成功");
+    }
+    clearChapterForm();
+    loadChapterList();
+}
+async function delChapter(id){
+    if(!confirm("确认永久删除该章节？")) return;
+    await supabaseRequest("chapters","DELETE",null,id);
+    loadChapterList();
+}
+
+// ======================【公告管理】======================
+async function loadNoticeList(){
+    const list = await supabaseRequest("notices");
+    const wrap = document.getElementById("noticeList");
+    if(!Array.isArray(list) || list.length===0){
+        wrap.innerHTML = "<div class='info-text'>暂无公告</div>";
+        return;
+    }
+    wrap.innerHTML = list.map(item=>`
+    <div class="list-item">
+        <h4>${escapeHtml(item.title)}</h4>
+        <div class="info-text">发布日期：${item.date||""}</div>
+        <div class="list-actions">
+            <button class="btn-primary" onclick="editNotice(${JSON.stringify(item).replace(/"/g,'&quot;')})">编辑</button>
+            <button class="btn-danger" onclick="delNotice(${item.id})">删除</button>
+        </div>
+    </div>`).join('');
+}
+function clearNoticeForm(){
+    document.getElementById('editNoticeId').value="";
+    document.getElementById('noticeTitle').value="";
+    document.getElementById('noticeContent').value="";
+}
+function editNotice(data){
+    document.getElementById('editNoticeId').value = data.id;
+    document.getElementById('noticeTitle').value = data.title||"";
+    document.getElementById('noticeContent').value = data.content||"";
+}
+async function saveNotice(){
+    const id = document.getElementById('editNoticeId').value;
+    const now = new Date().toLocaleString();
+    const data = {
+        title: document.getElementById('noticeTitle').value.trim(),
+        content: document.getElementById('noticeContent').value.trim(),
+        date: now
+    }
+    if(!data.title || !data.content) return alert("标题和内容不能为空");
+    if(id){
+        await supabaseRequest("notices","PATCH",data,id);
+        alert("公告已更新");
+    }else{
+        await supabaseRequest("notices","POST",data);
+        alert("公告发布成功");
+    }
+    clearNoticeForm();
+    loadNoticeList();
+}
+async function delNotice(id){
+    if(!confirm("删除这条公告？")) return;
+    await supabaseRequest("notices","DELETE",null,id);
+    loadNoticeList();
+}
+
+// ======================【投稿审核】======================
+async function loadSubmitList(){
+    const list = await supabaseRequest("submissions");
+    const wrap = document.getElementById("submitList");
+    const pending = Array.isArray(list) ? list.filter(x=>x.status==="pending") : [];
+    if(pending.length===0){
+        wrap.innerHTML = "<div class='info-text'>目前没有待审核投稿</div>";
+        return;
+    }
+    wrap.innerHTML = pending.map(item=>{
+        let contentObj = {};
+        try{contentObj = JSON.parse(item.content);}catch(e){}
+        return `
+        <div class="list-item">
+            <h4>投稿人：${escapeHtml(item.nickname)}</h4>
+            <div class="info-text">标题：${escapeHtml(contentObj.title||"无标题")}</div>
+            <pre>${escapeHtml(contentObj.body||"无正文")}</pre>
+            <div class="list-actions">
+                <button class="btn-success" onclick="acceptSubmit(${item.id})">✅通过（转为正式章节）</button>
+                <button class="btn-danger" onclick="rejectSubmit(${item.id})">❌驳回（直接删除）</button>
             </div>
-        </header>
-        <main class="admin-main" id="adminMain"></main>
-    </div>
+        </div>`;
+    }).join('');
+}
+async function acceptSubmit(subId){
+    if(!confirm("确认通过投稿，自动添加到历史书并删除投稿记录？")) return;
+    const allSub = await supabaseRequest("submissions");
+    const subItem = allSub.find(x=>x.id===subId);
+    let c = {};
+    try{c=JSON.parse(subItem.content);}catch(e){alert("投稿内容解析失败");return;}
+    await supabaseRequest("chapters","POST",{
+        title:c.title,
+        preface:c.preface||"",
+        body:c.body||"",
+        exercises:c.exercises||"",
+        extension:c.extension||""
+    });
+    await supabaseRequest("submissions","DELETE",null,subId);
+    alert("审核通过！已生成章节");
+    loadSubmitList();
+}
+async function rejectSubmit(subId){
+    if(!confirm("确定驳回，直接删除这条投稿？")) return;
+    await supabaseRequest("submissions","DELETE",null,subId);
+    alert("已驳回删除");
+    loadSubmitList();
+}
 
-    <script>
-        // ===== Supabase 配置 =====
-        const SUPABASE_URL = 'https://gbktpjnitqpwomcprrol.supabase.co';   // ← 你的 URL
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdia3Rwam5pdHFwd29tY3Bycm9sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTk2NDIsImV4cCI6MjA5ODk5NTY0Mn0.TIp9NAdDRZrI16Jq_no7Ga9EpX7ooc6b5Ck7r-sNqww';                // ← 你的 anon key
+// ======================【在线用户】======================
+async function loadOnlineUsers(){
+    const raw = await supabaseRequest("online_users");
+    const wrap = document.getElementById("onlineUserList");
+    const expire = 90*1000;
+    const now = Date.now();
+    const active = Array.isArray(raw) ? raw.filter(u=> now-new Date(u.last_active).getTime() < expire) : [];
+    if(active.length===0){
+        wrap.innerHTML="<div class='info-text'>暂无在线用户</div>";
+        return;
+    }
+    wrap.innerHTML = `<div class="info-text">在线人数：${active.length}</div>` +
+        active.map(u=>`<div class="list-item">👤 ${escapeHtml(u.nickname)}</div>`).join("");
+}
 
-        async function supabaseRequest(table, method = 'GET', data = null, id = null) {
-            const url = id 
-                ? `${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`
-                : `${SUPABASE_URL}/rest/v1/${table}`;
-            const options = {
-                method: method,
-                headers: {
-                    'apikey': SUPABASE_KEY,
-                    'Authorization': `Bearer ${SUPABASE_KEY}`,
-                    'Content-Type': 'application/json',
-                    'Prefer': 'return=representation'
-                }
-            };
-            if (data && (method === 'POST' || method === 'PATCH')) {
-                options.body = JSON.stringify(data);
-            }
-            try {
-                const res = await fetch(url, options);
-                if (method === 'DELETE') return { ok: true };
-                return res.json();
-            } catch(e) {
-                console.error('Supabase 请求失败：', e);
-                return [];
-            }
-        }
+// ======================【小说管理】======================
+async function loadNovelAdminList(){
+    const list = await supabaseRequest("novels");
+    const wrap = document.getElementById("novelAdminList");
+    if(!Array.isArray(list)||list.length===0){
+        wrap.innerHTML="<div class='info-text'>暂无小说</div>";
+        return;
+    }
+    wrap.innerHTML = list.map(item=>`
+    <div class="list-item">
+        <h4>${escapeHtml(item.title)}｜作者：${escapeHtml(item.author)}</h4>
+        <div class="info-text">点赞：${item.likes||0}</div>
+        <div class="list-actions">
+            <button class="btn-danger" onclick="adminDelNovel(${item.id})">🗑️ 删除小说</button>
+        </div>
+    </div>`).join('');
+}
+async function adminDelNovel(id){
+    if(!confirm("管理员删除小说，不可恢复！")) return;
+    await supabaseRequest("novels","DELETE",null,id);
+    loadNovelAdminList();
+}
 
-        // ===== 登录 =====
-        const PASSWORD = '280class';
-        
-        function login() {
-            if (document.getElementById('pwd').value === PASSWORD) {
-                localStorage.setItem('admin_ok', '1');
-                showPanel();
-            } else alert('密码错误');
-        }
-        
-        function logout() { 
-            localStorage.removeItem('admin_ok'); 
-            location.reload(); 
-        }
-        
-        function showPanel() {
-            document.getElementById('loginBox').style.display = 'none';
-            document.getElementById('panel').style.display = 'block';
-            switchAdminModule();
-        }
-        
-        if (localStorage.getItem('admin_ok') === '1') showPanel();
-        
-        document.getElementById('pwd').addEventListener('keypress', e => {
-            if (e.key === 'Enter') login();
-        });
+// ======================【讨论管理】======================
+async function loadDiscussAdminList(){
+    const list = await supabaseRequest("discussions");
+    const wrap = document.getElementById("discussAdminList");
+    if(!Array.isArray(list)||list.length===0){
+        wrap.innerHTML="<div class='info-text'>暂无讨论内容</div>";
+        return;
+    }
+    wrap.innerHTML = list.map(item=>`
+    <div class="list-item">
+        <h4>👤${escapeHtml(item.nickname)} ${item.created_at||""}</h4>
+        <pre>${escapeHtml(item.content)}</pre>
+        <div class="list-actions">
+            <button class="btn-danger" onclick="adminDelDiscuss(${item.id})">🗑️ 删除这条讨论</button>
+        </div>
+    </div>`).join('');
+}
+async function adminDelDiscuss(id){
+    if(!confirm("删除这条讨论？")) return;
+    await supabaseRequest("discussions","DELETE",null,id);
+    loadDiscussAdminList();
+}
 
-        // ===== 切换模块 =====
-        function switchAdminModule() {
-            const mod = document.getElementById('moduleSelect').value;
-            if (mod === 'notices') renderNoticeEditor();
-            else if (mod === 'book') renderBookEditor();
-            else if (mod === 'submissions') renderSubmissions();
-            else if (mod === 'novels') renderNovelManager();
-            else if (mod === 'discussions') renderDiscussions();
-            else if (mod === 'posts') renderPosts();
-            else if (mod === 'users') renderUsers();
-        }
+// ======================【日常分享管理】======================
+async function loadShareAdminList(){
+    const posts = await supabaseRequest("posts");
+    const wrap = document.getElementById("shareAdminList");
+    if(!Array.isArray(posts)||posts.length===0){
+        wrap.innerHTML="<div class='info-text'>暂无日常分享帖子</div>";
+        return;
+    }
+    wrap.innerHTML = posts.map(item=>`
+    <div class="list-item">
+        <h4>👤${escapeHtml(item.nickname)} ${item.created_at||""}</h4>
+        <pre>${escapeHtml(item.content||"无文字内容")}</pre>
+        <div class="list-actions">
+            <button class="btn-danger" onclick="adminDelPost(${item.id})">🗑️ 删除帖子</button>
+        </div>
+    </div>`).join('');
+}
+async function adminDelPost(id){
+    if(!confirm("删除这条日常分享帖子？")) return;
+    await supabaseRequest("posts","DELETE",null,id);
+    loadShareAdminList();
+}
 
-        // ===== 用户管理（新增）=====
-        async function renderUsers() {
-            const users = Array.isArray(await supabaseRequest('users')) ? await supabaseRequest('users') : [];
-            document.getElementById('adminMain').innerHTML = `
-                <div class="admin-section">
-                    <h2>👤 用户管理</h2>
-                    <p class="desc">查看和管理注册用户。</p>
-                    <div style="margin-top:16px;">
-                        ${(users || []).map(u => `
-                            <div class="item-row">
-                                <div>
-                                    <strong>${escapeHtml(u.nickname || '匿名')}</strong>
-                                    <span class="sugg-date">注册时间：${u.created_at ? u.created_at.slice(0,16) : ''}</span>
-                                </div>
-                                <button class="del-btn" onclick="deleteUser(${u.id})">删除</button>
-                            </div>
-                        `).join('') || '<div style="padding:20px;text-align:center;color:#999;">暂无用户</div>'}
-                    </div>
-                </div>
-            `;
-        }
-
-        async function deleteUser(id) {
-            if (!confirm('确认删除？')) return;
-            await supabaseRequest('users', 'DELETE', null, id);
-            alert('删除成功！');
-            renderUsers();
-        }
-
-        // ===== 投稿审核 =====
-        async function renderSubmissions() {
-            const submissions = Array.isArray(await supabaseRequest('submissions')) ? await supabaseRequest('submissions') : [];
-            document.getElementById('adminMain').innerHTML = `
-                <div class="admin-section">
-                    <h2>✍️ 投稿审核</h2>
-                    <p class="desc">审核通过后将自动加入历史书，并立即从列表消失。</p>
-                    ${(submissions || []).map(s => {
-                        let content = {};
-                        try { content = JSON.parse(s.content); } catch(e) {}
-                        return `
-                        <div class="item-row sub-${s.status}">
-                            <div>
-                                <strong>${escapeHtml(s.nickname || '匿名')}</strong>
-                                <span class="badge ${s.status}">${s.status}</span>
-                                <span class="sugg-date">${s.created_at ? s.created_at.slice(0,16) : ''}</span>
-                                <pre>标题：${escapeHtml(content.title || '')}\n\n课前导言：\n${escapeHtml(content.preface || '')}\n\n正文：\n${escapeHtml(content.body || '')}\n\n课后习题：\n${escapeHtml(content.exercises || '')}\n\n知识扩展：\n${escapeHtml(content.extension || '')}</pre>
-                            </div>
-                            ${s.status === 'pending' ? `
-                                <div>
-                                    <button class="btn-primary" onclick="approveSub(${s.id})">通过</button>
-                                    <button class="del-btn" onclick="rejectSub(${s.id})">拒绝</button>
-                                </div>
-                            ` : ''}
-                        </div>
-                    `;}).join('') || '<div class="empty">暂无投稿</div>'}
-                </div>
-            `;
-        }
-
-        async function approveSub(id) {
-            if (!confirm('确认通过并发布？')) return;
-            const submissions = Array.isArray(await supabaseRequest('submissions')) ? await supabaseRequest('submissions') : [];
-            const sub = submissions.find(s => s.id === id);
-            if (sub) {
-                const content = JSON.parse(sub.content);
-                await supabaseRequest('chapters', 'POST', {
-                    title: content.title,
-                    preface: content.preface || '',
-                    body: content.body,
-                    exercises: content.exercises || '',
-                    extension: content.extension || '',
-                    images: []
-                });
-            }
-            await supabaseRequest('submissions', 'DELETE', null, id);
-            alert('已通过！内容已加入历史书。');
-            renderSubmissions();
-        }
-
-        async function rejectSub(id) {
-            if (!confirm('确认拒绝？')) return;
-            await supabaseRequest('submissions', 'DELETE', null, id);
-            alert('已拒绝。');
-            renderSubmissions();
-        }
-
-        // ===== 公告管理 =====
-        async function renderNoticeEditor() {
-            const notices = Array.isArray(await supabaseRequest('notices')) ? await supabaseRequest('notices') : [];
-            document.getElementById('adminMain').innerHTML = `
-                <div class="admin-section">
-                    <h2>📋 公告栏管理</h2>
-                    <button class="btn-primary" onclick="showAddNotice()">＋ 发布公告</button>
-                    <div style="margin-top:16px;">
-                        ${(notices || []).map(n => `
-                            <div class="item-row">
-                                <span>${n.date || ''} | ${escapeHtml(n.title || '')}</span>
-                                <button class="del-btn" onclick="deleteNotice(${n.id})">删除</button>
-                            </div>
-                        `).join('')}
-                    </div>
-                    <div id="noticeEditor"></div>
-                </div>
-            `;
-        }
-
-        function showAddNotice() {
-            document.getElementById('noticeEditor').innerHTML = `
-                <div class="editor-box">
-                <label>标题</label>
-                <input id="ntTitle" />
-                <label>日期</label>
-                <input id="ntDate" type="date" value="${new Date().toISOString().slice(0,10)}" />
-                <label>内容</label>
-                <textarea id="ntContent" class="big"></textarea>
-                <div class="actions">
-                    <button class="btn-primary" onclick="saveNotice()">💾 保存</button>
-                    <button onclick="renderNoticeEditor()">取消</button>
-                </div>
-                </div>
-            `;
-        }
-
-        async function saveNotice() {
-            const title = document.getElementById('ntTitle').value.trim();
-            const date = document.getElementById('ntDate').value;
-            const content = document.getElementById('ntContent').value.trim();
-            if (!title || !content) return alert('请填写标题和内容');
-            await supabaseRequest('notices', 'POST', { title, date, content });
-            alert('发布成功！');
-            renderNoticeEditor();
-        }
-
-        async function deleteNotice(id) {
-            if (!confirm('确认删除？')) return;
-            await supabaseRequest('notices', 'DELETE', null, id);
-            alert('删除成功！');
-            renderNoticeEditor();
-        }
-
-        // ===== 历史书管理 =====
-        let editingChapterId = null;
-
-        async function renderBookEditor() {
-            const chapters = Array.isArray(await supabaseRequest('chapters')) ? await supabaseRequest('chapters') : [];
-            document.getElementById('adminMain').innerHTML = `
-                <div class="admin-section">
-                    <h2>📖 历史书管理</h2>
-                    <button class="btn-primary" onclick="showAddChapter()">＋ 新建章节</button>
-                    <div style="margin-top:16px;">
-                        ${(chapters || []).map((ch, idx) => `
-                            <div class="item-row">
-                                <span>第${idx+1}章：${escapeHtml(ch.title || '未命名')}</span>
-                                <div>
-                                    <button onclick="editChapter(${ch.id})">编辑</button>
-                                    <button class="del-btn" onclick="deleteChapter(${ch.id})">删除</button>
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
-                    <div id="chapterEditor"></div>
-                </div>
-            `;
-        }
-
-        function showAddChapter() {
-            editingChapterId = null;
-            document.getElementById('chapterEditor').innerHTML = chapterFormHTML({});
-        }
-
-        function editChapter(id) {
-            editingChapterId = id;
-            supabaseRequest('chapters').then(chapters => {
-                const ch = (Array.isArray(chapters) ? chapters : []).find(c => c.id === id) || {};
-                document.getElementById('chapterEditor').innerHTML = chapterFormHTML(ch);
-            });
-        }
-
-        function chapterFormHTML(ch) {
-            return `
-                <div class="editor-box">
-                <label>章节标题</label>
-                <input id="chTitle" value="${escapeHtml(ch.title || '')}" />
-                <label>课前导言</label>
-                <textarea id="chPreface">${(ch.preface || '').replace(/"/g,'&quot;')}</textarea>
-                <label>正文</label>
-                <textarea id="chBody" class="big">${(ch.body || '').replace(/"/g,'&quot;')}</textarea>
-                <label>课后习题</label>
-                <textarea id="chExercises">${(ch.exercises || '').replace(/"/g,'&quot;')}</textarea>
-                <label>知识扩展</label>
-                <textarea id="chExtension">${(ch.extension || '').replace(/"/g,'&quot;')}</textarea>
-                <div class="actions">
-                    <button class="btn-primary" onclick="saveChapter()">💾 保存</button>
-                    <button onclick="renderBookEditor()">取消</button>
-                </div>
-                </div>
-            `;
-        }
-
-        async function saveChapter() {
-            const chapterData = {
-                title: document.getElementById('chTitle').value.trim() || '未命名',
-                preface: document.getElementById('chPreface').value.trim(),
-                body: document.getElementById('chBody').value.trim(),
-                exercises: document.getElementById('chExercises').value.trim(),
-                extension: document.getElementById('chExtension').value.trim(),
-                images: []
-            };
-            if (editingChapterId) {
-                await supabaseRequest('chapters', 'PATCH', chapterData, editingChapterId);
-            } else {
-                await supabaseRequest('chapters', 'POST', chapterData);
-            }
-            alert('保存成功！');
-            renderBookEditor();
-        }
-
-        async function deleteChapter(id) {
-            if (!confirm('确认删除？')) return;
-            await supabaseRequest('chapters', 'DELETE', null, id);
-            alert('删除成功！');
-            renderBookEditor();
-        }
-
-        // ===== 小说管理 =====
-        async function renderNovelManager() {
-            const novels = Array.isArray(await supabaseRequest('novels')) ? await supabaseRequest('novels') : [];
-            document.getElementById('adminMain').innerHTML = `
-                <div class="admin-section">
-                    <h2>📖 小说管理</h2>
-                    <p class="desc">管理用户发布的小说，可以删除违规内容。</p>
-                    <div style="margin-top:16px;">
-                        ${(novels || []).map(n => `
-                            <div class="item-row">
-                                <div>
-                                    <strong>${escapeHtml(n.title || '无题')}</strong>
-                                    <span style="margin-left:8px;color:#999;">✍️ ${escapeHtml(n.author || '匿名')}</span>
-                                </div>
-                                <button class="del-btn" onclick="deleteNovel(${n.id})">删除</button>
-                            </div>
-                        `).join('') || '<div style="padding:20px;text-align:center;color:#999;">暂无小说</div>'}
-                    </div>
-                </div>
-            `;
-        }
-
-        async function deleteNovel(id) {
-            if (!confirm('确认删除？')) return;
-            await supabaseRequest('novels', 'DELETE', null, id);
-            alert('删除成功！');
-            renderNovelManager();
-        }
-
-        // ===== 讨论管理 =====
-        async function renderDiscussions() {
-            const discussions = Array.isArray(await supabaseRequest('discussions')) ? await supabaseRequest('discussions') : [];
-            document.getElementById('adminMain').innerHTML = `
-                <div class="admin-section">
-                    <h2>💬 讨论管理</h2>
-                    <p class="desc">可以删除不当言论。</p>
-                    <div style="margin-top:16px;">
-                        ${(discussions || []).map(d => `
-                            <div class="item-row">
-                                <div>
-                                    <strong>${escapeHtml(d.nickname || '匿名')}</strong>
-                                    <span class="sugg-date">${d.created_at ? d.created_at.slice(0,16) : ''}</span>
-                                    <div style="margin-top:6px;">${escapeHtml(d.content)}</div>
-                                </div>
-                                <button class="del-btn" onclick="deleteDiscussion(${d.id})">删除</button>
-                            </div>
-                        `).join('') || '<div style="padding:20px;text-align:center;color:#999;">暂无讨论</div>'}
-                    </div>
-                </div>
-            `;
-        }
-
-        async function deleteDiscussion(id) {
-            if (!confirm('确认删除？')) return;
-            await supabaseRequest('discussions', 'DELETE', null, id);
-            alert('删除成功！');
-            renderDiscussions();
-        }
-
-        // ===== 日常管理（新增）=====
-        async function renderPosts() {
-            const posts = Array.isArray(await supabaseRequest('posts')) ? await supabaseRequest('posts') : [];
-            document.getElementById('adminMain').innerHTML = `
-                <div class="admin-section">
-                    <h2>📸 日常管理</h2>
-                    <p class="desc">可以删除违规帖子。</p>
-                    <div style="margin-top:16px;">
-                        ${(posts || []).map(p => `
-                            <div class="item-row">
-                                <div>
-                                    <strong>${escapeHtml(p.nickname || '匿名')}</strong>
-                                    <span class="sugg-date">${p.created_at ? p.created_at.slice(0,16) : ''}</span>
-                                    <div style="margin-top:6px;">${escapeHtml(p.content || '')}</div>
-                                </div>
-                                <button class="del-btn" onclick="deletePost(${p.id})">删除</button>
-                            </div>
-                        `).join('') || '<div style="padding:20px;text-align:center;color:#999;">暂无帖子</div>'}
-                    </div>
-                </div>
-            `;
-        }
-
-        async function deletePost(id) {
-            if (!confirm('确认删除？')) return;
-            await supabaseRequest('posts', 'DELETE', null, id);
-            alert('删除成功！');
-            renderPosts();
-        }
-
-        // ===== 工具函数 =====
-        function escapeHtml(str) {
-            if (!str) return '';
-            return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-        }
-    </script>
+// HTML转义，防止XSS
+function escapeHtml(str){
+    if(!str) return "";
+    return String(str)
+        .replace(/&/g,'&amp;')
+        .replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;')
+        .replace(/'/g,'&#039;');
+}
+</script>
 </body>
 </html>
