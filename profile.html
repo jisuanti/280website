@@ -3,156 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>个人主页｜280班</title>
+    <title>个人主页</title>
     <style>
-*{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,-apple-system}
-body{background:#f7f3ec;color:#222;line-height:1.7}
-.site-header{background:#2563eb;color:#fff;padding:12px 20px;box-shadow:0 2px 8px rgba(0,0,0,0.1)}
-.header-inner{max-width:1080px;margin:0 auto;display:flex;align-items:center;gap:24px}
-.logo{font-size:22px;font-weight:600}
-.site-header a{color:#fff;text-decoration:none}
-.site-header a:hover{opacity:0.85}
-
-.module-content{max-width:860px;margin:28px auto;padding:0 16px}
-
-/* 个人信息卡片：头像左，信息右 横向布局 */
-.profile-card{
-    background:#ffffff;
-    border-radius:18px;
-    padding:28px;
-    box-shadow:0 2px 14px rgba(0,0,0,0.06);
-    display:flex;
-    gap:24px;
-    align-items:flex-start;
-    margin-bottom:20px;
+*{
+    box-sizing: border-box;
 }
-.profile-avatar{
-    width:110px;
-    height:110px;
-    border-radius:50%;
-    object-fit:cover;
-    border:3px solid #e2ddd4;
-    flex-shrink:0;
+body{
+    margin:0;
+    padding:16px;
+    background:#f7f8fa;
+    font-family:system-ui, sans-serif;
+    color:#222;
 }
-.profile-info{
-    flex:1;
-}
-.profile-info h2{
-    font-size:26px;
-    font-weight:600;
-    margin-bottom:4px;
-}
-.profile-account{
-    color:#555;
-    margin-bottom:6px;
-}
-.cooling-tip{
-    color:#c82423;
-    margin-bottom:16px;
-}
-
-.profile-edit-area label{
-    display:block;
-    margin:12px 0 6px 0;
-    font-weight:500;
-    font-size:14px;
-}
-.profile-edit-area input{
-    width:100%;
-    max-width:320px;
-    padding:10px 14px;
-    border:1px solid #d1cbc2;
-    border-radius:10px;
-    font-size:14px;
-}
-.btn-group{
-    margin-top:18px;
-    display:flex;
-    gap:12px;
-}
-.btn-save{
-    background:#8c6c58;
-    color:#fff;
-    border:none;
-    padding:10px 24px;
-    border-radius:10px;
-    cursor:pointer;
-    font-size:14px;
-}
-.btn-back{
-    background:#ece9e4;
-    border:none;
-    padding:10px 24px;
-    border-radius:10px;
-    cursor:pointer;
-    font-size:14px;
-}
-
-/* Tab标签区域 */
-.tab-wrap{
+.generic-page{
+    max-width:900px;
+    margin:0 auto;
     background:#fff;
-    border-radius:18px;
     padding:24px;
-    box-shadow:0 2px 14px rgba(0,0,0,0.06);
+    border-radius:12px;
+    box-shadow:0 1px 4px #00000018;
 }
-.tab-header{
-    display:flex;
-    gap:8px;
-    border-bottom:1px solid #ddd;
-    margin-bottom:16px;
+.novel-card{
+    border:1px solid #e5e7eb;
+    border-radius:8px;
+    padding:14px;
+    margin:10px 0;
 }
-.tab-item{
-    padding:10px 18px;
-    cursor:pointer;
-    border:none;
-    background:transparent;
-    font-size:16px;
+.novel-meta{
+    color:#666;
+    font-size:14px;
+    margin:6px 0;
 }
-.tab-item.active{
-    background:#efe3d2;
-    border-radius:8px 8px 0 0;
-    font-weight:500;
+.novel-intro{
+    color:#444;
+    margin-top:8px;
 }
-.tab-content{
-    min-height:120px;
+.post-card{
+    border:1px solid #e5e7eb;
+    border-radius:8px;
+    padding:14px;
+    margin:10px 0;
 }
 .item-row{
-    background:#f8f5f0;
-    padding:14px 16px;
-    border-radius:12px;
-    margin:8px 0;
+    border:1px solid #e5e7eb;
+    border-radius:8px;
+    padding:14px;
+    margin:10px 0;
+}
+.sugg-date{
+    font-size:13px;
+    color:#888;
 }
 .empty{
-    color:#888;
-    text-align:center;
-    padding:40px 0;
+    color:#999;
+}
+a{
+    color:#2563eb;
+    text-decoration:none;
 }
     </style>
 </head>
 <body>
-    <header class="site-header">
-        <div class="header-inner">
-            <h1 class="logo">🏫280班</h1>
-            <a href="index.html">← 返回首页</a>
-        </div>
-    </header>
     <main class="module-content">
         <div id="profileWrap"></div>
-
-        <div class="tab-wrap" id="tabWrap" style="display:none">
-            <div class="tab-header">
-                <button class="tab-item active" data-tab="novel">我的小说</button>
-                <button class="tab-item" data-tab="post">日常分享</button>
-                <button class="tab-item" data-tab="record">投稿记录</button>
-            </div>
-            <div class="tab-content" id="tabContent"></div>
+        <div style="margin-top:20px;">
+            <a href="index.html">← 返回首页</a>
         </div>
     </main>
 
 <script>
-// ========== 全局公共配置（和index保持一致） =========
 const SUPABASE_URL = 'https://gbktpjnitqpwomcprrol.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdia3Rwam5pdHFwd29tY3Bycm9sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTk2NDIsImV4cCI6MjA5ODk5NTY0Mn0.TIp9NAdDRZrI16Jq_no7Ga9EpX7ooc6b5Ck7r-sNqww';
+
+let loginUser = null;
+let targetUserId = null;
+
+function refreshUserStatus(){
+    const raw = localStorage.getItem("userInfo");
+    loginUser = raw ? JSON.parse(raw) : null;
+}
 
 async function supabaseRequest(table, method = 'GET', data = null, id = null) {
     const url = id
@@ -176,20 +105,30 @@ async function supabaseRequest(table, method = 'GET', data = null, id = null) {
         const result = await res.json();
         return result;
     } catch (e) {
-        console.error('Supabase 请求失败：', e);
+        console.error('请求失败', e);
         return [];
     }
 }
 
 function escapeHtml(str) {
-    if (!str) return '';
-    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    if (str === null || str === undefined) return '';
+    const s = String(str);
+    return s.replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
 }
 
-let loginUser = null;
-function refreshUserStatus(){
-    const raw = localStorage.getItem("userInfo");
-    loginUser = raw ? JSON.parse(raw) : null;
+function formatTime(timeStr){
+    if(!timeStr) return '';
+    const d = new Date(timeStr);
+    if(isNaN(d.getTime())) return '';
+    const y = d.getFullYear();
+    const m = String(d.getMonth()+1).padStart(2,'0');
+    const day = String(d.getDate()).padStart(2,'0');
+    const h = String(d.getHours()).padStart(2,'0');
+    const mi = String(d.getMinutes()).padStart(2,'0');
+    return `${y}-${m}-${day} ${h}:${mi}`;
 }
 
 function getUrlParam(name){
@@ -197,117 +136,70 @@ function getUrlParam(name){
     return params.get(name);
 }
 
-let viewUserId = getUrlParam("uid");
-let viewUser = null;
-let userNovels = [];
-let userPosts = [];
-
-async function loadProfilePage(){
+async function loadProfile(){
     refreshUserStatus();
-    const tabWrapDom = document.getElementById("tabWrap");
-
-    if(viewUserId){
-        // 查看别人主页
-        const userArr = await supabaseRequest("users","GET");
-        viewUser = Array.isArray(userArr) ? userArr.find(u=>u.id == viewUserId) : null;
-        if(!viewUser){
-            alert("找不到该用户！");
-            location.href="index.html";
-            return;
-        }
-    }else{
-        // 自己主页
-        if(!loginUser){
-            alert("请先登录账号");
-            location.href="login.html";
-            return;
-        }
-        viewUser = loginUser;
+    targetUserId = getUrlParam("uid");
+    if(!targetUserId && loginUser){
+        targetUserId = loginUser.id;
+    }
+    if(!targetUserId){
+        alert("参数错误");
+        return;
     }
 
-    renderProfile();
-    await loadUserWorks();
-    tabWrapDom.style.display="block";
-    bindTabClick();
-    switchTab("novel");
-}
+    const allNovels = await supabaseRequest("novels");
+    const userNovels = Array.isArray(allNovels) ? allNovels.filter(n=>n.user_id === targetUserId) : [];
 
-function renderProfile(){
-    const isMe = viewUserId === null;
-    const avatar = viewUser.avatar||"";
-    const nick = escapeHtml(viewUser.nickname);
+    const allPosts = await supabaseRequest("posts");
+    const userPosts = Array.isArray(allPosts) ? allPosts.filter(p=>p.user_id === targetUserId) : [];
 
-    let html=`
-    <div class="profile-card">
-        ${avatar ? `<img src="${avatar}" class="profile-avatar">` : "👤"}
-        <div class="profile-info">
-            <h2>${nick}</h2>
-            <div class="profile-account">账号：${nick}</div>
-    `;
+    const allDiscuss = await supabaseRequest("discussions");
+    const userDiscuss = Array.isArray(allDiscuss) ? allDiscuss.filter(d=>d.user_id === targetUserId) : [];
 
-    if(isMe){
-        // 自己主页：显示编辑、冷却提示
-        html+=`
-        <div class="cooling-tip">✕ 冷却中，剩余 59天22小时，暂时无法修改资料</div>
-        <div class="profile-edit-area">
-            <label>新昵称</label>
-            <input id="inputNick" value="${escapeHtml(viewUser.nickname)}">
-            <label>头像链接</label>
-            <input id="inputAvatar" value="${escapeHtml(viewUser.avatar||'')}" placeholder="粘贴图片URL">
-            <div class="btn-group">
-                <button class="btn-save" onclick="saveProfile()">保存修改</button>
-                <button class="btn-back" onclick="location.href='index.html'">返回首页</button>
+    const box = document.getElementById("profileWrap");
+    box.innerHTML = `
+    <div class="generic-page">
+        <h1>👤 用户主页</h1>
+        <div style="margin-bottom:24px;">
+            <p><strong>用户ID：</strong>${escapeHtml(targetUserId)}</p>
+            <p>📖 小说：${userNovels.length} 篇</p>
+            <p>📸 日常分享：${userPosts.length} 条</p>
+            <p>💬 讨论：${userDiscuss.length} 条</p>
+        </div>
+
+        <h2>📖 发布的小说</h2>
+        ${userNovels.length ===0 ? "<p class='empty'>暂无小说</p>" : userNovels.map(n=>`
+        <div class="novel-card">
+            <div class="novel-info">
+                <h3>${escapeHtml(n.title||"无题")}</h3>
+                <div class="novel-meta">👍 ${n.likes||0}</div>
+                <div class="novel-intro">${escapeHtml(n.intro||"暂无简介")}</div>
             </div>
         </div>
-        `;
-    }
-    html+=`</div></div>`;
-    document.getElementById("profileWrap").innerHTML = html;
+        `).join('')}
+
+        <hr style="margin:30px 0;">
+        <h2>📸 日常分享</h2>
+        ${userPosts.length ===0 ? "<p class='empty'>暂无分享</p>" : userPosts.map(p=>`
+        <div class="post-card">
+            <span class="sugg-date">🕐 ${formatTime(p.created_at)}</span>
+            <div class="post-content">${escapeHtml(p.content||"")}</div>
+        </div>
+        `).join('')}
+
+        <hr style="margin:30px 0;">
+        <h2>💬 发表的讨论</h2>
+        ${userDiscuss.length ===0 ? "<p class='empty'>暂无讨论</p>" : userDiscuss.map(d=>`
+        <div class="item-row">
+            <span class="sugg-date">🕐 ${formatTime(d.created_at)}</span>
+            <div>${escapeHtml(d.content)}</div>
+        </div>
+        `).join('')}
+    </div>
+    `;
 }
 
-async function loadUserWorks(){
-    const allPosts = await supabaseRequest("posts");
-    const allNovels = await supabaseRequest("novels");
-    userPosts = Array.isArray(allPosts) ? allPosts.filter(p=>p.user_id===viewUser.id) : [];
-    userNovels = Array.isArray(allNovels) ? allNovels.filter(n=>n.user_id===viewUser.id) : [];
-}
-
-// Tab切换
-function bindTabClick(){
-    document.querySelectorAll(".tab-item").forEach(el=>{
-        el.onclick=()=>{
-            document.querySelectorAll(".tab-item").forEach(t=>t.classList.remove("active"));
-            el.classList.add("active");
-            switchTab(el.dataset.tab);
-        }
-    })
-}
-function switchTab(tabName){
-    const box = document.getElementById("tabContent");
-    let html="";
-    if(tabName==="novel"){
-        if(userNovels.length>0){
-            userNovels.forEach(n=> html+=`<div class="item-row">${escapeHtml(n.title)}</div>`)
-        }else html=`<div class="empty">暂无小说</div>`;
-    }else if(tabName==="post"){
-        if(userPosts.length>0){
-            userPosts.forEach(p=> html+=`<div class="item-row">${escapeHtml(p.content||"无文字内容")}</div>`)
-        }else html=`<div class="empty">暂无日常分享</div>`;
-    }else if(tabName==="record"){
-        html=`<div class="empty">投稿记录开发中</div>`;
-    }
-    box.innerHTML=html;
-}
-
-async function saveProfile(){
-    if(viewUserId) return;
-    const newNick = document.getElementById("inputNick").value.trim();
-    const newAvatar = document.getElementById("inputAvatar").value.trim();
-    // 这里目前写死冷却，后面再做真实冷却时间逻辑
-    alert("冷却限制，暂时不能保存");
-}
-
-window.addEventListener('DOMContentLoaded',loadProfilePage);
+window.addEventListener('DOMContentLoaded', loadProfile);
 </script>
 </body>
 </html>
