@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>账号登录</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui, sans-serif;}
+body{background:#f3f1ec;display:flex;min-height:100vh;align-items:center;justify-content:center;padding:16px;}
+.box{width:100%;max-width:420px;background:#fff;padding:32px;border-radius:14px;box-shadow:0 2px 14px rgba(0,0,0,0.07);}
+h2{text-align:center;margin-bottom:24px;color:#333;}
+input{width:100%;padding:12px 14px;margin:8px 0;border:1px solid #ddd;border-radius:8px;font-size:16px;}
+button{width:100%;padding:13px;background:#8d6e63;color:#fff;border:none;border-radius:8px;font-size:16px;margin-top:12px;cursor:pointer;}
+.tip{margin-top:16px;text-align:center;font-size:14px;color:#555;}
+.tip a{color:#8d6e63;text-decoration:none;}
+</style>
+</head>
+<body>
+<div class="box">
+    <h2>账号登录</h2>
+    <input id="loginUser" placeholder="登录账号">
+    <input id="loginPwd" type="password" placeholder="登录密码">
+    <button id="loginBtn">登录</button>
+    <div class="tip">没有账号？<a href="register.html">立即注册</a></div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://gbktpjnitqpwomcprrol.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdia3Rwam5pdHFwd29tY3Bycm9sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTk2NDIsImV4cCI6MjA5ODk5NTY0Mn0.TIp9NAdDRZrI16Jq_no7Ga9EpX7ooc6b5Ck7r-sNqww';
+
+async function api(table){
+    const res=await fetch(`${SUPABASE_URL}/rest/v1/${table}`,{
+        headers:{
+            apikey:SUPABASE_KEY,
+            Authorization:`Bearer ${SUPABASE_KEY}`
+        }
+    });
+    return await res.json();
+}
+
+document.getElementById("loginBtn").onclick=async ()=>{
+    const username=document.getElementById("loginUser").value.trim();
+    const password=document.getElementById("loginPwd").value.trim();
+    if(!username||!password) return alert("账号密码不能为空");
+
+    const list=await api("users");
+    const user=list.find(u=>u.username===username && u.password===password);
+    if(!user) return alert("账号或密码错误");
+
+    // 登录成功存储用户信息
+    localStorage.setItem("userInfo",JSON.stringify({
+        id:user.id,
+        username:user.username,
+        nickname:user.nickname,
+        avatar:user.avatar
+    }));
+    alert("登录成功！");
+    location.href="index.html";
+}
+</script>
+</body>
+</html>
