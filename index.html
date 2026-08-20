@@ -427,49 +427,49 @@
         
         /* ===== 手机端适配 ===== */
         @media (max-width: 768px) {
-            .header-inner { padding: 10px 12px; }
-            .logo { font-size: 1.1em; }
-            .nav-item { font-size: 0.9em; padding: 6px 10px; }
-            .admin-link { font-size: 0.85em; padding: 5px 10px; }
+            .header-inner { padding:10px 12px; }
+            .logo { font-size:1.1em; }
+            .nav-item { font-size:0.9em; padding:6px 10px; }
+            .admin-link { font-size:0.85em; padding:5px 10px; }
             
-            .module-content { padding: 12px; }
-            .generic-page { padding: 16px; }
-            .generic-page h1 { font-size: 1.4em; }
+            .module-content { padding:12px; }
+            .generic-page { padding:16px; }
+            .generic-page h1 { font-size:1.4em; }
             
-            .book-layout { flex-direction: column; }
+            .book-layout { flex-direction:column; }
             .book-toc { 
-                width: 100%; 
-                position: static; 
-                display: flex; 
-                flex-wrap: wrap; 
-                gap: 8px; 
-                padding: 12px; 
+                width:100%; 
+                position:static; 
+                display:flex; 
+                flex-wrap:wrap; 
+                gap:8px; 
+                padding:12px; 
             }
-            .book-toc h3 { width: 100%; margin-bottom: 8px; }
+            .book-toc h3 { width:100%; margin-bottom:8px; }
             .toc-item { 
-                font-size: 0.85em; 
-                padding: 6px 10px; 
-                margin-bottom: 0;
+                font-size:0.85em; 
+                padding:6px 10px; 
+                margin-bottom:0;
             }
             
-            .book-content h1 { font-size: 1.5em; }
-            .bk-section { padding: 16px; }
-            .bk-section p { font-size: 1.05em; line-height: 1.9; }
+            .book-content h1 { font-size:1.5em; }
+            .bk-section { padding:16px; }
+            .bk-section p { font-size:1.05em; line-height:1.9; }
             
-            .notice-card { padding: 16px; }
-            .notice-title { font-size: 1.2em; }
+            .notice-card { padding:16px; }
+            .notice-title { font-size:1.2em; }
             
-            .novel-card { flex-direction: column; }
-            .novel-cover { width: 100%; height: 200px; }
-            .novel-title { font-size: 1.2em; }
+            .novel-card { flex-direction:column; }
+            .novel-cover { width:100%; height:200px; }
+            .novel-title { font-size:1.2em; }
             
-            .item-row { flex-direction: column; }
-            .item-row > div:last-child { margin-top: 10px; }
+            .item-row { flex-direction:column; }
+            .item-row > div:last-child { margin-top:10px; }
             
-            input, textarea, select { font-size: 16px; }
+            input, textarea, select { font-size:16px; }
             
             .post-images img {
-                height: 150px;
+                height:150px;
             }
         }
     </style>
@@ -583,7 +583,7 @@
     const s = String(str);
     return s.replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
+            .replace( />/g, '&gt;')
             .replace(/"/g, '&quot;');
 }
 function formatTime(timeStr){
@@ -644,14 +644,12 @@ async function registerOnline() {
                 last_active: new Date().toISOString()
             }).catch(() => { });
         }
-
         onlineTimer = setInterval(async () => {
             try {
                 const tickNow = Date.now();
                 // 只请求1次，不要重复多次请求接口！！
                 let tickListRaw = await supabaseRequest('online_users');
                 let tickList = Array.isArray(tickListRaw) ? tickListRaw : [];
-
                 for (const item of tickList) {
                     const t = new Date(item.last_active).getTime();
                     if (tickNow - t > expireMs) {
@@ -981,7 +979,6 @@ ${(()=>{
     return;
   }
   list.sort((a,b)=>new Date(b.created_at) - new Date(a.created_at));
-
   el.innerHTML = list.length > 0
     ? list.map(item=>{
         const userInfo = Array.isArray(userList) && userList.find(u=>u.id === item.user_id);
@@ -1034,6 +1031,16 @@ ${(()=>{
                 await loadPosts();
             }
         });
+//新增虚拟模块：用户列表，点击直接跳转userlist.html
+registerModule({
+    id: 'userlist',
+    name: '用户列表',
+    icon: '👥',
+    render(){ return ''; },
+    async init(){
+        location.href = "userlist.html";
+    }
+});
         let allPosts = [];
         function searchPosts(keyword) {
             const filtered = allPosts.filter(p => (p.content && p.content.includes(keyword)) || (p.nickname && p.nickname.includes(keyword)));

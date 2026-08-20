@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户列表 - 280班</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; 
+            background: #f4f1eb; 
+            color: #2c2c2c; 
+            line-height: 1.6;
+        }
+        .site-header { 
+            background: #3e2723; 
+            color: #fff; 
+            position: sticky; 
+            top: 0; 
+            z-index: 100; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        .header-inner { 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            padding: 12px 16px; 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+        }
+        .logo { 
+            font-size: 1.3em; 
+            font-weight: 700; 
+            white-space: nowrap; 
+            flex-shrink: 0;
+        }
+        .main-nav { 
+            display: flex; 
+            gap: 4px; 
+            flex: 1; 
+            overflow-x: auto; 
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+        .main-nav::-webkit-scrollbar { display: none; }
+        .nav-item { 
+            color: rgba(255,255,255,0.8); 
+            text-decoration: none; 
+            padding: 8px 14px; 
+            border-radius: 20px; 
+            font-size: 0.95em; 
+            transition: 0.2s; 
+            white-space: nowrap; 
+            cursor: pointer; 
+            user-select: none;
+            flex-shrink: 0;
+        }
+        .nav-item:hover { background: rgba(255,255,255,0.15); color: #fff; }
+        .user-bar{
+            display:flex;
+            align-items:center;
+            gap:10px;
+            flex-shrink:0;
+            font-size:0.9em;
+        }
+        .user-bar a{
+            color:rgba(255,255,255,0.8);
+            text-decoration:none;
+            padding:4px 8px;
+            border-radius:6px;
+        }
+        .user-bar a:hover{
+            background:rgba(255,255,255,0.15);
+            color:#fff;
+        }
+        .nav-avatar{
+            width:28px;
+            height:28px;
+            border-radius:50%;
+            object-fit:cover;
+            flex-shrink:0;
+        }
+        .user-bar-logged{
+            display:flex;
+            align-items:center;
+            gap:8px;
+        }
+        .admin-link { 
+            color: #ffcc80; 
+            text-decoration: none; 
+            font-size: 0.9em; 
+            border: 1px solid #ffcc80; 
+            padding: 6px 12px; 
+            border-radius: 20px; 
+            white-space: nowrap; 
+            transition: 0.2s; 
+            flex-shrink: 0;
+        }
+        .admin-link:hover { background: #ffcc80; color: #3e2723; }
+        .module-content { 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            padding: 20px 16px; 
+        }
+        .generic-page { 
+            background: #fff; 
+            border-radius: 12px; 
+            padding: 24px; 
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08); 
+        }
+        .user-item{
+            display:flex;
+            align-items:center;
+            gap:12px;
+            padding:14px;
+            border:1px solid #e5e7eb;
+            border-radius:8px;
+            margin:10px 0;
+        }
+        .u-avatar{
+            width:40px;
+            height:40px;
+            border-radius:50%;
+            object-fit:cover;
+            flex-shrink:0;
+        }
+        .empty{color:#999;padding:30px 0;text-align:center;}
+        h1{margin-bottom:20px;color:#3e2723;}
+        a{color:#2563eb;text-decoration:none;}
+        @media (max-width:768px){
+            .header-inner{padding:10px 12px;}
+            .generic-page{padding:16px;}
+        }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <div class="header-inner">
+            <h1 class="logo">🏫 280班</h1>
+            <nav class="main-nav" id="mainNav">
+                <div class="nav-item" onclick="location.href='index.html#book'">📖历史书</div>
+                <div class="nav-item" onclick="location.href='index.html#notice'">📋公告栏</div>
+                <div class="nav-item" onclick="location.href='index.html#novel'">📖小说</div>
+                <div class="nav-item" onclick="location.href='index.html#submit'">✍️创作投稿</div>
+                <div class="nav-item" onclick="location.href='index.html#discuss'">💬讨论</div>
+                <div class="nav-item" onclick="location.href='index.html#share'">📸日常分享</div>
+                <div class="nav-item" onclick="location.href='userlist.html'">👥 用户列表</div>
+            </nav>
+            <div class="user-bar" id="userBar"></div>
+            <a href="admin.html" class="admin-link">管理</a>
+        </div>
+    </header>
+    <main class="module-content">
+        <div class="generic-page">
+            <h1>👥 全部注册用户</h1>
+            <div id="userListWrap">
+                <p class="empty">正在加载用户列表…</p>
+            </div>
+        </div>
+    </main>
+<script>
+const SUPABASE_URL = 'https://gbktpjnitqpwomcprrol.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdia3Rwam5pdHFwd29tY3Bycm9sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTk2NDIsImV4cCI6MjA5ODk5NTY0Mn0.TIp9NAdDRZrI16Jq_no7Ga9EpX7ooc6b5Ck7r-sNqww';
+let loginUser = null;
+
+function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    const s = String(str);
+    return s.replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace( />/g, '&gt;')
+            .replace(/"/g, '&quot;');
+}
+
+function refreshUserStatus(){
+    const raw = localStorage.getItem("userInfo");
+    loginUser = raw ? JSON.parse(raw) : null;
+    renderUserBar();
+}
+function renderUserBar(){
+    const bar = document.getElementById("userBar");
+    if(!loginUser){
+        bar.innerHTML = `
+            <a href="login.html">登录</a>
+            <a href="register.html">注册</a>
+        `;
+    }else{
+        const avatarSrc = loginUser.avatar ? escapeHtml(loginUser.avatar) : "";
+        bar.innerHTML = `
+            <div class="user-bar-logged">
+    <a href="profile.html" style="display:flex;align-items:center;gap:6px;color:unset;text-decoration:none;">
+        ${avatarSrc ? `<img class="nav-avatar" src="${avatarSrc}" alt="头像">` : "👤"}
+        <span>${escapeHtml(loginUser.nickname)}</span>
+    </a>
+</div>
+                    <a href="profile.html">个人主页</a>
+                    <a href="javascript:logout()">退出</a>
+        `;
+    }
+}
+function logout(){
+    localStorage.removeItem("userInfo");
+    refreshUserStatus();
+}
+
+async function supabaseRequest(table, method = 'GET', data = null, query = null) {
+    let url = `${SUPABASE_URL}/rest/v1/${table}`;
+    if(query){
+        url += "?" + query;
+    }
+    const options = {
+        method: method,
+        headers: {
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'Content-Type': 'application/json; charset=utf-8',
+            'Prefer': 'return=representation'
+        }
+    };
+    if (data && (method === 'POST' || method === 'PATCH')) {
+        options.body = JSON.stringify(data);
+    }
+    try {
+        const res = await fetch(url, options);
+        if (method === 'DELETE') return { ok: true };
+        const result = await res.json();
+        return result;
+    } catch (e) {
+        console.error('请求失败', e);
+        return [];
+    }
+}
+
+async function loadUserList(){
+    const wrap = document.getElementById("userListWrap");
+    try{
+        const userArr = await supabaseRequest("users");
+        if(!Array.isArray(userArr) || userArr.length === 0){
+            wrap.innerHTML = `<p class="empty">暂无注册用户</p>`;
+            return;
+        }
+        wrap.innerHTML = userArr.map(u=>{
+            const ava = u?.avatar||"";
+            const nick = escapeHtml(u.nickname||"匿名用户");
+            return `
+            <div class="user-item">
+                ${ava?`<img class="u-avatar" src="${ava}" alt="头像">`:"👤"}
+                <div>
+                    <a href="profile.html?uid=${escapeHtml(u.id)}" style="font-size:1.1em;font-weight:600;">${nick}</a>
+                    <div style="font-size:13px;color:#777;">用户ID：${escapeHtml(u.id)}</div>
+                </div>
+            </div>
+            `;
+        }).join('');
+    }catch(err){
+        console.error(err);
+        wrap.innerHTML = `<p class="empty">用户列表加载失败</p>`;
+    }
+}
+
+window.addEventListener('DOMContentLoaded',()=>{
+    refreshUserStatus();
+    loadUserList();
+})
+</script>
+</body>
+</html>

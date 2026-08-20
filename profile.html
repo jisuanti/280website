@@ -139,7 +139,8 @@
                 <div class="nav-item" onclick="location.href='index.html#submit'">✍️创作投稿</div>
                 <div class="nav-item" onclick="location.href='index.html#discuss'">💬讨论</div>
                 <div class="nav-item" onclick="location.href='index.html#share'">📸日常分享</div>
-            </nav>
+            <div class="nav-item" onclick="location.href='userlist.html'">👥 用户列表</div>
+</nav>
             <div class="user-bar" id="userBar"></div>
             <a href="admin.html" class="admin-link">管理</a>
         </div>
@@ -153,13 +154,11 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 let loginUser = null;
 let targetUserId = null;
 let targetUserInfo = null;
-
 function refreshUserStatus(){
     const raw = localStorage.getItem("userInfo");
     loginUser = raw ? JSON.parse(raw) : null;
     renderUserBar();
 }
-
 function renderUserBar(){
     const bar = document.getElementById("userBar");
     if(!loginUser){
@@ -181,12 +180,10 @@ function renderUserBar(){
         `;
     }
 }
-
 function logout(){
     localStorage.removeItem("userInfo");
     refreshUserStatus();
 }
-
 async function supabaseRequest(table, method = 'GET', data = null, query = null) {
     let url = `${SUPABASE_URL}/rest/v1/${table}`;
     if(query){
@@ -214,16 +211,14 @@ async function supabaseRequest(table, method = 'GET', data = null, query = null)
         return [];
     }
 }
-
 function escapeHtml(str) {
     if (str === null || str === undefined) return '';
     const s = String(str);
     return s.replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
+            .replace( />/g, '&gt;')
             .replace(/"/g, '&quot;');
 }
-
 function formatTime(timeStr){
     if(!timeStr) return '';
     const d = new Date(timeStr);
@@ -235,12 +230,10 @@ function formatTime(timeStr){
     const mi = String(d.getMinutes()).padStart(2,'0');
     return `${y}-${m}-${day} ${h}:${mi}`;
 }
-
 function getUrlParam(name){
     const params = new URLSearchParams(location.search);
     return params.get(name);
 }
-
 function renderPostsPartial(userPosts, targetUid){
     const postWrapDom = document.getElementById("userPostsWrap");
     if(!postWrapDom) return;
@@ -253,7 +246,6 @@ function renderPostsPartial(userPosts, targetUid){
  </div>
  `).join('');
 }
-
 async function loadProfile(){
     refreshUserStatus();
     const wrapDom = document.getElementById("profileWrap");
@@ -274,18 +266,15 @@ async function loadProfile(){
       supabaseRequest("novels"),
       supabaseRequest("discussions")
     ]);
-
     if(Array.isArray(userList)){
       targetUserInfo = userList.find(u=>u.id === targetUserId);
     }
     const userNovels = Array.isArray(allNovels) ? allNovels.filter(n=>n.user_id === targetUserId) : [];
     const userDiscuss = Array.isArray(allDiscuss) ? allDiscuss.filter(d=>d.user_id === targetUserId) : [];
-
     const userName = targetUserInfo?.nickname || "未知用户";
     const pageAvatar = (targetUserInfo && targetUserInfo.avatar) 
         ? `<img class="nav-avatar" style="width:40px;height:40px;" src="${escapeHtml(targetUserInfo.avatar)}">` 
         : "👤";
-
     wrapDom.innerHTML = `
  <div class="generic-page">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
@@ -337,6 +326,33 @@ async function loadProfile(){
  `).join('')}
  </div>
  `;
+
+    // ==========新增：绑定保存按钮事件==========
+    const saveBtn = document.getElementById("saveProfileBtn");
+    if(saveBtn){
+        saveBtn.onclick = async function(){
+            const newAvatar = document.getElementById("editAvatarInput").value.trim();
+            const newNick = document.getElementById("editNickInput").value.trim();
+            if(!newNick){
+                alert("昵称不能为空");
+                return;
+            }
+            const updateData = {
+                nickname: newNick,
+                avatar: newAvatar
+            };
+            const res = await supabaseRequest("users","PATCH", updateData, `id=eq.${targetUserId}`);
+            if(Array.isArray(res) && res.length>0){
+                loginUser.nickname = newNick;
+                loginUser.avatar = newAvatar;
+                localStorage.setItem("userInfo",JSON.stringify(loginUser));
+                alert("保存成功，页面即将刷新");
+                location.reload();
+            }else{
+                alert("保存失败，请检查网络与Supabase权限策略");
+            }
+        };
+    }
 
     (async ()=>{
       try{
