@@ -4,8 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>280班网站</title>
-    <style>
-        * { margin:0; padding:0; box-sizing:border-box; }
+  <style>
+    .discussion-item{ background:#fff; border:1px solid #e5e7eb; border-radius:8px; padding:14px; margin-bottom:10px; }
+.discu-meta{ display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+.discu-avatar{ width:28px; height:28px; border-radius:50%; object-fit:cover; flex-shrink:0; }
+.discu-content{ line-height:1.6; }    
+* { margin:0; padding:0; box-sizing:border-box; }
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; 
             background: #f4f1eb; 
@@ -13,8 +17,9 @@
             line-height: 1.6;
             -webkit-font-smoothing: antialiased;
         }
-        
-        /* 头部导航 */
+</head>
+       
+ /* 头部导航 */
         .site-header { 
             background: #3e2723; 
             color: #fff; 
@@ -776,9 +781,12 @@ async function showOnlineUsers() {
                 document.getElementById('moduleContent').innerHTML = this.render({ notices: Array.isArray(notices) ? notices : [] });
             }
         });
-        registerModule({
-            id: 'novel', name: '小说', icon: '📖',
-            render(data) {
+        registerModule({    
+id: 'novel', name: '小说', icon: '📖',
+       async init(){
+    allPostsUser = await supabaseRequest("users");
+  },     
+render(data) {
                 const novels = data.novels || [];
                 return `
                     <div class="generic-page">
@@ -802,7 +810,9 @@ async function showOnlineUsers() {
             }
         });
         let allNovels = [];
-        function renderNovelCard(n) {
+let allUsersNovel = [];
+let allPostsUser = [];
+function renderNovelCard(n) {
             // 修复：使用user_id判断权限，不再单纯比对昵称
             const canDelete = loginUser && loginUser.id === n.user_id;
             return `
@@ -811,7 +821,14 @@ async function showOnlineUsers() {
                     <div class="novel-info">
                         <h3 class="novel-title">${escapeHtml(n.title || '无题')}</h3>
                         <div class="novel-meta">
-                            <span>✍️ ${n.user_id ? `<a href="profile.html?uid=${escapeHtml(n.user_id)}" style="color:#2563eb">${escapeHtml(n.author || '匿名')}</a>` : escapeHtml(n.author||'匿名')}</span>
+                            <span>
+${(()=>{
+  const u = Array.isArray(allPostsUser) && allPostsUser.find(x=>x.id === n.user_id);
+  const ava = u?.avatar||"";
+  const name = escapeHtml(n.author||"匿名");
+  return `${ava?`<img style="width:22px;height:22px;border-radius:50%;vertical-align:middle;margin-right:4px;" src="${ava}" alt="头像">`:""}${n.user_id?`<a href="profile.html?uid=${escapeHtml(n.user_id)}" style="color:#2563eb">${name}</a>`:name}`;
+})()}
+</span>
                             <span>👍 ${n.likes || 0}</span>
                         </div>
                         <div class="novel-intro">${escapeHtml(n.intro || '暂无简介')}</div>
@@ -943,7 +960,7 @@ async function showOnlineUsers() {
                                 <button class="btn-primary" onclick="postDiscussion()">📨 发布</button>
                             </div>
                         </div>
-                        <div id="discussList"></div>
+                        <div id="discussionList"></div>
                     </div>
                 `;
             },
@@ -951,20 +968,40 @@ async function showOnlineUsers() {
                 await loadDiscussions();
             }
         });
-        async function loadDiscussions() {
-            const list = await supabaseRequest('discussions');
-            const data = Array.isArray(list) ? list : [];
-            document.getElementById('discussList').innerHTML = data.length
-                ? data.map(d => `
-                    <div class="item-row">
-                        <div>
-                            <strong>👤 ${d.user_id ? `<a href="profile.html?uid=${escapeHtml(d.user_id)}" style="color:#2563eb">${escapeHtml(d.nickname || '匿名')}</a>` : escapeHtml(d.nickname||'匿名')}</strong>
-                            <span class="sugg-date">🕐 ${formatTime(d.created_at)}</span>
-                            <div style="margin-top:8px; line-height: 1.8;">${escapeHtml(d.content)}</div>
-                        </div>
-                    </div>`).join('')
-                : '<div class="empty">💬 暂无讨论，来说两句吧！</div>';
-        }
+      async function loadDiscussions() {
+  const el = document.getElementById("discussionList");
+  if (!el) {
+    console.warn("discussionList 容器不存在，跳过渲染讨论");
+    return;
+  }
+  const list = await supabaseRequest("discussions");
+  const userList = await supabaseRequest("users");
+  if(!Array.isArray(list)){
+    el.innerHTML = "<p>加载失败</p>";
+    return;
+  }
+  list.sort((a,b)=>new Date(b.created_at) - new Date(a.created_at));
+
+  el.innerHTML = list.length > 0
+    ? list.map(item=>{
+        const userInfo = Array.isArray(userList) && userList.find(u=>u.id === item.user_id);
+        const avatarUrl = userInfo?.avatar || "";
+        const showName = escapeHtml(item.nickname||"匿名");
+        return `
+<div class="discussion-item">
+  <div class="discu-meta">
+    ${avatarUrl ? `<img class="discu-avatar" src="${avatarUrl}" alt="头像">` : ''}
+    <span>${showName}</span>
+    <span class="time">${formatTime(item.created_at)}</span>
+  </div>
+  <div class="discu-content">
+    ${escapeHtml(item.content)}
+  </div>
+</div>
+`;
+      }).join('')
+    : `<p>暂无讨论，快来发表第一条！</p>`;
+}
         async function postDiscussion() {
             if(!checkLogin()) return;
             const content = document.getElementById('discContent').value.trim();
@@ -1075,10 +1112,11 @@ async function showOnlineUsers() {
         async function loadPosts() {
             const postsRaw = await supabaseRequest('posts');
             const commentsRaw = await supabaseRequest('comments');
-            allPosts = Array.isArray(postsRaw) ? postsRaw : [];
-            const allComments = Array.isArray(commentsRaw) ? commentsRaw : [];
-            renderPostList(allPosts, allComments);
-        }
+            allPostsUser = await supabaseRequest("users");
+  allPosts = Array.isArray(postsRaw) ? postsRaw : [];
+  const allComments = Array.isArray(commentsRaw) ? commentsRaw : [];
+  renderPostList(allPosts, allComments);
+}
         function renderPostList(posts, allComments = []) {
             const listDom = document.getElementById('postList');
             listDom.innerHTML = posts.length ? posts.map(p => {
@@ -1087,7 +1125,14 @@ async function showOnlineUsers() {
                 return `
                 <div class="post-card" id="post-${p.id}">
                     <div class="post-header">
-                        <strong>👤 ${p.user_id ? `<a href="profile.html?uid=${escapeHtml(p.user_id)}" style="color:#2563eb">${escapeHtml(p.nickname || '匿名')}</a>` : escapeHtml(p.nickname||'匿名')}</strong>
+                       <strong>
+${(()=>{
+  const u = Array.isArray(allPostsUser) && allPostsUser.find(x=>x.id === p.user_id);
+  const ava = u?.avatar||"";
+  const name = escapeHtml(p.nickname||"匿名");
+  return `${ava?`<img style="width:24px;height:24px;border-radius:50%;vertical-align:middle;margin-right:6px;" src="${ava}" alt="头像">`:""}${p.user_id?`<a href="profile.html?uid=${escapeHtml(p.user_id)}" style="color:#2563eb">${name}</a>`:name}`;
+})()}
+</strong>
                         <span class="sugg-date">🕐 ${formatTime(p.created_at)}</span>
                     </div>
                     ${p.content ? `<div class="post-content">${escapeHtml(p.content)}</div>` : ''}
