@@ -1126,11 +1126,11 @@ ${(()=>{
                 <div class="post-card" id="post-${p.id}">
                     <div class="post-header">
                        <strong>
-${(()=>{
-  const u = Array.isArray(allPostsUser) && allPostsUser.find(x=>x.id === p.user_id);
-  const ava = u?.avatar||"";
-  const name = escapeHtml(p.nickname||"匿名");
-  return `${ava?`<img style="width:24px;height:24px;border-radius:50%;vertical-align:middle;margin-right:6px;" src="${ava}" alt="头像">`:""}${p.user_id?`<a href="profile.html?uid=${escapeHtml(p.user_id)}" style="color:#2563eb">${name}</a>`:name}`;
+  ${(()=>{
+const u = Array.isArray(allPostsUser) && allPostsUser.find(x=>x.id === p.user_id);
+const ava = u?.avatar||"";
+const name = escapeHtml(p.nickname||"匿名");
+return `${ava?`<img style="width:24px;height:24px;border-radius:50%;vertical-align:middle;margin-right:6px;" src="${ava}" alt="头像">`:""}<a href="profile.html?uid=${escapeHtml(p.user_id)}" style="color:#2563eb">${name}</a>`;
 })()}
 </strong>
                         <span class="sugg-date">🕐 ${formatTime(p.created_at)}</span>
