@@ -142,7 +142,7 @@ pre{
 </style>
 </head>
 <body>
-<!-- 登录界面 -->
+<!-- 主管理员登录界面 -->
 <div class="login-wrap" id="loginBox">
     <div class="login-box">
         <h2>管理员登录</h2>
@@ -154,7 +154,19 @@ pre{
         <p class="info-text" id="loginTip" style="color:red;display:none;">密码错误，请重试</p>
     </div>
 </div>
-
+<!--激活数字模块独立密码弹窗 -->
+<div class="login-wrap" id="activatePwdBox" style="display:none;">
+    <div class="login-box">
+        <h2>🔢激活数字管理 需要额外密码</h2>
+        <label>输入额外访问密码</label>
+        <input type="password" id="extraPwdInput" placeholder="">
+        <div class="btns">
+            <button class="btn-primary" onclick="checkExtraPassword()">确认</button>
+            <button class="btn-default" onclick="closeActivatePwdBox()">取消</button>
+        </div>
+        <p id="extraPwdTip" style="color:red;display:none;">密码错误</p>
+    </div>
+</div>
 <div id="adminMain" style="display:none;">
 <header>
     <h1>⚙️ 280班网站后台管理中心</h1>
@@ -169,8 +181,8 @@ pre{
         <div class="tab" data-target="tab-novel">📖小说管理</div>
         <div class="tab" data-target="tab-discuss">💬讨论管理</div>
         <div class="tab" data-target="tab-share">📸日常分享管理</div>
+        <div class="tab" data-target="tab-activate">🔢激活数字管理</div>
     </div>
-
     <!-- ========== 1.历史书章节管理 ========== -->
     <div class="panel show" id="tab-chapter">
         <h2>新增 / 编辑章节</h2>
@@ -192,7 +204,6 @@ pre{
         <h2 style="margin-top:30px;">已有章节列表</h2>
         <div id="chapterList"></div>
     </div>
-
     <!-- ========== 2.公告管理 ========== -->
     <div class="panel" id="tab-notice">
         <h2>发布新公告</h2>
@@ -208,13 +219,11 @@ pre{
         <h2 style="margin-top:30px;">全部公告列表</h2>
         <div id="noticeList"></div>
     </div>
-
     <!-- ========== 3.投稿审核 ========== -->
     <div class="panel" id="tab-submit">
         <h2>待审核用户投稿（可通过转为章节 / 驳回）</h2>
         <div id="submitList"></div>
     </div>
-
     <!-- ========== 4.在线用户 ========== -->
     <div class="panel" id="tab-online">
         <h2>当前在线用户（90秒无操作自动离线）</h2>
@@ -223,35 +232,52 @@ pre{
             <button class="btn-primary" onclick="loadOnlineUsers()">刷新列表</button>
         </div>
     </div>
-
     <!-- ========== 5.小说管理 ========== -->
     <div class="panel" id="tab-novel">
         <h2>全部小说管理（可删除违规小说）</h2>
         <div id="novelAdminList"></div>
     </div>
-
     <!-- ========== 6.讨论区管理 ========== -->
     <div class="panel" id="tab-discuss">
         <h2>班级讨论内容管理</h2>
         <div id="discussAdminList"></div>
     </div>
-
     <!-- ========== 7.日常分享管理 ========== -->
     <div class="panel" id="tab-share">
         <h2>日常分享帖子管理（帖子+评论）</h2>
         <div id="shareAdminList"></div>
     </div>
+    <!-- ==========8.激活数字管理========== -->
+    <div class="panel" id="tab-activate">
+        <h2>🔢激活数字指令管理</h2>
+        <input type="hidden" id="editActivateId" value="">
+        <label>触发数字（纯数字）</label>
+        <input id="actCode" type="number" placeholder="例如100">
+        <label>指令描述</label>
+        <input id="actDesc" placeholder="描述这个数字干什么">
+        <label>行为类型</label>
+        <select id="actType">
+            <option value="alert">alert 弹窗提示</option>
+            <option value="jump">jump 页面跳转</option>
+        </select>
+        <label>参数（弹窗文字 / 跳转URL）</label>
+        <textarea id="actPayload" placeholder="弹窗填文字；跳转填完整url"></textarea>
+        <div class="btns">
+            <button class="btn-primary" onclick="saveActivateCode()">保存指令</button>
+            <button class="btn-default" onclick="clearActivateForm()">清空表单</button>
+        </div>
+        <h2 style="margin-top:24px;">全部激活指令列表</h2>
+        <div id="activateCodeList"></div>
+    </div>
 </div>
 </div>
-
 <script>
-// =====================【数据库配置，与前台保持一致】=====================
 const SUPABASE_URL = "https://gbktpjnitqpwomcprrol.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdia3Rwam5pdHFwd29tY3Bycm9sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTk2NDIsImV4cCI6MjA5ODk5NTY0Mn0.TIp9NAdDRZrI16Jq_no7Ga9EpX7ooc6b5Ck7r-sNqww";
-// 管理员密码【无空格】
 const ADMIN_PASSWORD = "280class";
+const EXTRA_PASSWORD = "hanliupiannuan";
+let canAccessActivatePanel = false;
 
-// 登录校验
 function loginCheck(){
     const input = document.getElementById("adminPwd").value;
     const tip = document.getElementById("loginTip");
@@ -263,13 +289,10 @@ function loginCheck(){
         tip.style.display = "block";
     }
 }
-
-// 回车快速登录
 document.getElementById("adminPwd").addEventListener("keydown",e=>{
     if(e.key === "Enter") loginCheck();
 })
 
-// 通用请求函数（与 index.html 完全兼容）
 async function supabaseRequest(table, method = 'GET', data = null, id = null) {
     const url = id
         ? `${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`
@@ -298,15 +321,20 @@ async function supabaseRequest(table, method = 'GET', data = null, id = null) {
     }
 }
 
-// Tab切换逻辑
 document.querySelectorAll('.tab').forEach(tab=>{
-    tab.onclick = ()=>{
+    tab.onclick = async ()=>{
         const target = tab.getAttribute("data-target");
+        if(target === "tab-activate"){
+            if(!canAccessActivatePanel){
+                document.getElementById("activatePwdBox").style.display="flex";
+                return;
+            }
+        }
         document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
         document.querySelectorAll('.panel').forEach(p=>p.classList.remove('show'));
         tab.classList.add('active');
         document.getElementById(target).classList.add('show');
-        loadCurrentTabData();
+        await loadCurrentTabData();
     }
 })
 
@@ -320,10 +348,10 @@ function loadCurrentTabData(){
         case "tab-novel": loadNovelAdminList(); break;
         case "tab-discuss": loadDiscussAdminList(); break;
         case "tab-share": loadShareAdminList(); break;
+        case "tab-activate": loadActivateCodeList(); break;
     }
 }
 
-// ======================【章节管理】======================
 async function loadChapterList(){
     const list = await supabaseRequest("chapters");
     const wrap = document.getElementById("chapterList");
@@ -382,7 +410,6 @@ async function delChapter(id){
     loadChapterList();
 }
 
-// ======================【公告管理】======================
 async function loadNoticeList(){
     const list = await supabaseRequest("notices");
     const wrap = document.getElementById("noticeList");
@@ -435,7 +462,6 @@ async function delNotice(id){
     loadNoticeList();
 }
 
-// ======================【投稿审核】======================
 async function loadSubmitList(){
     const list = await supabaseRequest("submissions");
     const wrap = document.getElementById("submitList");
@@ -483,7 +509,6 @@ async function rejectSubmit(subId){
     loadSubmitList();
 }
 
-// ======================【在线用户】======================
 async function loadOnlineUsers(){
     const raw = await supabaseRequest("online_users");
     const wrap = document.getElementById("onlineUserList");
@@ -498,7 +523,6 @@ async function loadOnlineUsers(){
         active.map(u=>`<div class="list-item">👤 ${escapeHtml(u.nickname)}</div>`).join("");
 }
 
-// ======================【小说管理】======================
 async function loadNovelAdminList(){
     const list = await supabaseRequest("novels");
     const wrap = document.getElementById("novelAdminList");
@@ -521,7 +545,6 @@ async function adminDelNovel(id){
     loadNovelAdminList();
 }
 
-// ======================【讨论管理】======================
 async function loadDiscussAdminList(){
     const list = await supabaseRequest("discussions");
     const wrap = document.getElementById("discussAdminList");
@@ -544,7 +567,6 @@ async function adminDelDiscuss(id){
     loadDiscussAdminList();
 }
 
-// ======================【日常分享管理】======================
 async function loadShareAdminList(){
     const posts = await supabaseRequest("posts");
     const wrap = document.getElementById("shareAdminList");
@@ -567,13 +589,98 @@ async function adminDelPost(id){
     loadShareAdminList();
 }
 
-// HTML转义，防止XSS
+//========激活数字模块密码弹窗工具函数 ========
+function checkExtraPassword(){
+    const inputVal = document.getElementById("extraPwdInput").value.trim();
+    if(inputVal === EXTRA_PASSWORD){
+        canAccessActivatePanel = true;
+        document.getElementById("activatePwdBox").style.display="none";
+        document.getElementById("extraPwdTip").style.display="none";
+        document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+        document.querySelectorAll('.panel').forEach(p=>p.classList.remove('show'));
+        document.querySelector('.tab[data-target="tab-activate"]').classList.add("active");
+        document.getElementById("tab-activate").classList.add("show");
+        loadActivateCodeList();
+    }else{
+        document.getElementById("extraPwdTip").style.display="block";
+    }
+}
+function closeActivatePwdBox(){
+    document.getElementById("activatePwdBox").style.display="none";
+    document.getElementById("extraPwdTip").style.display="none";
+}
+
+//========激活数字 CRUD 函数 ========
+async function loadActivateCodeList(){
+    const list = await supabaseRequest("activate_codes");
+    const wrap = document.getElementById("activateCodeList");
+    if(!Array.isArray(list) || list.length===0){
+        wrap.innerHTML="<div class='info-text'>暂无激活指令</div>";
+        return;
+    }
+    wrap.innerHTML = list.map(item=>`
+    <div class="list-item">
+        <h4>🔢数字：${escapeHtml(item.code)}｜类型：${escapeHtml(item.type)}</h4>
+        <div class="info-text">说明：${escapeHtml(item.description||"无")}</div>
+        <div class="info-text">参数：${escapeHtml(item.payload||"")}</div>
+        <div class="list-actions">
+            <button class="btn-primary" onclick="editActivate(${JSON.stringify(item).replace(/"/g,'&quot;')})">编辑</button>
+            <button class="btn-danger" onclick="delActivate(${item.id})">删除</button>
+        </div>
+    </div>`).join('');
+}
+function clearActivateForm(){
+    document.getElementById('editActivateId').value="";
+    document.getElementById('actCode').value="";
+    document.getElementById('actDesc').value="";
+    document.getElementById('actType').value="alert";
+    document.getElementById('actPayload').value="";
+}
+function editActivate(data){
+    document.getElementById('editActivateId').value = data.id;
+    document.getElementById('actCode').value = data.code;
+    document.getElementById('actDesc').value = data.description||"";
+    document.getElementById('actType').value = data.type;
+    document.getElementById('actPayload').value = data.payload||"";
+}
+async function saveActivateCode(){
+    const id = document.getElementById('editActivateId').value;
+    const codeVal = Number(document.getElementById('actCode').value);
+    const descVal = document.getElementById('actDesc').value.trim();
+    const typeVal = document.getElementById('actType').value;
+    const payloadVal = document.getElementById('actPayload').value.trim();
+    if(isNaN(codeVal)){
+        alert("请填写合法数字");
+        return;
+    }
+    const data = {
+        code: codeVal,
+        description: descVal,
+        type: typeVal,
+        payload: payloadVal
+    };
+    if(id){
+        await supabaseRequest("activate_codes","PATCH",data,Number(id));
+        alert("修改成功");
+    }else{
+        await supabaseRequest("activate_codes","POST",data);
+        alert("新增成功");
+    }
+    clearActivateForm();
+    loadActivateCodeList();
+}
+async function delActivate(id){
+    if(!confirm("确认删除该激活指令？")) return;
+    await supabaseRequest("activate_codes","DELETE",null,id);
+    loadActivateCodeList();
+}
+
 function escapeHtml(str){
     if(!str) return "";
     return String(str)
         .replace(/&/g,'&amp;')
         .replace(/</g,'&lt;')
-        .replace(/>/g,'&gt;')
+        .replace( />/g,'&gt;')
         .replace(/"/g,'&quot;')
         .replace(/'/g,'&#039;');
 }

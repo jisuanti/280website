@@ -4,12 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>280班网站</title>
-  <style>
-    .discussion-item{ background:#fff; border:1px solid #e5e7eb; border-radius:8px; padding:14px; margin-bottom:10px; }
-.discu-meta{ display:flex; align-items:center; gap:8px; margin-bottom:8px; }
-.discu-avatar{ width:28px; height:28px; border-radius:50%; object-fit:cover; flex-shrink:0; }
-.discu-content{ line-height:1.6; }    
-* { margin:0; padding:0; box-sizing:border-box; }
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; 
             background: #f4f1eb; 
@@ -17,9 +13,8 @@
             line-height: 1.6;
             -webkit-font-smoothing: antialiased;
         }
-</head>
-       
- /* 头部导航 */
+        
+        /* 头部导航 */
         .site-header { 
             background: #3e2723; 
             color: #fff; 
@@ -108,7 +103,6 @@
             background:rgba(255,255,255,0.15);
             color:#fff;
         }
-        /*导航栏用户头像*/
         .nav-avatar{
             width:28px;
             height:28px;
@@ -424,11 +418,21 @@
             font-size: 0.85em;
             padding: 4px 10px !important;
         }
-        
+        /*激活数字模块样式*/
+        .activate-item{
+            padding:10px 12px;
+            background:#f7f3ec;
+            border-radius:8px;
+            margin:8px 0;
+        }
+        .activate-input-wrap{
+            display:flex;gap:8px;margin:16px 0;
+        }
+        .activate-input-wrap input{flex:1;}
         /* ===== 手机端适配 ===== */
         @media (max-width: 768px) {
             .header-inner { padding:10px 12px; }
-            .logo { font-size:1.1em; }
+            .logo { font-size: 1.1em; }
             .nav-item { font-size:0.9em; padding:6px 10px; }
             .admin-link { font-size:0.85em; padding:5px 10px; }
             
@@ -494,7 +498,8 @@
 <script>
         // ===== 账号登录全局变量【完整保留】 =====
         let loginUser = null;
-        let onlineTimer = null; // 定时器，防止内存泄漏
+        let onlineTimer = null;
+        let activateCodeList = []; //保存激活数字列表
         function refreshUserStatus(){
             const raw = localStorage.getItem("userInfo");
             loginUser = raw ? JSON.parse(raw) : null;
@@ -508,7 +513,6 @@
                     <a href="register.html">注册</a>
                 `;
             }else{
-                // 如果用户没有设置头像，使用默认占位图标
                 const avatarSrc = loginUser.avatar ? escapeHtml(loginUser.avatar) : "";
                 bar.innerHTML = `
                     <div class="user-bar-logged">
@@ -528,7 +532,6 @@
             alert("已退出登录");
             openModule(currentModuleId);
         }
-        // 检查登录，未登录弹窗跳转
         function checkLogin(){
             if(!loginUser){
                 alert("请先登录账号！");
@@ -579,25 +582,13 @@
             return text.split('\n').filter(l => l.trim()).map(l => `<p>${escapeHtml(l)}</p>`).join('');
         }
         function escapeHtml(str) {
-    if (str === null || str === undefined) return '';
-    const s = String(str);
-    return s.replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace( />/g, '&gt;')
-            .replace(/"/g, '&quot;');
-}
-function formatTime(timeStr){
-    if(!timeStr) return '';
-    const d = new Date(timeStr);
-    if(isNaN(d.getTime())) return '';
-    const y = d.getFullYear();
-    const m = String(d.getMonth()+1).padStart(2,'0');
-    const day = String(d.getDate()).padStart(2,'0');
-    const h = String(d.getHours()).padStart(2,'0');
-    const mi = String(d.getMinutes()).padStart(2,'0');
-    return `${y}-${m}-${day} ${h}:${mi}`;
-}
-        // 生成游客唯一ID，解决多名游客昵称冲突覆盖在线状态
+            if (!str) return '';
+            return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace( />/g, '&gt;').replace(/"/g, '&quot;');
+        }
+        function formatTime(isoString) {
+            if (!isoString) return '';
+            return isoString.replace('T', ' ').slice(0, 16);
+        }
         function getGuestId(){
             let gid = localStorage.getItem("guest_id");
             if(!gid){
@@ -606,92 +597,83 @@ function formatTime(timeStr){
             }
             return gid;
         }
-        // ===== 在线用户功能 =====
-async function registerOnline() {
-    // 先清除旧定时器
-    if(onlineTimer) clearInterval(onlineTimer);
-    try {
-        const expireMs = 90 * 1000;
-        const now = Date.now();
-        const allOnlineRaw = await supabaseRequest('online_users');
-        const onlineList = Array.isArray(allOnlineRaw) ? allOnlineRaw : [];
-        // 清理超时用户
-        for (const item of onlineList) {
-            const activeTime = new Date(item.last_active).getTime();
-            if (now - activeTime > expireMs) {
-                await supabaseRequest('online_users', 'DELETE', null, item.id).catch(() => { });
-            }
-        }
-        const freshList = Array.isArray(await supabaseRequest('online_users')) ? await supabaseRequest('online_users') : [];
-        let currentNick, uniqueId;
-        if(loginUser){
-            currentNick = loginUser.nickname;
-            uniqueId = "user_" + loginUser.id;
-        }else{
-            currentNick = "游客";
-            uniqueId = getGuestId();
-        }
-        const me = freshList.find(u => u.unique_id === uniqueId);
-        if (me) {
-            await supabaseRequest('online_users', 'PATCH', {
-                last_active: new Date().toISOString(),
-                nickname: currentNick
-            }, me.id).catch(() => { });
-        } else {    
-             await supabaseRequest('online_users', 'POST', {
-                unique_id: uniqueId,
-                nickname: currentNick,
-                last_active: new Date().toISOString()
-            }).catch(() => { });
-        }
-        onlineTimer = setInterval(async () => {
+        async function registerOnline() {
+            if(onlineTimer) clearInterval(onlineTimer);
             try {
-                const tickNow = Date.now();
-                // 只请求1次，不要重复多次请求接口！！
-                let tickListRaw = await supabaseRequest('online_users');
-                let tickList = Array.isArray(tickListRaw) ? tickListRaw : [];
-                for (const item of tickList) {
-                    const t = new Date(item.last_active).getTime();
-                    if (tickNow - t > expireMs) {
+                const expireMs = 90 * 1000;
+                const now = Date.now();
+                const allOnlineRaw = await supabaseRequest('online_users');
+                const onlineList = Array.isArray(allOnlineRaw) ? allOnlineRaw : [];
+                for (const item of onlineList) {
+                    const activeTime = new Date(item.last_active).getTime();
+                    if (now - activeTime > expireMs) {
                         await supabaseRequest('online_users', 'DELETE', null, item.id).catch(() => { });
                     }
                 }
-                // 删除重复请求，直接复用上面数据，不再重新拉一遍
-                let selfNick, selfUid;
+                const freshList = Array.isArray(await supabaseRequest('online_users')) ? await supabaseRequest('online_users') : [];
+                let currentNick, uniqueId;
                 if(loginUser){
-                    selfNick = loginUser.nickname;
-                    selfUid = "user_" + loginUser.id;
+                    currentNick = loginUser.nickname;
+                    uniqueId = "user_" + loginUser.id;
                 }else{
-                    selfNick = "游客";
-                    selfUid = getGuestId();
+                    currentNick = "游客";
+                    uniqueId = getGuestId();
                 }
-                const self = tickList.find(u => u.unique_id === selfUid);
-                if (self) {
+                const me = freshList.find(u => u.unique_id === uniqueId);
+                if (me) {
                     await supabaseRequest('online_users', 'PATCH', {
                         last_active: new Date().toISOString(),
-                        nickname: selfNick
-                    }, self.id).catch(() => { });
+                        nickname: currentNick
+                    }, me.id).catch(() => { });
+                } else {
+                    await supabaseRequest('online_users', 'POST', {
+                        unique_id: uniqueId,
+                        nickname: currentNick,
+                        last_active: new Date().toISOString()
+                    }).catch(() => { });
                 }
-                document.getElementById('onlineCount').textContent = tickList.length;
-            }catch(tickErr){
-                console.warn("心跳循环出错",tickErr);
+                onlineTimer = setInterval(async () => {
+                    const tickNow = Date.now();
+                    let tickList = Array.isArray(await supabaseRequest('online_users')) ? await supabaseRequest('online_users') : [];
+                    for (const item of tickList) {
+                        const t = new Date(item.last_active).getTime();
+                        if (tickNow - t > expireMs) {
+                            await supabaseRequest('online_users', 'DELETE', null, item.id).catch(() => { });
+                        }
+                    }
+                    tickList = Array.isArray(await supabaseRequest('online_users')) ? await supabaseRequest('online_users') : [];
+                    let selfNick, selfUid;
+                    if(loginUser){
+                        selfNick = loginUser.nickname;
+                        selfUid = "user_" + loginUser.id;
+                    }else{
+                        selfNick = "游客";
+                        selfUid = getGuestId();
+                    }
+                    const self = tickList.find(u => u.unique_id === selfUid);
+                    if (self) {
+                        await supabaseRequest('online_users', 'PATCH', {
+                            last_active: new Date().toISOString(),
+                            nickname: selfNick
+                        }, self.id).catch(() => { });
+                    }
+                    document.getElementById('onlineCount').textContent = tickList.length;
+                }, 30000);
+                document.getElementById('onlineCount').textContent = freshList.length;
+            } catch (e) {
+                console.error('在线用户异常', e);
+                document.getElementById('onlineCount').textContent = '?';
             }
-        }, 30000);
-        document.getElementById('onlineCount').textContent = freshList.length;
-    } catch (e) {
-        console.error('在线用户异常', e);
-        document.getElementById('onlineCount').textContent = '?';
-    }
-}
-async function showOnlineUsers() {
-    const expireMs = 90 * 1000;
-    const now = Date.now();
-    const raw = await supabaseRequest('online_users');
-    const users = Array.isArray(raw) ? raw : [];
-    const active = users.filter(item => now - new Date(item.last_active).getTime() < expireMs);
-    if (active.length === 0) return alert('暂无在线用户');
-    alert('当前在线：\n' + active.map(u => u.nickname).join('\n'));
-}
+        }
+        async function showOnlineUsers() {
+            const expireMs = 90 * 1000;
+            const now = Date.now();
+            const raw = await supabaseRequest('online_users');
+            const users = Array.isArray(raw) ? raw : [];
+            const active = users.filter(item => now - new Date(item.last_active).getTime() < expireMs);
+            if (active.length === 0) return alert('暂无在线用户');
+            alert('当前在线：\n' + active.map(u => u.nickname).join('\n'));
+        }
         // ===== 模块系统 =====
         const modules = {};
         function registerModule(mod) {
@@ -779,12 +761,9 @@ async function showOnlineUsers() {
                 document.getElementById('moduleContent').innerHTML = this.render({ notices: Array.isArray(notices) ? notices : [] });
             }
         });
-        registerModule({    
-id: 'novel', name: '小说', icon: '📖',
-       async init(){
-    allPostsUser = await supabaseRequest("users");
-  },     
-render(data) {
+        registerModule({
+            id: 'novel', name: '小说', icon: '📖',
+            render(data) {
                 const novels = data.novels || [];
                 return `
                     <div class="generic-page">
@@ -808,10 +787,7 @@ render(data) {
             }
         });
         let allNovels = [];
-let allUsersNovel = [];
-let allPostsUser = [];
-function renderNovelCard(n) {
-            // 修复：使用user_id判断权限，不再单纯比对昵称
+        function renderNovelCard(n) {
             const canDelete = loginUser && loginUser.id === n.user_id;
             return `
                 <div class="novel-card" id="novel-${n.id}">
@@ -819,14 +795,7 @@ function renderNovelCard(n) {
                     <div class="novel-info">
                         <h3 class="novel-title">${escapeHtml(n.title || '无题')}</h3>
                         <div class="novel-meta">
-                            <span>
-${(()=>{
-  const u = Array.isArray(allPostsUser) && allPostsUser.find(x=>x.id === n.user_id);
-  const ava = u?.avatar||"";
-  const name = escapeHtml(n.author||"匿名");
-  return `${ava?`<img style="width:22px;height:22px;border-radius:50%;vertical-align:middle;margin-right:4px;" src="${ava}" alt="头像">`:""}${n.user_id?`<a href="profile.html?uid=${escapeHtml(n.user_id)}" style="color:#2563eb">${name}</a>`:name}`;
-})()}
-</span>
+                            <span>✍️ ${escapeHtml(n.author || '匿名')}</span>
                             <span>👍 ${n.likes || 0}</span>
                         </div>
                         <div class="novel-intro">${escapeHtml(n.intro || '暂无简介')}</div>
@@ -958,7 +927,7 @@ ${(()=>{
                                 <button class="btn-primary" onclick="postDiscussion()">📨 发布</button>
                             </div>
                         </div>
-                        <div id="discussionList"></div>
+                        <div id="discussList"></div>
                     </div>
                 `;
             },
@@ -966,39 +935,20 @@ ${(()=>{
                 await loadDiscussions();
             }
         });
-      async function loadDiscussions() {
-  const el = document.getElementById("discussionList");
-  if (!el) {
-    console.warn("discussionList 容器不存在，跳过渲染讨论");
-    return;
-  }
-  const list = await supabaseRequest("discussions");
-  const userList = await supabaseRequest("users");
-  if(!Array.isArray(list)){
-    el.innerHTML = "<p>加载失败</p>";
-    return;
-  }
-  list.sort((a,b)=>new Date(b.created_at) - new Date(a.created_at));
-  el.innerHTML = list.length > 0
-    ? list.map(item=>{
-        const userInfo = Array.isArray(userList) && userList.find(u=>u.id === item.user_id);
-        const avatarUrl = userInfo?.avatar || "";
-        const showName = escapeHtml(item.nickname||"匿名");
-        return `
-<div class="discussion-item">
-  <div class="discu-meta">
-    ${avatarUrl ? `<img class="discu-avatar" src="${avatarUrl}" alt="头像">` : ''}
-    <span>${showName}</span>
-    <span class="time">${formatTime(item.created_at)}</span>
-  </div>
-  <div class="discu-content">
-    ${escapeHtml(item.content)}
-  </div>
-</div>
-`;
-      }).join('')
-    : `<p>暂无讨论，快来发表第一条！</p>`;
-}
+        async function loadDiscussions() {
+            const list = await supabaseRequest('discussions');
+            const data = Array.isArray(list) ? list : [];
+            document.getElementById('discussList').innerHTML = data.length
+                ? data.map(d => `
+                    <div class="item-row">
+                        <div>
+                            <strong>👤 ${escapeHtml(d.nickname || '匿名')}</strong>
+                            <span class="sugg-date">🕐 ${formatTime(d.created_at)}</span>
+                            <div style="margin-top:8px; line-height: 1.8;">${escapeHtml(d.content)}</div>
+                        </div>
+                    </div>`).join('')
+                : '<div class="empty">💬 暂无讨论，来说两句吧！</div>';
+        }
         async function postDiscussion() {
             if(!checkLogin()) return;
             const content = document.getElementById('discContent').value.trim();
@@ -1031,7 +981,8 @@ ${(()=>{
                 await loadPosts();
             }
         });
-//新增虚拟模块：用户列表，点击直接跳转userlist.html
+
+//=====补回 用户列表虚拟模块 =====
 registerModule({
     id: 'userlist',
     name: '用户列表',
@@ -1041,6 +992,56 @@ registerModule({
         location.href = "userlist.html";
     }
 });
+
+        //========激活数字模块========
+        registerModule({
+            id:'activate',
+            name:'激活数字',
+            icon:'🔢',
+            render(){
+                return `
+                <div class="generic-page">
+                    <h1>🔢 激活数字</h1>
+                    <p>输入数字执行预设指令</p>
+                    <div class="activate-input-wrap">
+                        <input id="activateInput" type="number" placeholder="输入数字">
+                        <button class="btn-primary" onclick="runActivateCode()">执行</button>
+                    </div>
+                    <h3>可用指令列表</h3>
+                    <div id="activateListWrap"></div>
+                </div>`;
+            },
+            async init(){
+                const res = await supabaseRequest("activate_codes");
+                activateCodeList = Array.isArray(res) ? res : [];
+                const wrap = document.getElementById("activateListWrap");
+                if(activateCodeList.length===0){
+                    wrap.innerHTML = `<p class="empty">暂无可用激活数字</p>`;
+                }else{
+                    wrap.innerHTML = activateCodeList.map(item=>`
+                    <div class="activate-item">
+                        <b>🔢 ${escapeHtml(item.code)}</b> — ${escapeHtml(item.description||"无说明")}
+                    </div>`).join("");
+                }
+            }
+        });
+        //执行激活数字
+        window.runActivateCode = async function(){
+            const dom = document.getElementById("activateInput");
+            const num = Number(dom.value.trim());
+            const find = activateCodeList.find(x=>Number(x.code)===num);
+            if(!find){
+                alert("该数字没有对应指令");
+                return;
+            }
+            if(find.type === "alert"){
+                alert(find.payload);
+            }else if(find.type === "jump"){
+                location.href = find.payload;
+            }else{
+                alert("未知指令类型");
+            }
+        };
         let allPosts = [];
         function searchPosts(keyword) {
             const filtered = allPosts.filter(p => (p.content && p.content.includes(keyword)) || (p.nickname && p.nickname.includes(keyword)));
@@ -1119,11 +1120,10 @@ registerModule({
         async function loadPosts() {
             const postsRaw = await supabaseRequest('posts');
             const commentsRaw = await supabaseRequest('comments');
-            allPostsUser = await supabaseRequest("users");
-  allPosts = Array.isArray(postsRaw) ? postsRaw : [];
-  const allComments = Array.isArray(commentsRaw) ? commentsRaw : [];
-  renderPostList(allPosts, allComments);
-}
+            allPosts = Array.isArray(postsRaw) ? postsRaw : [];
+            const allComments = Array.isArray(commentsRaw) ? commentsRaw : [];
+            renderPostList(allPosts, allComments);
+        }
         function renderPostList(posts, allComments = []) {
             const listDom = document.getElementById('postList');
             listDom.innerHTML = posts.length ? posts.map(p => {
@@ -1132,14 +1132,7 @@ registerModule({
                 return `
                 <div class="post-card" id="post-${p.id}">
                     <div class="post-header">
-                       <strong>
-  ${(()=>{
-const u = Array.isArray(allPostsUser) && allPostsUser.find(x=>x.id === p.user_id);
-const ava = u?.avatar||"";
-const name = escapeHtml(p.nickname||"匿名");
-return `${ava?`<img style="width:24px;height:24px;border-radius:50%;vertical-align:middle;margin-right:6px;" src="${ava}" alt="头像">`:""}<a href="profile.html?uid=${escapeHtml(p.user_id)}" style="color:#2563eb">${name}</a>`;
-})()}
-</strong>
+                        <strong>👤 ${escapeHtml(p.nickname || '匿名')}</strong>
                         <span class="sugg-date">🕐 ${formatTime(p.created_at)}</span>
                     </div>
                     ${p.content ? `<div class="post-content">${escapeHtml(p.content)}</div>` : ''}
@@ -1153,7 +1146,7 @@ return `${ava?`<img style="width:24px;height:24px;border-radius:50%;vertical-ali
                     <div class="post-comments" id="comments-${p.id}" style="display:none;">
                         ${pc.map(cm => `
                             <div class="comment-item">
-                                <strong>${cm.user_id ? `<a href="profile.html?uid=${escapeHtml(cm.user_id)}" style="color:#2563eb">${escapeHtml(cm.nickname)}</a>` : escapeHtml(cm.nickname)}</strong>
+                                <strong>${escapeHtml(cm.nickname)}</strong>
                                 <div>${escapeHtml(cm.content)}</div>
                             </div>
                         `).join('')}
@@ -1185,7 +1178,7 @@ return `${ava?`<img style="width:24px;height:24px;border-radius:50%;vertical-ali
         }
         async function likePost(id) {
             const list = await supabaseRequest('posts');
-            const post = Array.isArray(list) && list.find(x => x.id === id);
+                       const post = Array.isArray(list) && list.find(x => x.id === id);
             if (!post) return;
             await supabaseRequest('posts', 'PATCH', { likes: (post.likes || 0) + 1 }, id);
             await loadPosts();
@@ -1195,14 +1188,12 @@ return `${ava?`<img style="width:24px;height:24px;border-radius:50%;vertical-ali
             await supabaseRequest('posts', 'DELETE', null, id);
             await loadPosts();
         }
-        // ========== 页面初始化入口 ==========
         async function initApp() {
-    refreshUserStatus();
-    renderNav();
-    // await registerOnline(); //临时关闭在线用户，解决400报错，后续表结构修好再取消注释
-    openModule('book');
-}
-        // 页面加载完成启动
+            refreshUserStatus();
+            renderNav();
+            await registerOnline();
+            openModule('book');
+        }
         window.addEventListener('DOMContentLoaded', initApp);
 </script>
 </body>
