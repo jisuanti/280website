@@ -98,7 +98,6 @@
             flex-shrink: 0;
         }
         .admin-link:hover { background: #ffcc80; color: #3e2723; }
-
         .module-content { 
             max-width: 1200px; 
             margin: 0 auto; 
@@ -148,7 +147,6 @@
     <main class="module-content" id="moduleContent">
         <div id="profileWrap"></div>
     </main>
-
 <script>
 const SUPABASE_URL = 'https://gbktpjnitqpwomcprrol.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdia3Rwam5pdHFwd29tY3Bycm9sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTk2NDIsImV4cCI6MjA5ODk5NTY0Mn0.TIp9NAdDRZrI16Jq_no7Ga9EpX7ooc6b5Ck7r-sNqww';
@@ -161,6 +159,7 @@ function refreshUserStatus(){
     loginUser = raw ? JSON.parse(raw) : null;
     renderUserBar();
 }
+
 function renderUserBar(){
     const bar = document.getElementById("userBar");
     if(!loginUser){
@@ -182,13 +181,17 @@ function renderUserBar(){
         `;
     }
 }
+
 function logout(){
     localStorage.removeItem("userInfo");
     refreshUserStatus();
 }
 
-async function supabaseRequest(table, method = 'GET', data = null, id = null) {
-    const url = id ? `${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}` : `${SUPABASE_URL}/rest/v1/${table}`;
+async function supabaseRequest(table, method = 'GET', data = null, query = null) {
+    let url = `${SUPABASE_URL}/rest/v1/${table}`;
+    if(query){
+        url += "?" + query;
+    }
     const options = {
         method: method,
         headers: {
@@ -220,6 +223,7 @@ function escapeHtml(str) {
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;');
 }
+
 function formatTime(timeStr){
     if(!timeStr) return '';
     const d = new Date(timeStr);
@@ -231,9 +235,23 @@ function formatTime(timeStr){
     const mi = String(d.getMinutes()).padStart(2,'0');
     return `${y}-${m}-${day} ${h}:${mi}`;
 }
+
 function getUrlParam(name){
     const params = new URLSearchParams(location.search);
     return params.get(name);
+}
+
+function renderPostsPartial(userPosts, targetUid){
+    const postWrapDom = document.getElementById("userPostsWrap");
+    if(!postWrapDom) return;
+    postWrapDom.innerHTML = !Array.isArray(userPosts) || userPosts.length ===0 
+        ? "<p class='empty'>暂无分享</p>" 
+        : userPosts.map(p=>`
+ <div class="post-card">
+ <span class="sugg-date">🕐 ${formatTime(p.created_at)}</span>
+ <div class="post-content">${escapeHtml(p.content||"")}</div>
+ </div>
+ `).join('');
 }
 
 async function loadProfile(){
@@ -241,32 +259,32 @@ async function loadProfile(){
     const wrapDom = document.getElementById("profileWrap");
     if(!wrapDom) return;
     let rawUid = getUrlParam("uid");
-if(rawUid !== null){
-  targetUserId = Number(rawUid);
-}else if(loginUser){
-  targetUserId = loginUser.id;
-}
+    if(rawUid !== null){
+      targetUserId = Number(rawUid);
+    }else if(loginUser){
+      targetUserId = loginUser.id;
+    }
     if(!targetUserId){
         wrapDom.innerHTML = `<div class="generic-page"><p>请登录后访问个人主页</p><a href="index.html">返回首页</a></div>`;
         return;
     }
     
-//并行一次性发出4个接口请求
-const [userList, allNovels, allPosts, allDiscuss] = await Promise.all([
-  supabaseRequest("users"),
-  supabaseRequest("novels"),
-  supabaseRequest("posts"),
-  supabaseRequest("discussions")
-]);
+    const [userList, allNovels, allDiscuss] = await Promise.all([
+      supabaseRequest("users"),
+      supabaseRequest("novels"),
+      supabaseRequest("discussions")
+    ]);
 
-if(Array.isArray(userList)){
-  targetUserInfo = userList.find(u=>u.id === targetUserId);
-}
-const userNovels = Array.isArray(allNovels) ? allNovels.filter(n=>n.user_id === targetUserId) : [];
-const userPosts = Array.isArray(allPosts) ? allPosts.filter(p=>p.user_id === targetUserId) : [];
-const userDiscuss = Array.isArray(allDiscuss) ? allDiscuss.filter(d=>d.user_id === targetUserId) : [];
+    if(Array.isArray(userList)){
+      targetUserInfo = userList.find(u=>u.id === targetUserId);
+    }
+    const userNovels = Array.isArray(allNovels) ? allNovels.filter(n=>n.user_id === targetUserId) : [];
+    const userDiscuss = Array.isArray(allDiscuss) ? allDiscuss.filter(d=>d.user_id === targetUserId) : [];
+
     const userName = targetUserInfo?.nickname || "未知用户";
-    const pageAvatar = (targetUserInfo && targetUserInfo.avatar) ? `<img class="nav-avatar" style="width:40px;height:40px;" src="${escapeHtml(targetUserInfo.avatar)}">` : "👤";
+    const pageAvatar = (targetUserInfo && targetUserInfo.avatar) 
+        ? `<img class="nav-avatar" style="width:40px;height:40px;" src="${escapeHtml(targetUserInfo.avatar)}">` 
+        : "👤";
 
     wrapDom.innerHTML = `
  <div class="generic-page">
@@ -277,7 +295,7 @@ const userDiscuss = Array.isArray(allDiscuss) ? allDiscuss.filter(d=>d.user_id =
     <div style="margin-bottom:24px;">
         <p><strong>用户ID：</strong>${escapeHtml(targetUserId)}</p>
         <p>📖 小说：${userNovels.length} 篇</p>
-        <p>📸 日常分享：${userPosts.length} 条</p>
+        <p>📸 日常分享：<span id="postsCountText">加载中…</span> 条</p>
         <p>💬 讨论：${userDiscuss.length} 条</p>
     </div>
     ${(loginUser && targetUserId === loginUser.id) ? `
@@ -306,12 +324,9 @@ const userDiscuss = Array.isArray(allDiscuss) ? allDiscuss.filter(d=>d.user_id =
  `).join('')}
  <hr>
  <h2>📸 日常分享</h2>
- ${userPosts.length ===0 ? "<p class='empty'>暂无分享</p>" : userPosts.map(p=>`
- <div class="post-card">
- <span class="sugg-date">🕐 ${formatTime(p.created_at)}</span>
- <div class="post-content">${escapeHtml(p.content||"")}</div>
+ <div id="userPostsWrap">
+    <p class='empty'>帖子加载中，请稍候…</p>
  </div>
- `).join('')}
  <hr>
  <h2>💬 发表的讨论</h2>
  ${userDiscuss.length ===0 ? "<p class='empty'>暂无讨论</p>" : userDiscuss.map(d=>`
@@ -322,8 +337,20 @@ const userDiscuss = Array.isArray(allDiscuss) ? allDiscuss.filter(d=>d.user_id =
  `).join('')}
  </div>
  `;
-}
 
+    (async ()=>{
+      try{
+        const userPosts = await supabaseRequest("posts","GET",null,`user_id=eq.${targetUserId}`);
+        renderPostsPartial(userPosts, targetUserId);
+        const countDom = document.getElementById("postsCountText");
+        if(countDom) countDom.innerText = Array.isArray(userPosts) ? userPosts.length : 0;
+      }catch(err){
+        console.error("posts加载失败",err);
+        const wrap = document.getElementById("userPostsWrap");
+        if(wrap) wrap.innerHTML = `<p class='empty'>帖子加载失败</p>`;
+      }
+    })();
+}
 window.addEventListener('DOMContentLoaded', loadProfile);
 </script>
 </body>
