@@ -696,49 +696,95 @@
             if (mod.init && typeof mod.init === 'function') await mod.init({});
         }
         // ===== 注册各个模块 =====
-        registerModule({
-            id: 'book', name: '历史书', icon: '📖',
-            _chapters: [],
-            render(data) {
-                this._chapters = data.chapters || [];
-                if (this._chapters.length === 0) return '<div class="empty">暂无章节</div>';
-                return `
-                    <div class="book-layout">
-                        <aside class="book-toc">
-                            <h3>📚 目录</h3>
-                            ${this._chapters.map((ch, idx) => `
-                                <div class="toc-item" onclick="modules['book'].openChapter(${idx})">
-                                    第${idx + 1}章 ${escapeHtml(ch.title || '未命名')}
-                                </div>
-                            `).join('')}
-                        </aside>
-                        <article class="book-content" id="bookContent">
-                            <div class="welcome-hint">📖 请从左侧目录选择章节</div>
-                        </article>
-                    </div>
-                `;
-            },
-            async init() {
-                const chapters = await supabaseRequest('chapters');
-                this._chapters = Array.isArray(chapters) ? chapters : [];
-                document.getElementById('moduleContent').innerHTML = this.render({ chapters: this._chapters });
-                if (this._chapters.length > 0) this.openChapter(0);
-            },
-            openChapter(idx) {
-                const ch = this._chapters[idx];
-                if (!ch) return;
-                const el = document.getElementById('bookContent');
-                if (!el) return;
-                el.innerHTML = `
-                    <h1>${escapeHtml(ch.title || '')}</h1>
-                    ${ch.preface ? `<section class="bk-section preface"><h4>📋 课前导言</h4>${formatText(ch.preface)}</section>` : ''}
-                    ${ch.body ? `<section class="bk-section body"><h4>📖 正文</h4>${formatText(ch.body)}</section>` : ''}
-                    ${ch.exercises ? `<section class="bk-section exercises"><h4>📝 课后习题</h4>${formatText(ch.exercises)}</section>` : ''}
-                    ${ch.extension ? `<section class="bk-section extension"><h4>🔗 知识扩展</h4>${formatText(ch.extension)}</section>` : ''}
-                `;
-                document.querySelectorAll('.toc-item').forEach((item, i) => item.classList.toggle('active', i === idx));
+registerModule({
+    id: 'book', name: '历史书', icon: '📖',
+    _volumes:[],
+    _currentVolumeId:null,
+    _chapters:[],
+    render(data) {
+        this._volumes = data.volumes||[];
+        this._currentVolumeId = data.currentVolumeId||null;
+        this._chapters = data.chapters||[];
+        if(!this._currentVolumeId){
+            //展示分册列表首页
+            if(this._volumes.length===0){
+                return `<div class="empty">📚暂无分册，请管理员后台添加分册</div>`;
             }
+            return `
+            <div class="generic-page">
+                <h1>📚历史回忆册</h1>
+                <p style="margin-bottom:16px;">请选择一册进入查看章节</p>
+                ${this._volumes.map(vol=>`
+                <div class="toc-item" style="cursor:pointer;margin-bottom:8px;" onclick="modules['book'].openVolume(${vol.id})">
+                    📖 ${escapeHtml(vol.title)}
+                    ${vol.description?`<div style="font-size:0.9em;color:#666;margin-top:4px;">${escapeHtml(vol.description)}</div>`:""}
+                </div>
+                `).join("")}
+            </div>`;
+        }else{
+            //选中某一册，展示该册章节目录
+            const volInfo = this._volumes.find(v=>v.id===this._currentVolumeId);
+            return `
+            <div class="book-layout">
+                <aside class="book-toc">
+                    <div style="cursor:pointer;color:#2563eb;margin-bottom:12px;" onclick="modules['book'].backVolumeList()">← 返回全部分册</div>
+                    <h3>📚 ${escapeHtml(volInfo?.title||"")}</h3>
+                    ${this._chapters.length>0?
+                        this._chapters.map((ch,idx)=>`
+                        <div class="toc-item" onclick="modules['book'].openChapter(${idx})">
+                            第${idx + 1}章 ${escapeHtml(ch.title || '未命名')}
+                        </div>`).join('')
+                        :`<div style="color:#888;">该分册暂无章节</div>`
+                    }
+                </aside>
+                <article class="book-content" id="bookContent">
+                    <div class="welcome-hint">📖 请从左侧目录选择章节</div>
+                </article>
+            </div>
+            `;
+        }
+    },
+    async init() {
+        //加载全部分册
+        const vols = await supabaseRequest('book_volume');
+        this._volumes = Array.isArray(vols)?vols:[];
+        this._currentVolumeId = null;
+        document.getElementById('moduleContent').innerHTML = this.render({volumes:this._volumes});
+    },
+    //打开某一分册，加载该分册下所有章节
+    async openVolume(volumeId){
+        this._currentVolumeId = volumeId;
+        //筛选volume_id匹配的章节
+        const allCh = await supabaseRequest('chapters');
+        this._chapters = Array.isArray(allCh)? allCh.filter(c=>c.volume_id === volumeId):[];
+        document.getElementById('moduleContent').innerHTML = this.render({
+            volumes:this._volumes,
+            currentVolumeId:this._currentVolumeId,
+            chapters:this._chapters
         });
+    },
+    //退回到分册总列表
+    backVolumeList(){
+        this._currentVolumeId=null;
+        this._chapters=[];
+        document.getElementById('moduleContent').innerHTML = this.render({volumes:this._volumes});
+    },
+    openChapter(idx) {
+        const ch = this._chapters[idx];
+        if (!ch) return;
+        const el = document.getElementById('bookContent');
+        if (!el) return;
+        el.innerHTML = `
+            <h1>${escapeHtml(ch.title || '')}</h1>
+            ${ch.preface ? `<section class="bk-section preface"><h4>📋 课前导言</h4>${formatText(ch.preface)}</section>` : ''}
+            ${ch.body ? `<section class="bk-section body"><h4>📖 正文</h4>${formatText(ch.body)}</section>` : ''}
+            ${ch.exercises ? `<section class="bk-section exercises"><h4>📝 课后习题</h4>${formatText(ch.exercises)}</section>` : ''}
+            ${ch.extension ? `<section class="bk-section extension"><h4>🔗 知识扩展</h4>${formatText(ch.extension)}</section>` : ''}
+        `;
+        document.querySelectorAll('.toc-item').forEach((item, i) => item.classList.toggle('active', i === idx));
+    }
+});
+
         registerModule({
             id: 'notice', name: '公告栏', icon: '📋',
             render(data) {
