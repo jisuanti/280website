@@ -3,128 +3,381 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>注册账号</title>
+<title>个人主页 - 280班</title>
 <style>
+:root{
+    --glass-bg: rgba(255,255,255,0.55);
+    --glass-border: rgba(255,255,255,0.65);
+    --glass-shadow: 0 8px 32px rgba(31,38,135,0.10);
+    --glass-blur: saturate(180%) blur(20px);
+}
 *{margin:0;padding:0;box-sizing:border-box;}
 body{
-    background:#f4f1eb;
-    font-family:"Microsoft YaHei",sans-serif;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    min-height:100vh;
-    padding:16px;
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+    color:#2c2c2c;line-height:1.6;min-height:100vh;
+    background:
+        radial-gradient(circle at 10% 10%, #f6e7d6 0%, transparent 45%),
+        radial-gradient(circle at 90% 20%, #e0ecf5 0%, transparent 45%),
+        radial-gradient(circle at 50% 100%, #ede0d1 0%, transparent 55%),
+        linear-gradient(135deg, #f0e9df 0%, #e8dfd3 100%);
+    background-attachment:fixed;
 }
-.box{
-    background:#fff;
-    padding:28px 24px;
-    border-radius:12px;
-    box-shadow:0 2px 14px rgba(0,0,0,0.08);
-    width:100%;
-    max-width:420px;
+.site-header{
+    position:sticky;top:0;z-index:100;color:#fff;
+    background:rgba(62,39,35,0.55);
+    backdrop-filter:var(--glass-blur);
+    -webkit-backdrop-filter:var(--glass-blur);
+    border-bottom:1px solid rgba(255,255,255,0.12);
+    box-shadow:0 4px 24px rgba(0,0,0,0.10);
 }
-h1{
-    text-align:center;
-    margin-bottom:22px;
-    color:#3e2723;
-    font-size:1.5em;
+.header-inner{max-width:1200px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;gap:12px;}
+.logo{font-size:1.3em;font-weight:700;white-space:nowrap;flex-shrink:0;}
+.main-nav{display:flex;gap:4px;flex:1;overflow-x:auto;scrollbar-width:none;}
+.main-nav::-webkit-scrollbar{display:none;}
+.nav-item{color:rgba(255,255,255,0.85);text-decoration:none;padding:8px 14px;border-radius:20px;font-size:0.95em;white-space:nowrap;cursor:pointer;flex-shrink:0;transition:.2s;}
+.nav-item:hover{background:rgba(255,255,255,0.18);color:#fff;}
+.user-bar{display:flex;align-items:center;gap:10px;flex-shrink:0;font-size:0.9em;}
+.user-bar a{color:rgba(255,255,255,0.85);text-decoration:none;padding:4px 8px;border-radius:6px;}
+.user-bar a:hover{background:rgba(255,255,255,0.18);color:#fff;}
+.nav-avatar{width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;}
+.user-bar-logged{display:flex;align-items:center;gap:8px;}
+.admin-link{color:#ffcc80;text-decoration:none;font-size:0.9em;border:1px solid rgba(255,204,128,0.7);padding:6px 12px;border-radius:20px;white-space:nowrap;flex-shrink:0;transition:.2s;}
+.admin-link:hover{background:#ffcc80;color:#3e2723;}
+.module-content{max-width:900px;margin:0 auto;padding:20px 16px;}
+
+.profile-card{
+    background:var(--glass-bg);
+    backdrop-filter:var(--glass-blur);
+    -webkit-backdrop-filter:var(--glass-blur);
+    border:1px solid var(--glass-border);
+    border-radius:22px;
+    padding:26px;display:flex;gap:22px;align-items:flex-start;
+    box-shadow:var(--glass-shadow);margin-bottom:20px;
 }
-label{
-    display:block;
-    margin:14px 0 6px;
-    font-weight:600;
-    font-size:0.95em;
+.avatar-wrap{position:relative;flex-shrink:0;}
+.p-avatar{width:110px;height:110px;border-radius:50%;object-fit:cover;background:rgba(232,213,196,0.8);display:block;border:3px solid rgba(255,255,255,0.85);}
+.p-avatar.default{display:flex;align-items:center;justify-content:center;font-size:46px;}
+.avatar-edit{
+    position:absolute;right:0;bottom:0;background:#8d6e63;color:#fff;width:36px;height:36px;
+    border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;
+    font-size:16px;border:3px solid #fff;transition:.2s;
+    box-shadow:0 4px 12px rgba(141,110,99,0.4);
 }
-input{
-    width:100%;
-    padding:12px;
-    border:1px solid #ddd;
-    border-radius:8px;
-    font-size:1em;
+.avatar-edit:hover{background:#6d4c41;}
+.p-main{flex:1;min-width:0;}
+.p-nick{font-size:1.5em;color:#3e2723;margin-bottom:6px;word-break:break-all;}
+.p-sign{color:#777;font-size:0.95em;margin-bottom:14px;word-break:break-all;}
+.btn-primary{
+    background:#8d6e63;color:#fff;border:none;padding:10px 20px;border-radius:14px;cursor:pointer;
+    font-size:0.95em;transition:.2s;box-shadow:0 4px 14px rgba(141,110,99,0.35);
 }
-.btns{
-    margin-top:24px;
+.btn-primary:hover{background:#6d4c41;}
+.btn-default{background:rgba(255,255,255,0.7);color:#666;border:1px solid rgba(255,255,255,0.9);padding:10px 20px;border-radius:14px;cursor:pointer;font-size:0.95em;backdrop-filter:blur(8px);}
+.edit-box{margin-top:14px;background:rgba(255,255,255,0.5);border-radius:16px;padding:16px;border:1px solid rgba(255,255,255,0.7);}
+.edit-box label{display:block;margin:8px 0 4px;font-weight:600;font-size:0.9em;color:#555;}
+.edit-box input{width:100%;padding:10px 14px;border:1px solid rgba(255,255,255,0.85);border-radius:12px;font-size:1em;font-family:inherit;background:rgba(255,255,255,0.75);outline:none;transition:.2s;}
+.edit-box input:focus{border-color:rgba(141,110,99,0.5);background:rgba(255,255,255,0.95);}
+.edit-box .actions{margin-top:14px;display:flex;gap:10px;}
+
+.tab-bar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+.tab{
+    padding:9px 18px;border-radius:14px;cursor:pointer;font-size:0.95em;user-select:none;transition:.2s;
+    background:rgba(255,255,255,0.55);
+    backdrop-filter:blur(10px);
+    border:1px solid rgba(255,255,255,0.75);
+    color:#555;
 }
-button{
-    width:100%;
-    padding:12px;
-    border:none;
-    border-radius:8px;
-    background:#8d6e63;
-    color:#fff;
-    font-size:1em;
-    cursor:pointer;
+.tab.active{background:#8d6e63;color:#fff;border-color:#8d6e63;box-shadow:0 4px 14px rgba(141,110,99,0.35);}
+
+.p-item{
+    background:var(--glass-bg);
+    backdrop-filter:var(--glass-blur);
+    -webkit-backdrop-filter:var(--glass-blur);
+    border:1px solid var(--glass-border);
+    border-radius:16px;
+    padding:16px 18px;margin-bottom:12px;
+    box-shadow:var(--glass-shadow);
 }
-button:disabled{background:#aaa;cursor:not-allowed;}
-.tip{margin-top:14px;text-align:center;font-size:0.9em;}
-.tip a{color:#2563eb;text-decoration:none;}
+.p-item h4{color:#3e2723;margin-bottom:6px;font-size:1.05em;}
+.p-item-meta{font-size:0.85em;color:#999;margin-bottom:8px;}
+.p-item-body{color:#555;font-size:0.95em;line-height:1.7;white-space:pre-wrap;}
+.empty{text-align:center;padding:50px 20px;color:#8a7f76;}
+
+@media (max-width:768px){
+    .header-inner{padding:10px 12px;}
+    .logo{font-size:1.1em;}
+    .nav-item{font-size:0.9em;padding:6px 10px;}
+    .admin-link{font-size:0.85em;padding:5px 10px;}
+    .profile-card{flex-direction:column;align-items:center;text-align:center;padding:20px;}
+    .p-main{width:100%;}
+    .p-actions{display:flex;justify-content:center;}
+}
 </style>
 </head>
 <body>
-<div class="box">
-    <h1>账号注册</h1>
-    <label>昵称</label>
-    <input id="regNick" placeholder="你的昵称">
-    <label>密码</label>
-    <input type="password" id="regPwd" placeholder="设置密码">
-    <label>确认密码</label>
-    <input type="password" id="regPwd2" placeholder="再次输入密码">
-    <div class="btns">
-        <button id="regBtn" onclick="doRegister()">注册账号</button>
+<header class="site-header">
+    <div class="header-inner">
+        <h1 class="logo">🏫 280班</h1>
+        <nav class="main-nav" id="mainNav">
+            <div class="nav-item" onclick="location.href='index.html'">🏠 首页</div>
+            <div class="nav-item" onclick="location.href='index.html'">📖历史书</div>
+            <div class="nav-item" onclick="location.href='index.html'">📋公告栏</div>
+            <div class="nav-item" onclick="location.href='index.html'">📖小说</div>
+            <div class="nav-item" onclick="location.href='index.html'">💬讨论</div>
+            <div class="nav-item" onclick="location.href='index.html'">📸日常分享</div>
+            <div class="nav-item" onclick="location.href='userlist.html'">👥 用户列表</div>
+        </nav>
+        <div class="user-bar" id="userBar"></div>
+        <a href="admin.html" class="admin-link">管理</a>
     </div>
-    <div class="tip">已有账号？<a href="login.html">去登录</a></div>
-</div>
+</header>
+
+<main class="module-content">
+    <div class="profile-card" id="profileCard"></div>
+    <input type="file" id="avatarFile" accept="image/*" style="display:none">
+    <div class="tab-bar" id="pTabBar">
+        <div class="tab active" data-tab="novel">📖 发表的小说</div>
+        <div class="tab" data-tab="discuss">💬 发表过的讨论</div>
+        <div class="tab" data-tab="share">📸 日常分享</div>
+    </div>
+    <div id="pContent"><div class="empty">加载中…</div></div>
+</main>
+
 <script>
-const SUPABASE_URL = "https://gbktpjnitqpwomcprrol.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdia3Rwam5pdHFwd29tY3Bycm9sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTk2NDIsImV4cCI6MjA5ODk5NTY0Mn0.TIp9NAdDRZrI16Jq_no7Ga9EpX7ooc6b5Ck7r-sNqww";
+const SUPABASE_URL = 'https://gbktpjnitqpwomcprrol.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdia3Rwam5pdHFwd29tY3Bycm9sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTk2NDIsImV4cCI6MjA5ODk5NTY0Mn0.TIp9NAdDRZrI16Jq_no7Ga9EpX7ooc6b5Ck7r-sNqww';
+let loginUser = null, profileUser = null, isSelf = false;
 
-//【选项1：本机设备注册限制】
-if(localStorage.getItem("hasRegistered") === "1"){
-    alert("⚠️本机已经注册过账号，一台设备只允许注册一个账号！");
-    document.querySelector("#regBtn").disabled = true;
-}
-
-async function supabaseReq(table,method="GET",data=null,id=null){
+async function supabaseRequest(table, method = 'GET', data = null, id = null){
     const url = id ? `${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}` : `${SUPABASE_URL}/rest/v1/${table}`;
-    const opt={
+    const options = {
         method,
-        headers:{
-            "apikey":SUPABASE_KEY,
-            "Authorization":`Bearer ${SUPABASE_KEY}`,
-            "Content-Type":"application/json;charset=utf-8",
-            "Prefer":"return=representation"
+        headers: {
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'Content-Type': 'application/json; charset=utf-8',
+            'Prefer': 'return=representation'
         }
     };
-    if((method==="POST"||method==="PATCH")&&data) opt.body=JSON.stringify(data);
-    const res=await fetch(url,opt);
-    if(method==="DELETE") return {ok:true};
-    return await res.json();
+    if(data && (method === 'POST' || method === 'PATCH')) options.body = JSON.stringify(data);
+    try{
+        const res = await fetch(url, options);
+        if(method === 'DELETE') return {ok:true};
+        if(!res.ok){ console.warn('请求失败', await res.text()); return []; }
+        return await res.json();
+    }catch(e){ console.error(e); return []; }
 }
-
-async function doRegister(){
-    const nick = document.getElementById("regNick").value.trim();
-    const pwd1 = document.getElementById("regPwd").value;
-    const pwd2 = document.getElementById("regPwd2").value;
-    if(!nick) return alert("请填写昵称");
-    if(!pwd1) return alert("请填写密码");
-    if(pwd1!==pwd2) return alert("两次密码不一致");
-    const all = await supabaseReq("users");
-    const exist = Array.isArray(all) && all.find(u=>u.nickname===nick);
-    if(exist) return alert("该昵称已经被占用");
-    const res = await supabaseReq("users","POST",{
-        nickname:nick,
-        password:pwd1,
-        avatar:""
+async function patchUser(payload){
+    try{
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${profileUser.id}`, {
+            method: 'PATCH',
+            headers: {
+                'apikey': SUPABASE_KEY,
+                'Authorization': `Bearer ${SUPABASE_KEY}`,
+                'Content-Type': 'application/json; charset=utf-8',
+                'Prefer': 'return=representation'
+            },
+            body: JSON.stringify(payload)
+        });
+        return res.ok;
+    }catch(e){ return false; }
+}
+function escapeHtml(str){
+    if(str === null || str === undefined) return '';
+    return String(str)
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+}
+function formatTime(isoString){
+    if(!isoString) return '';
+    return String(isoString).replace('T',' ').slice(0,16);
+}
+function compressImage(file, maxSize){
+    return new Promise(resolve => {
+        const reader = new FileReader();
+        reader.onload = e => {
+            const img = new Image();
+            img.onload = () => {
+                let w = img.width, h = img.height;
+                if(w > h && w > maxSize){ h = Math.round(h * maxSize / w); w = maxSize; }
+                else if(h > maxSize){ w = Math.round(w * maxSize / h); h = maxSize; }
+                const canvas = document.createElement('canvas');
+                canvas.width = w; canvas.height = h;
+                canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                resolve(canvas.toDataURL('image/jpeg', 0.85));
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
     });
-    if(res&&res.id){
-        //标记本机已经注册
-        localStorage.setItem("hasRegistered","1");
-        alert("注册成功！跳转登录页");
-        location.href="login.html";
+}
+function renderUserBar(){
+    const bar = document.getElementById('userBar');
+    if(!loginUser){
+        bar.innerHTML = `<a href="login.html">登录</a><a href="register.html">注册</a>`;
     }else{
-        alert("注册失败");
+        const avatarSrc = loginUser.avatar ? escapeHtml(loginUser.avatar) : '';
+        bar.innerHTML = `
+            <div class="user-bar-logged">
+                <a href="profile.html" style="display:flex;align-items:center;gap:6px;color:unset;text-decoration:none;">
+                    ${avatarSrc ? `<img class="nav-avatar" src="${avatarSrc}" alt="头像">` : '👤'}
+                    <span>${escapeHtml(loginUser.nickname)}</span>
+                </a>
+            </div>
+            <a href="profile.html">个人主页</a>
+            <a href="javascript:logout()">退出</a>
+        `;
     }
 }
+function logout(){
+    localStorage.removeItem('userInfo');
+    location.href = 'index.html';
+}
+async function init(){
+    const raw = localStorage.getItem('userInfo');
+    loginUser = raw ? JSON.parse(raw) : null;
+    renderUserBar();
+
+    const params = new URLSearchParams(location.search);
+    let targetId = params.get('uid');
+    if(!targetId){
+        if(!loginUser){ alert('请先登录'); location.href = 'login.html'; return; }
+        targetId = loginUser.id;
+    }
+    isSelf = !!loginUser && String(loginUser.id) === String(targetId);
+
+    const users = await supabaseRequest('users');
+    const arr = Array.isArray(users) ? users : [];
+    profileUser = arr.find(u => String(u.id) === String(targetId));
+
+    if(!profileUser){
+        document.getElementById('profileCard').innerHTML = '';
+        document.getElementById('pTabBar').style.display = 'none';
+        document.getElementById('pContent').innerHTML = '<div class="empty">😢 该用户不存在</div>';
+        return;
+    }
+    renderProfileCard();
+    document.querySelectorAll('.tab').forEach(t => {
+        t.onclick = () => {
+            document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+            t.classList.add('active');
+            loadTab(t.dataset.tab);
+        };
+    });
+    document.getElementById('avatarFile').addEventListener('change', onAvatarChange);
+    loadTab('novel');
+}
+function renderProfileCard(){
+    const card = document.getElementById('profileCard');
+    const av = profileUser.avatar;
+    card.innerHTML = `
+        <div class="avatar-wrap">
+            ${av ? `<img class="p-avatar" src="${escapeHtml(av)}" alt="头像">`
+                 : `<div class="p-avatar default">👤</div>`}
+            ${isSelf ? `<div class="avatar-edit" title="更换头像" onclick="document.getElementById('avatarFile').click()">📷</div>` : ''}
+        </div>
+        <div class="p-main">
+            <h2 class="p-nick">${escapeHtml(profileUser.nickname || '匿名用户')}</h2>
+            <div class="p-sign">${escapeHtml(profileUser.signature || '这个人很懒，什么都没写~')}</div>
+            <div class="p-actions">
+                ${isSelf ? `<button class="btn-primary" onclick="toggleEdit()">✏️ 编辑资料</button>` : ''}
+            </div>
+            <div id="editBox" class="edit-box" style="display:none;">
+                <label>昵称</label>
+                <input id="editNick" value="${escapeHtml(profileUser.nickname || '')}" maxlength="20">
+                <label>个性签名</label>
+                <input id="editSign" value="${escapeHtml(profileUser.signature || '')}" placeholder="写点什么介绍自己…" maxlength="60">
+                <div class="actions">
+                    <button class="btn-primary" onclick="saveProfile()">保存</button>
+                    <button class="btn-default" onclick="toggleEdit()">取消</button>
+                </div>
+            </div>
+        </div>
+    `;
+}
+function toggleEdit(){
+    const box = document.getElementById('editBox');
+    box.style.display = box.style.display === 'block' ? 'none' : 'block';
+}
+async function saveProfile(){
+    const nick = document.getElementById('editNick').value.trim();
+    const sign = document.getElementById('editSign').value.trim();
+    if(!nick) return alert('昵称不能为空');
+    let ok = await patchUser({ nickname: nick, signature: sign });
+    if(!ok){
+        ok = await patchUser({ nickname: nick });
+        if(ok){
+            alert('昵称已更新。\n⚠️ 个性签名保存失败：请在 Supabase 的 users 表中添加 text 类型的 signature 字段。');
+        }else{
+            alert('保存失败，请检查网络或数据库权限'); return;
+        }
+    }
+    profileUser.nickname = nick;
+    if(ok) profileUser.signature = sign;
+    if(isSelf){
+        loginUser.nickname = nick;
+        localStorage.setItem('userInfo', JSON.stringify(loginUser));
+        renderUserBar();
+    }
+    renderProfileCard();
+    alert('✅ 资料已更新');
+}
+async function onAvatarChange(){
+    const f = this.files[0];
+    if(!f) return;
+    if(!f.type.startsWith('image/')){ alert('请选择图片文件'); this.value = ''; return; }
+    const dataUrl = await compressImage(f, 240);
+    const ok = await patchUser({ avatar: dataUrl });
+    if(!ok){ alert('头像保存失败'); this.value = ''; return; }
+    profileUser.avatar = dataUrl;
+    if(isSelf){
+        loginUser.avatar = dataUrl;
+        localStorage.setItem('userInfo', JSON.stringify(loginUser));
+        renderUserBar();
+    }
+    renderProfileCard();
+    this.value = '';
+    alert('✅ 头像已更新');
+}
+async function loadTab(tab){
+    const box = document.getElementById('pContent');
+    box.innerHTML = '<div class="empty">加载中…</div>';
+    if(tab === 'novel'){
+        const list = await supabaseRequest('novels');
+        const arr = (Array.isArray(list) ? list : []).filter(x => String(x.user_id) === String(profileUser.id));
+        box.innerHTML = arr.length ? arr.map(n => `
+            <div class="p-item">
+                <h4>📖 ${escapeHtml(n.title || '无题')}</h4>
+                <div class="p-item-meta">👍 ${n.likes || 0} 赞</div>
+                <div class="p-item-body">${escapeHtml((n.intro || '暂无简介').slice(0, 150))}</div>
+            </div>
+        `).join('') : '<div class="empty">还没有发表过小说</div>';
+    }
+    if(tab === 'discuss'){
+        const list = await supabaseRequest('discussions');
+        const arr = (Array.isArray(list) ? list : []).filter(x => String(x.user_id) === String(profileUser.id));
+        box.innerHTML = arr.length ? arr.map(d => `
+            <div class="p-item">
+                <div class="p-item-meta">🕐 ${formatTime(d.created_at)}</div>
+                <div class="p-item-body">${escapeHtml(d.content || '')}</div>
+            </div>
+        `).join('') : '<div class="empty">还没有发表过讨论</div>';
+    }
+    if(tab === 'share'){
+        const list = await supabaseRequest('posts');
+        const arr = (Array.isArray(list) ? list : []).filter(x => String(x.user_id) === String(profileUser.id));
+        box.innerHTML = arr.length ? arr.map(p => `
+            <div class="p-item">
+                <div class="p-item-meta">🕐 ${formatTime(p.created_at)} ｜ ❤️ ${p.likes || 0}</div>
+                <div class="p-item-body">${escapeHtml(p.content || '（无文字内容）')}</div>
+                ${p.images && p.images.length ? `<div style="display:flex;gap:8px;overflow-x:auto;margin-top:10px;">
+                    ${p.images.map(img => `<img src="${img}" style="height:120px;border-radius:12px;object-fit:cover;">`).join('')}
+                </div>` : ''}
+            </div>
+        `).join('') : '<div class="empty">还没有发表过日常分享</div>';
+    }
+}
+window.addEventListener('DOMContentLoaded', init);
 </script>
 </body>
 </html>

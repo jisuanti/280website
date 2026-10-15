@@ -1,1246 +1,1221 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>280班网站</title>
-    <style>
-        * { margin:0; padding:0; box-sizing:border-box; }
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; 
-            background: #f4f1eb; 
-            color: #2c2c2c; 
-            line-height: 1.6;
-            -webkit-font-smoothing: antialiased;
-        }
-        
-        /* 头部导航 */
-        .site-header { 
-            background: #3e2723; 
-            color: #fff; 
-            position: sticky; 
-            top: 0; 
-            z-index: 100; 
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-        }
-        .header-inner { 
-            max-width: 1200px; 
-            margin: 0 auto; 
-            padding: 12px 16px; 
-            display: flex; 
-            align-items: center; 
-            gap: 12px; 
-        }
-        .logo { 
-            font-size: 1.3em; 
-            font-weight: 700; 
-            white-space: nowrap; 
-            flex-shrink: 0;
-        }
-        .main-nav { 
-            display: flex; 
-            gap: 4px; 
-            flex: 1; 
-            overflow-x: auto; 
-            -webkit-overflow-scrolling: touch;
-            scrollbar-width: none;
-        }
-        .main-nav::-webkit-scrollbar { display: none; }
-        .nav-item { 
-            color: rgba(255,255,255,0.8); 
-            text-decoration: none; 
-            padding: 8px 14px; 
-            border-radius: 20px; 
-            font-size: 0.95em; 
-            transition: 0.2s; 
-            white-space: nowrap; 
-            cursor: pointer; 
-            user-select: none;
-            flex-shrink: 0;
-        }
-        .nav-item:hover { background: rgba(255,255,255,0.15); color: #fff; }
-        .nav-item.active { background: rgba(255,255,255,0.25); color: #fff; font-weight: 600; }
-        .admin-link { 
-            color: #ffcc80; 
-            text-decoration: none; 
-            font-size: 0.9em; 
-            border: 1px solid #ffcc80; 
-            padding: 6px 12px; 
-            border-radius: 20px; 
-            white-space: nowrap; 
-            transition: 0.2s; 
-            flex-shrink: 0;
-        }
-        .admin-link:hover { background: #ffcc80; color: #3e2723; }
-        
-        /* 在线用户 */
-        #onlineUsers {
-            display:flex;align-items:center;gap:6px;font-size:0.85em;color:rgba(255,255,255,0.8);margin-left:12px;cursor:pointer;
-        }
-        .online-dot {
-            width:8px;height:8px;background:#4caf50;border-radius:50%;display:inline-block;
-            animation: pulse 2s infinite;
-        }
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
-        }
-        .user-bar{
-            display:flex;
-            align-items:center;
-            gap:10px;
-            flex-shrink:0;
-            font-size:0.9em;
-        }
-        .user-bar a{
-            color:rgba(255,255,255,0.8);
-            text-decoration:none;
-            padding:4px 8px;
-            border-radius:6px;
-        }
-        .user-bar a:hover{
-            background:rgba(255,255,255,0.15);
-            color:#fff;
-        }
-        .nav-avatar{
-            width:28px;
-            height:28px;
-            border-radius:50%;
-            object-fit:cover;
-            flex-shrink:0;
-        }
-        .user-bar-logged{
-            display:flex;
-            align-items:center;
-            gap:8px;
-        }
-        
-        /* 主内容区 */
-        .module-content { 
-            max-width: 1200px; 
-            margin: 0 auto; 
-            padding: 20px 16px; 
-            min-height: calc(100vh - 56px); 
-        }
-        .empty { 
-            text-align: center; 
-            padding: 60px 20px; 
-            color: #999; 
-            font-size: 1.1em; 
-        }
-        
-        /* 通用页面 */
-        .generic-page { 
-            background: #fff; 
-            border-radius: 12px; 
-            padding: 24px; 
-            box-shadow: 0 2px 12px rgba(0,0,0,0.08); 
-        }
-        .generic-page h1 { 
-            font-size: 1.6em; 
-            color: #3e2723; 
-            border-bottom: 2px solid #d7ccc8; 
-            padding-bottom: 12px; 
-            margin-bottom: 20px; 
-        }
-        
-        /* 搜索框 */
-        .search-box {
-            background: #f9f9f9;
-            border: 1px solid #ddd;
-            border-radius: 20px;
-            padding: 8px 16px;
-            width: 100%;
-            margin-bottom: 16px;
-            font-size: 0.95em;
-        }
-        
-        /* 历史书 */
-        .book-layout { display: flex; gap: 24px; }
-        .book-toc { 
-            width: 240px; 
-            background: #fff; 
-            border-radius: 12px; 
-            padding: 20px; 
-            position: sticky; 
-            top: 80px; 
-            height: fit-content; 
-            box-shadow: 0 2px 12px rgba(0,0,0,0.08); 
-        }
-        .book-toc h3 { font-size: 1em; color: #666; margin-bottom: 12px; }
-        .toc-item { 
-            padding: 10px 12px; 
-            cursor: pointer; 
-            border-radius: 8px; 
-            font-size: 0.95em; 
-            margin-bottom: 6px; 
-            transition: 0.15s; 
-            line-height: 1.4;
-        }
-        .toc-item:hover { background: #f5f0e8; }
-        .toc-item.active { background: #e8d5c4; color: #5d4037; font-weight: 600; }
-        .book-content { flex: 1; min-width: 0; }
-        .welcome-hint { color: #999; text-align: center; padding: 60px 0; font-size: 1.1em; }
-        .book-content h1 { 
-            font-size: 1.8em; 
-            color: #3e2723; 
-            border-bottom: 2px solid #d7ccc8; 
-            padding-bottom: 12px; 
-            margin-bottom: 24px; 
-        }
-        .bk-section { 
-            background: #fff; 
-            border-radius: 10px; 
-            padding: 20px 24px; 
-            margin-bottom: 20px; 
-            box-shadow: 0 1px 6px rgba(0,0,0,0.06); 
-        }
-        .bk-section h4 { 
-            font-size: 0.9em; 
-            color: #8d6e63; 
-            margin-bottom: 12px; 
-            letter-spacing: 1px; 
-            font-weight: 600;
-        }
-        .bk-section p { 
-            margin-bottom: 12px; 
-            line-height: 1.8; 
-            text-indent: 2em; 
-            font-size: 1em;
-        }
-        .bk-section.preface { border-left: 4px solid #81c784; }
-        .bk-section.body { border-left: 4px solid #64b5f6; }
-        .bk-section.exercises { border-left: 4px solid #ffb74d; }
-        .bk-section.extension { border-left: 4px solid #ba68c8; }
-        
-        /* 公告栏 */
-        .notice-list { display: flex; flex-direction: column; gap: 16px; }
-        .notice-card { 
-            background: #fff; 
-            border-radius: 12px; 
-            padding: 20px 24px; 
-            box-shadow: 0 2px 12px rgba(0,0,0,0.08); 
-        }
-        .notice-date { font-size: 0.85em; color: #999; margin-bottom: 8px; }
-        .notice-title { font-size: 1.3em; color: #3e2723; margin-bottom: 12px; font-weight: 600; }
-        .notice-body p { line-height: 1.8; margin-bottom: 10px; font-size: 1em; }
-        
-        /* 小说 */
-        .novel-card { 
-            background: #fff; 
-            border-radius: 12px; 
-            padding: 20px; 
-            margin-bottom: 16px; 
-            box-shadow: 0 2px 12px rgba(0,0,0,0.08); 
-            display: flex; 
-            gap: 16px; 
-        }
-        .novel-cover { 
-            width: 120px; 
-            height: 160px; 
-            object-fit: cover; 
-            border-radius: 8px; 
-            cursor: pointer; 
-            flex-shrink: 0; 
-        }
-        .novel-info { flex: 1; }
-        .novel-title { font-size: 1.3em; color: #3e2723; margin-bottom: 8px; font-weight: 600; }
-        .novel-meta { font-size: 0.9em; color: #999; margin-bottom: 10px; display: flex; gap: 12px; }
-        .novel-intro { color: #666; font-size: 1em; line-height: 1.7; margin-bottom: 12px; }
-        .novel-actions { display: flex; gap: 10px; flex-wrap: wrap; }
-        .novel-actions button { 
-            background: #f5f0e8; 
-            border: none; 
-            padding: 8px 16px; 
-            border-radius: 20px; 
-            cursor: pointer; 
-            font-size: 0.95em; 
-            transition: 0.2s; 
-        }
-        .novel-actions button:hover { background: #e8d5c4; }
-        .like-btn { color: #e57373; font-weight: 600; }
-        .novel-body { 
-            color: #444; 
-            line-height: 1.8; 
-            margin-top: 12px; 
-            display: none; 
-            font-size: 1em;
-        }
-        
-        /* 投稿表单 */
-        .editor-box { 
-            margin-top: 16px; 
-            background: #f9f9f9; 
-            padding: 20px; 
-            border-radius: 10px; 
-            border: 1px solid #eee;
-        }
-        label { 
-            display: block; 
-            margin: 14px 0 6px; 
-            font-weight: 600; 
-            font-size: 0.9em; 
-            color: #555; 
-        }
-        input, textarea, select { 
-            width: 100%; 
-            padding: 12px; 
-            border: 1px solid #ddd; 
-            border-radius: 8px; 
-            font-size: 1em; 
-            font-family: inherit; 
-            background: #fff;
-        }
-        textarea { min-height: 80px; resize: vertical; }
-        textarea.big { min-height: 200px; }
-        .btn-primary { 
-            background: #8d6e63; 
-            color: #fff; 
-            border: none; 
-            padding: 12px 24px; 
-            border-radius: 8px; 
-            cursor: pointer; 
-            font-size: 1em; 
-            font-weight: 600;
-            transition: 0.2s;
-        }
-        .btn-primary:hover { background: #6d4c41; }
-        .actions { margin-top: 16px; display: flex; gap: 12px; flex-wrap: wrap; }
-        
-        /* 讨论区 */
-        .item-row { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: flex-start; 
-            padding: 14px 16px; 
-            background: #f9f9f9; 
-            border-radius: 10px; 
-            margin-bottom: 10px; 
-            font-size: 1em; 
-            line-height: 1.6;
-        }
-        .sugg-date { font-size: 0.85em; color: #999; margin-left: 8px; }
-        
-        /* 图片遮罩 */
-        .img-overlay { 
-            display: none; 
-            position: fixed; 
-            inset: 0; 
-            background: rgba(0,0,0,0.9); 
-            z-index: 999; 
-            justify-content: center; 
-            align-items: center; 
-        }
-        .img-overlay img { max-width: 95vw; max-height: 95vh; border-radius: 8px; }
-        
-        /* ===== 日常分享板块样式 ===== */
-        .post-card {
-            background: #fff;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-        }
-        .post-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-        }
-        .post-content {
-            line-height: 1.8;
-            margin-bottom: 12px;
-            font-size: 1em;
-            white-space: pre-wrap;
-        }
-        .post-images {
-            display: flex;
-            gap: 8px;
-            overflow-x: auto;
-            padding-bottom: 10px;
-            -webkit-overflow-scrolling: touch;
-        }
-        .post-images img {
-            height: 200px;
-            border-radius: 8px;
-            cursor: pointer;
-            flex-shrink: 0;
-            object-fit: cover;
-        }
-        .post-video {
-            margin-top: 12px;
-        }
-        .post-actions {
-            display: flex;
-            gap: 12px;
-            margin-top: 14px;
-            flex-wrap: wrap;
-        }
-        .post-actions button {
-            background: #f5f0e8;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 0.95em;
-            transition: 0.2s;
-        }
-        .post-actions button:hover {
-            background: #e8d5c4;
-        }
-        .like-btn {
-            color: #e57373;
-            font-weight: 600;
-        }
-        .post-comments {
-            margin-top: 14px;
-            border-top: 1px solid #eee;
-            padding-top: 14px;
-        }
-        .comment-item {
-            background: #f9f9f9;
-            border-radius: 6px;
-            padding: 10px;
-            margin-bottom: 6px;
-            font-size: 0.9em;
-        }
-        .comment-item strong {
-            font-size: 0.95em;
-        }
-        .comment-item div {
-            margin-top: 4px;
-            line-height: 1.6;
-        }
-        .delete-btn {
-            background: #ffcdd2 !important;
-            color: #c62828;
-            font-size: 0.85em;
-            padding: 4px 10px !important;
-        }
-        /*激活数字模块样式*/
-        .activate-item{
-            padding:10px 12px;
-            background:#f7f3ec;
-            border-radius:8px;
-            margin:8px 0;
-        }
-        .activate-input-wrap{
-            display:flex;gap:8px;margin:16px 0;
-        }
-        .activate-input-wrap input{flex:1;}
-        /* ===== 手机端适配 ===== */
-        @media (max-width: 768px) {
-            .header-inner { padding:10px 12px; }
-            .logo { font-size: 1.1em; }
-            .nav-item { font-size:0.9em; padding:6px 10px; }
-            .admin-link { font-size:0.85em; padding:5px 10px; }
-            
-            .module-content { padding:12px; }
-            .generic-page { padding:16px; }
-            .generic-page h1 { font-size:1.4em; }
-            
-            .book-layout { flex-direction:column; }
-            .book-toc { 
-                width:100%; 
-                position:static; 
-                display:flex; 
-                flex-wrap:wrap; 
-                gap:8px; 
-                padding:12px; 
-            }
-            .book-toc h3 { width:100%; margin-bottom:8px; }
-            .toc-item { 
-                font-size:0.85em; 
-                padding:6px 10px; 
-                margin-bottom:0;
-            }
-            
-            .book-content h1 { font-size:1.5em; }
-            .bk-section { padding:16px; }
-            .bk-section p { font-size:1.05em; line-height:1.9; }
-            
-            .notice-card { padding:16px; }
-            .notice-title { font-size:1.2em; }
-            
-            .novel-card { flex-direction:column; }
-            .novel-cover { width:100%; height:200px; }
-            .novel-title { font-size:1.2em; }
-            
-            .item-row { flex-direction:column; }
-            .item-row > div:last-child { margin-top:10px; }
-            
-            input, textarea, select { font-size:16px; }
-            
-            .post-images img {
-                height:150px;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>280班网站</title>
+<style>
+:root{
+    --glass-bg: rgba(255,255,255,0.55);
+    --glass-bg-strong: rgba(255,255,255,0.78);
+    --glass-border: rgba(255,255,255,0.65);
+    --glass-shadow: 0 8px 32px rgba(31,38,135,0.10);
+    --glass-blur: saturate(180%) blur(20px);
+    --brand: #8d6e63;
+    --brand-dark: #3e2723;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{min-height:100%;}
+body{
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+    color:#2c2c2c;line-height:1.6;
+    background:
+        radial-gradient(circle at 10% 10%, #f6e7d6 0%, transparent 45%),
+        radial-gradient(circle at 90% 20%, #e0ecf5 0%, transparent 45%),
+        radial-gradient(circle at 50% 100%, #ede0d1 0%, transparent 55%),
+        linear-gradient(135deg, #f0e9df 0%, #e8dfd3 100%);
+    background-attachment: fixed;
+    -webkit-font-smoothing: antialiased;
+}
+/* ---- 顶部导航（玻璃） ---- */
+.site-header{
+    position:sticky;top:0;z-index:100;
+    background: rgba(62,39,35,0.55);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-bottom:1px solid rgba(255,255,255,0.12);
+    box-shadow:0 4px 24px rgba(0,0,0,0.10);
+    color:#fff;
+}
+.header-inner{max-width:1200px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;gap:12px;}
+.logo{font-size:1.3em;font-weight:700;white-space:nowrap;flex-shrink:0;}
+.main-nav{display:flex;gap:4px;flex:1;overflow-x:auto;scrollbar-width:none;}
+.main-nav::-webkit-scrollbar{display:none;}
+.nav-item{
+    color:rgba(255,255,255,0.85);text-decoration:none;padding:8px 14px;border-radius:20px;
+    font-size:0.95em;white-space:nowrap;cursor:pointer;flex-shrink:0;transition:.2s;
+    border:1px solid transparent;
+}
+.nav-item:hover{background:rgba(255,255,255,0.18);color:#fff;}
+.nav-item.active{background:rgba(255,255,255,0.28);color:#fff;font-weight:600;border-color:rgba(255,255,255,0.35);}
+.admin-link{
+    color:#ffcc80;text-decoration:none;font-size:0.9em;border:1px solid rgba(255,204,128,0.7);
+    padding:6px 12px;border-radius:20px;white-space:nowrap;flex-shrink:0;transition:.2s;
+    backdrop-filter: blur(8px);
+}
+.admin-link:hover{background:#ffcc80;color:#3e2723;}
+#onlineUsers{display:flex;align-items:center;gap:6px;font-size:0.85em;color:rgba(255,255,255,0.85);margin-left:12px;cursor:pointer;}
+.online-dot{width:8px;height:8px;background:#4caf50;border-radius:50%;display:inline-block;animation:pulse 2s infinite;}
+@keyframes pulse{0%{opacity:1;}50%{opacity:.5;}100%{opacity:1;}}
+.user-bar{display:flex;align-items:center;gap:10px;flex-shrink:0;font-size:0.9em;}
+.user-bar a{color:rgba(255,255,255,0.85);text-decoration:none;padding:4px 8px;border-radius:6px;transition:.2s;}
+.user-bar a:hover{background:rgba(255,255,255,0.18);color:#fff;}
+.nav-avatar{width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;}
+.user-bar-logged{display:flex;align-items:center;gap:8px;}
+
+/* ---- 主内容 ---- */
+.module-content{max-width:1200px;margin:0 auto;padding:20px 16px;min-height:calc(100vh - 56px);}
+.empty{text-align:center;padding:60px 20px;color:#8a7f76;font-size:1.05em;}
+
+/* ---- 通用玻璃卡片 ---- */
+.generic-page{
+    background:var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border:1px solid var(--glass-border);
+    border-radius:20px;
+    padding:26px;
+    box-shadow:var(--glass-shadow);
+}
+.generic-page h1{font-size:1.6em;color:var(--brand-dark);border-bottom:1px solid rgba(141,110,99,0.25);padding-bottom:12px;margin-bottom:20px;}
+
+/* ---- 搜索框 ---- */
+.search-box{
+    background:rgba(255,255,255,0.6);border:1px solid rgba(255,255,255,0.8);border-radius:20px;
+    padding:10px 18px;width:100%;margin-bottom:16px;font-size:0.95em;outline:none;
+    backdrop-filter: blur(10px);transition:.2s;
+}
+.search-box:focus{border-color:rgba(141,110,99,0.5);background:rgba(255,255,255,0.85);}
+
+/* ---- 历史书 ---- */
+.book-layout{display:flex;gap:24px;}
+.book-toc{
+    width:240px;padding:20px;position:sticky;top:80px;height:fit-content;
+    background:var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border:1px solid var(--glass-border);
+    border-radius:20px;
+    box-shadow:var(--glass-shadow);
+}
+.book-toc h3{font-size:1em;color:#666;margin-bottom:12px;}
+.toc-item{
+    padding:10px 12px;cursor:pointer;border-radius:12px;font-size:0.95em;margin-bottom:6px;
+    transition:.15s;line-height:1.4;border:1px solid transparent;
+}
+.toc-item:hover{background:rgba(255,255,255,0.6);}
+.toc-item.active{background:rgba(141,110,99,0.20);color:#5d4037;font-weight:600;border-color:rgba(141,110,99,0.30);}
+.book-content{flex:1;min-width:0;}
+.welcome-hint{color:#8a7f76;text-align:center;padding:60px 0;font-size:1.05em;}
+.book-content h1{
+    font-size:1.8em;color:var(--brand-dark);border-bottom:1px solid rgba(141,110,99,0.25);
+    padding-bottom:12px;margin-bottom:24px;
+}
+.bk-section{
+    background:var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border:1px solid var(--glass-border);
+    border-radius:16px;
+    padding:20px 24px;margin-bottom:20px;
+    box-shadow:var(--glass-shadow);
+}
+.bk-section h4{font-size:0.9em;color:#8d6e63;margin-bottom:12px;letter-spacing:1px;font-weight:600;}
+.bk-section p{margin-bottom:12px;line-height:1.85;text-indent:2em;font-size:1em;}
+.bk-section.preface{border-left:4px solid #81c784;}
+.bk-section.body{border-left:4px solid #64b5f6;}
+.bk-section.exercises{border-left:4px solid #ffb74d;}
+.bk-section.extension{border-left:4px solid #ba68c8;}
+
+/* ---- 每课讨论区 ---- */
+.chapter-discuss-section{
+    border-left:4px solid #4db6ac;
+    margin-top:20px;
+}
+.chapter-comments{margin:12px 0;max-height:420px;overflow-y:auto;}
+.chapter-comment-item{
+    display:flex;gap:10px;padding:10px 0;border-bottom:1px solid rgba(141,110,99,0.12);
+}
+.chapter-comment-item:last-child{border-bottom:none;}
+.comment-avatar{
+    flex-shrink:0;width:36px;height:36px;display:flex;align-items:center;justify-content:center;
+    font-size:20px;border-radius:50%;overflow:hidden;background:rgba(141,110,99,0.15);
+}
+.comment-avatar img{width:100%;height:100%;object-fit:cover;}
+.comment-content{flex:1;min-width:0;}
+.comment-meta{display:flex;align-items:center;gap:8px;font-size:0.85em;margin-bottom:4px;}
+.comment-meta strong{color:#3e2723;}
+.comment-time{color:#999;}
+.comment-text{font-size:0.95em;line-height:1.7;color:#444;white-space:pre-wrap;word-break:break-word;}
+.chapter-comment-input{display:flex;gap:10px;margin-top:12px;}
+.chapter-comment-input input{
+    flex:1;padding:10px 16px;border:1px solid rgba(255,255,255,0.8);border-radius:20px;
+    font-size:0.95em;outline:none;background:rgba(255,255,255,0.65);
+    backdrop-filter:blur(10px);transition:.2s;
+}
+.chapter-comment-input input:focus{border-color:rgba(141,110,99,0.5);background:rgba(255,255,255,0.9);}
+.chapter-comment-input button{
+    padding:10px 22px;border-radius:20px;white-space:nowrap;
+    background:var(--brand);color:#fff;border:none;cursor:pointer;font-size:0.95em;
+    box-shadow:0 4px 14px rgba(141,110,99,0.35);transition:.2s;
+}
+.chapter-comment-input button:hover{background:#6d4c41;}
+
+/* ---- 公告栏 ---- */
+.notice-list{display:flex;flex-direction:column;gap:16px;}
+.notice-card{
+    background:var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border:1px solid var(--glass-border);
+    border-radius:18px;
+    padding:20px 24px;
+    box-shadow:var(--glass-shadow);
+}
+.notice-date{font-size:0.85em;color:#999;margin-bottom:8px;}
+.notice-title{font-size:1.3em;color:var(--brand-dark);margin-bottom:12px;font-weight:600;}
+.notice-body p{line-height:1.85;margin-bottom:10px;font-size:1em;}
+
+/* ---- 小说 ---- */
+.novel-card{
+    background:var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border:1px solid var(--glass-border);
+    border-radius:18px;
+    padding:20px;margin-bottom:16px;
+    box-shadow:var(--glass-shadow);
+    display:flex;gap:16px;
+}
+.novel-cover{width:120px;height:160px;object-fit:cover;border-radius:12px;cursor:pointer;flex-shrink:0;}
+.novel-info{flex:1;}
+.novel-title{font-size:1.3em;color:var(--brand-dark);margin-bottom:8px;font-weight:600;}
+.novel-meta{font-size:0.9em;color:#8a7f76;margin-bottom:10px;display:flex;gap:12px;align-items:center;}
+.novel-author{display:inline-flex;align-items:center;gap:6px;text-decoration:none;color:inherit;}
+.novel-author:hover{color:#8d6e63;}
+.novel-author-avatar{
+    width:22px;height:22px;border-radius:50%;object-fit:cover;background:rgba(141,110,99,0.2);
+    display:inline-flex;align-items:center;justify-content:center;font-size:12px;overflow:hidden;
+}
+.novel-intro{color:#666;font-size:1em;line-height:1.7;margin-bottom:12px;}
+.novel-actions{display:flex;gap:10px;flex-wrap:wrap;}
+.novel-actions button{
+    background:rgba(255,255,255,0.65);border:1px solid rgba(255,255,255,0.85);
+    padding:8px 16px;border-radius:20px;cursor:pointer;font-size:0.95em;transition:.2s;
+    backdrop-filter:blur(8px);
+}
+.novel-actions button:hover{background:rgba(232,213,196,0.9);}
+.like-btn{color:#e57373;font-weight:600;}
+.novel-body{color:#444;line-height:1.85;margin-top:12px;display:none;font-size:1em;}
+
+/* ---- 编辑器 / 表单 ---- */
+.editor-box{
+    margin-top:16px;padding:20px;border-radius:16px;
+    background:rgba(255,255,255,0.45);
+    backdrop-filter:blur(14px);
+    border:1px solid rgba(255,255,255,0.7);
+}
+label{display:block;margin:14px 0 6px;font-weight:600;font-size:0.9em;color:#555;}
+input,textarea,select{
+    width:100%;padding:12px;border:1px solid rgba(255,255,255,0.85);border-radius:12px;
+    font-size:1em;font-family:inherit;background:rgba(255,255,255,0.7);outline:none;transition:.2s;
+    backdrop-filter:blur(8px);
+}
+input:focus,textarea:focus,select:focus{border-color:rgba(141,110,99,0.5);background:rgba(255,255,255,0.95);}
+textarea{min-height:80px;resize:vertical;}
+textarea.big{min-height:200px;}
+.btn-primary{
+    background:var(--brand);color:#fff;border:none;padding:12px 24px;border-radius:14px;
+    cursor:pointer;font-size:1em;font-weight:600;transition:.2s;
+    box-shadow:0 4px 14px rgba(141,110,99,0.35);
+}
+.btn-primary:hover{background:#6d4c41;}
+.btn-primary:disabled{background:#bdbdbd;cursor:not-allowed;box-shadow:none;}
+.actions{margin-top:16px;display:flex;gap:12px;flex-wrap:wrap;}
+
+/* ---- 讨论 ---- */
+.item-row{
+    display:flex;justify-content:space-between;align-items:flex-start;
+    padding:14px 16px;border-radius:14px;margin-bottom:10px;font-size:1em;line-height:1.6;
+    background:rgba(255,255,255,0.55);
+    backdrop-filter:blur(10px);
+    border:1px solid rgba(255,255,255,0.7);
+}
+.discuss-author{display:inline-flex;align-items:center;gap:8px;}
+.discuss-author-avatar{
+    width:26px;height:26px;border-radius:50%;overflow:hidden;object-fit:cover;
+    background:rgba(141,110,99,0.2);display:inline-flex;align-items:center;justify-content:center;font-size:14px;
+}
+.sugg-date{font-size:0.85em;color:#999;margin-left:8px;}
+
+/* ---- 图片遮罩 ---- */
+.img-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:999;justify-content:center;align-items:center;backdrop-filter:blur(8px);}
+.img-overlay img{max-width:95vw;max-height:95vh;border-radius:12px;}
+
+/* ---- 日常分享 ---- */
+.post-card{
+    background:var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border:1px solid var(--glass-border);
+    border-radius:18px;
+    padding:20px;margin-bottom:20px;
+    box-shadow:var(--glass-shadow);
+}
+.post-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+.post-author{display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:inherit;font-weight:600;}
+.post-author:hover{color:#8d6e63;}
+.post-author-avatar{
+    width:32px;height:32px;border-radius:50%;overflow:hidden;object-fit:cover;
+    background:rgba(141,110,99,0.2);display:inline-flex;align-items:center;justify-content:center;font-size:16px;
+}
+.post-content{line-height:1.8;margin-bottom:12px;font-size:1em;white-space:pre-wrap;}
+.post-images{display:flex;gap:8px;overflow-x:auto;padding-bottom:10px;-webkit-overflow-scrolling:touch;}
+.post-images img{height:200px;border-radius:12px;cursor:pointer;flex-shrink:0;object-fit:cover;background:rgba(255,255,255,0.5);}
+.post-video{margin-top:12px;}
+.post-actions{display:flex;gap:12px;margin-top:14px;flex-wrap:wrap;}
+.post-actions button{
+    background:rgba(255,255,255,0.65);border:1px solid rgba(255,255,255,0.85);
+    padding:8px 16px;border-radius:20px;cursor:pointer;font-size:0.95em;transition:.2s;
+    backdrop-filter:blur(8px);
+}
+.post-actions button:hover{background:rgba(232,213,196,0.9);}
+.post-comments{margin-top:14px;border-top:1px solid rgba(141,110,99,0.15);padding-top:14px;}
+.comment-item{background:rgba(255,255,255,0.55);border-radius:12px;padding:10px;margin-bottom:6px;font-size:0.9em;backdrop-filter:blur(8px);}
+.comment-item strong{font-size:0.95em;}
+.comment-item div{margin-top:4px;line-height:1.6;}
+.delete-btn{background:rgba(255,205,210,0.85) !important;color:#c62828;font-size:0.85em;padding:4px 10px !important;border:none;}
+
+/* ---- 激活数字 ---- */
+.activate-item{padding:10px 12px;background:rgba(247,243,236,0.8);border-radius:12px;margin:8px 0;backdrop-filter:blur(8px);}
+.activate-input-wrap{display:flex;gap:8px;margin:16px 0;}
+.activate-input-wrap input{flex:1;}
+
+/* ---- 手机端 ---- */
+@media (max-width:768px){
+    .header-inner{padding:10px 12px;}
+    .logo{font-size:1.1em;}
+    .nav-item{font-size:0.9em;padding:6px 10px;}
+    .admin-link{font-size:0.85em;padding:5px 10px;}
+    .module-content{padding:12px;}
+    .generic-page{padding:16px;}
+    .generic-page h1{font-size:1.4em;}
+    .book-layout{flex-direction:column;}
+    .book-toc{width:100%;position:static;display:flex;flex-wrap:wrap;gap:8px;padding:12px;}
+    .book-toc h3{width:100%;margin-bottom:8px;}
+    .toc-item{font-size:0.85em;padding:6px 10px;margin-bottom:0;}
+    .book-content h1{font-size:1.5em;}
+    .bk-section{padding:16px;}
+    .bk-section p{font-size:1.02em;line-height:1.9;}
+    .notice-card{padding:16px;}
+    .notice-title{font-size:1.2em;}
+    .novel-card{flex-direction:column;}
+    .novel-cover{width:100%;height:200px;}
+    .novel-title{font-size:1.2em;}
+    .item-row{flex-direction:column;}
+    .item-row > div:last-child{margin-top:10px;}
+    input, textarea, select{font-size:16px;}
+    .post-images img{height:150px;}
+    #onlineUsers{display:none;}
+}
+</style>
 </head>
 <body>
-    <header class="site-header">
-        <div class="header-inner">
-            <h1 class="logo">🏫 280班</h1>
-            <nav class="main-nav" id="mainNav"></nav>
-            <div id="onlineUsers" onclick="showOnlineUsers()">
-                <span class="online-dot"></span>
-                <span id="onlineCount">1</span> 人在线
-            </div>
-            <div class="user-bar" id="userBar"></div>
-            <a href="admin.html" class="admin-link">管理</a>
+<header class="site-header">
+    <div class="header-inner">
+        <h1 class="logo">🏫 280班</h1>
+        <nav class="main-nav" id="mainNav"></nav>
+        <div id="onlineUsers" onclick="showOnlineUsers()">
+            <span class="online-dot"></span>
+            <span id="onlineCount">1</span> 人在线
         </div>
-    </header>
-    <main class="module-content" id="moduleContent"></main>
-    <div class="img-overlay" id="imgOverlay" onclick="closeOverlay()">
-        <img id="overlayImg" src="" />
+        <div class="user-bar" id="userBar"></div>
+        <a href="admin.html" class="admin-link">管理</a>
     </div>
-<script>
-        // ===== 账号登录全局变量【完整保留】 =====
-        let loginUser = null;
-        let onlineTimer = null;
-        let activateCodeList = []; //保存激活数字列表
-        function refreshUserStatus(){
-            const raw = localStorage.getItem("userInfo");
-            loginUser = raw ? JSON.parse(raw) : null;
-            renderUserBar();
-        }
-        function renderUserBar(){
-            const bar = document.getElementById("userBar");
-            if(!loginUser){
-                bar.innerHTML = `
-                    <a href="login.html">登录</a>
-                    <a href="register.html">注册</a>
-                `;
-            }else{
-                const avatarSrc = loginUser.avatar ? escapeHtml(loginUser.avatar) : "";
-                bar.innerHTML = `
-                    <div class="user-bar-logged">
-    <a href="profile.html" style="display:flex;align-items:center;gap:6px;color:unset;text-decoration:none;">
-        ${avatarSrc ? `<img class="nav-avatar" src="${avatarSrc}" alt="头像">` : "👤"}
-        <span>${escapeHtml(loginUser.nickname)}</span>
-    </a>
+</header>
+<main class="module-content" id="moduleContent"></main>
+<div class="img-overlay" id="imgOverlay" onclick="closeOverlay()">
+    <img id="overlayImg" src="" />
 </div>
-                    <a href="profile.html">个人主页</a>
-                    <a href="javascript:logout()">退出</a>
-                `;
-            }
+<script>
+/* ===== 全局 ===== */
+let loginUser = null;
+let onlineTimer = null;
+let activateCodeList = [];
+let allNovels = [];
+let allPosts = [];
+
+/* ===== 工具 ===== */
+function escapeHtml(str){
+    if(str === null || str === undefined) return '';
+    return String(str)
+        .replace(/&/g,'&amp;')
+        .replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;')
+        .replace(/'/g,'&#039;');
+}
+function formatText(text){
+    if(!text) return '';
+    return text.split('\n').filter(l=>l.trim()).map(l=>`<p>${escapeHtml(l)}</p>`).join('');
+}
+function formatTime(isoString){
+    if(!isoString) return '';
+    return String(isoString).replace('T',' ').slice(0,16);
+}
+function openOverlay(src){
+    document.getElementById('overlayImg').src = src;
+    document.getElementById('imgOverlay').style.display = 'flex';
+}
+function closeOverlay(){
+    document.getElementById('imgOverlay').style.display = 'none';
+}
+function getGuestId(){
+    let gid = localStorage.getItem('guest_id');
+    if(!gid){
+        gid = 'guest_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+        localStorage.setItem('guest_id', gid);
+    }
+    return gid;
+}
+
+/* ===== 用户状态 ===== */
+function refreshUserStatus(){
+    const raw = localStorage.getItem('userInfo');
+    loginUser = raw ? JSON.parse(raw) : null;
+    renderUserBar();
+}
+function renderUserBar(){
+    const bar = document.getElementById('userBar');
+    if(!loginUser){
+        bar.innerHTML = `<a href="login.html">登录</a><a href="register.html">注册</a>`;
+    }else{
+        const avatarSrc = loginUser.avatar ? escapeHtml(loginUser.avatar) : '';
+        bar.innerHTML = `
+            <div class="user-bar-logged">
+                <a href="profile.html" style="display:flex;align-items:center;gap:6px;color:unset;text-decoration:none;">
+                    ${avatarSrc ? `<img class="nav-avatar" src="${avatarSrc}" alt="头像">` : '👤'}
+                    <span>${escapeHtml(loginUser.nickname)}</span>
+                </a>
+            </div>
+            <a href="profile.html">个人主页</a>
+            <a href="javascript:logout()">退出</a>
+        `;
+    }
+}
+function logout(){
+    localStorage.removeItem('userInfo');
+    refreshUserStatus();
+    alert('已退出登录');
+    openModule(currentModuleId);
+}
+function checkLogin(){
+    if(!loginUser){ alert('请先登录账号！'); location.href = 'login.html'; return false; }
+    return true;
+}
+
+/* ===== Supabase ===== */
+const SUPABASE_URL = 'https://gbktpjnitqpwomcprrol.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdia3Rwam5pdHFwd29tY3Bycm9sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTk2NDIsImV4cCI6MjA5ODk5NTY0Mn0.TIp9NAdDRZrI16Jq_no7Ga9EpX7ooc6b5Ck7r-sNqww';
+async function supabaseRequest(table, method = 'GET', data = null, id = null){
+    const url = id
+        ? `${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`
+        : `${SUPABASE_URL}/rest/v1/${table}`;
+    const options = {
+        method,
+        headers: {
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'Content-Type': 'application/json; charset=utf-8',
+            'Prefer': 'return=representation'
         }
-        function logout(){
-            localStorage.removeItem("userInfo");
-            refreshUserStatus();
-            alert("已退出登录");
-            openModule(currentModuleId);
-        }
-        function checkLogin(){
-            if(!loginUser){
-                alert("请先登录账号！");
-                location.href="login.html";
-                return false;
-            }
-            return true;
-        }
-        // ===== Supabase 配置 =====
-        const SUPABASE_URL = 'https://gbktpjnitqpwomcprrol.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdia3Rwam5pdHFwd29tY3Bycm9sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTk2NDIsImV4cCI6MjA5ODk5NTY0Mn0.TIp9NAdDRZrI16Jq_no7Ga9EpX7ooc6b5Ck7r-sNqww';
-        async function supabaseRequest(table, method = 'GET', data = null, id = null) {
-            const url = id
-                ? `${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`
-                : `${SUPABASE_URL}/rest/v1/${table}`;
-            const options = {
-                method: method,
-                headers: {
-                    'apikey': SUPABASE_KEY,
-                    'Authorization': `Bearer ${SUPABASE_KEY}`,
-                    'Content-Type': 'application/json; charset=utf-8',
-                    'Prefer': 'return=representation'
-                }
+    };
+    if(data && (method === 'POST' || method === 'PATCH')) options.body = JSON.stringify(data);
+    try{
+        const res = await fetch(url, options);
+        if(method === 'DELETE') return {ok:true};
+        if(!res.ok){ console.warn('请求失败', await res.text()); return []; }
+        return await res.json();
+    }catch(e){ console.error(e); return []; }
+}
+
+/* ===== Storage 上传 ===== */
+async function uploadFileToStorage(file, folder){
+    const ext = (file.name && file.name.includes('.')) ? file.name.split('.').pop() : 'bin';
+    const filename = `${folder}/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
+    const url = `${SUPABASE_URL}/storage/v1/object/posts/${filename}`;
+    const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'Content-Type': file.type || 'application/octet-stream'
+        },
+        body: file
+    });
+    if(!res.ok){
+        const t = await res.text();
+        throw new Error('上传失败：' + t);
+    }
+    return `${SUPABASE_URL}/storage/v1/object/public/posts/${filename}`;
+}
+
+/* 前端压缩图片（不压缩视频） */
+function compressImageFile(file, maxSize, quality){
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = e => {
+            const img = new Image();
+            img.onload = () => {
+                let w = img.width, h = img.height;
+                if(w > h && w > maxSize){ h = Math.round(h * maxSize / w); w = maxSize; }
+                else if(h > maxSize){ w = Math.round(w * maxSize / h); h = maxSize; }
+                const canvas = document.createElement('canvas');
+                canvas.width = w; canvas.height = h;
+                canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                canvas.toBlob(blob => {
+                    if(blob) resolve(new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), {type: 'image/jpeg'}));
+                    else reject(new Error('压缩失败'));
+                }, 'image/jpeg', quality);
             };
-            if (data && (method === 'POST' || method === 'PATCH')) {
-                options.body = JSON.stringify(data);
+            img.onerror = reject;
+            img.src = e.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
+/* ===== 在线用户 ===== */
+async function registerOnline(){
+    if(onlineTimer) clearInterval(onlineTimer);
+    try{
+        const expireMs = 90 * 1000;
+        const now = Date.now();
+        let list = await supabaseRequest('online_users');
+        list = Array.isArray(list) ? list : [];
+        for(const item of list){
+            if(now - new Date(item.last_active).getTime() > expireMs){
+                await supabaseRequest('online_users','DELETE',null,item.id).catch(()=>{});
             }
-            try {
-                const res = await fetch(url, options);
-                if (method === 'DELETE') return { ok: true };
-                const result = await res.json();
-                return result;
-            } catch (e) {
-                console.error('Supabase 请求失败：', e);
-                return [];
-            }
         }
-        // ===== 工具函数 =====
-        function openOverlay(src) {
-            document.getElementById('overlayImg').src = src;
-            document.getElementById('imgOverlay').style.display = 'flex';
+        const freshList = Array.isArray(await supabaseRequest('online_users')) ? await supabaseRequest('online_users') : [];
+        let nick, uid;
+        if(loginUser){ nick = loginUser.nickname; uid = 'user_' + loginUser.id; }
+        else { nick = '游客'; uid = getGuestId(); }
+        const me = freshList.find(u => u.unique_id === uid);
+        if(me){
+            await supabaseRequest('online_users','PATCH',{last_active:new Date().toISOString(), nickname:nick}, me.id).catch(()=>{});
+        }else{
+            await supabaseRequest('online_users','POST',{unique_id:uid, nickname:nick, last_active:new Date().toISOString()}).catch(()=>{});
         }
-        function closeOverlay() {
-            document.getElementById('imgOverlay').style.display = 'none';
-        }
-        function formatText(text) {
-            if (!text) return '';
-            return text.split('\n').filter(l => l.trim()).map(l => `<p>${escapeHtml(l)}</p>`).join('');
-        }
-        function escapeHtml(str) {
-            if (!str) return '';
-            return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace( />/g, '&gt;').replace(/"/g, '&quot;');
-        }
-        function formatTime(isoString) {
-            if (!isoString) return '';
-            return isoString.replace('T', ' ').slice(0, 16);
-        }
-        function getGuestId(){
-            let gid = localStorage.getItem("guest_id");
-            if(!gid){
-                gid = "guest_" + Date.now() + "_" + Math.random().toString(36).slice(2);
-                localStorage.setItem("guest_id", gid);
-            }
-            return gid;
-        }
-        async function registerOnline() {
-            if(onlineTimer) clearInterval(onlineTimer);
-            try {
-                const expireMs = 90 * 1000;
-                const now = Date.now();
-                const allOnlineRaw = await supabaseRequest('online_users');
-                const onlineList = Array.isArray(allOnlineRaw) ? allOnlineRaw : [];
-                for (const item of onlineList) {
-                    const activeTime = new Date(item.last_active).getTime();
-                    if (now - activeTime > expireMs) {
-                        await supabaseRequest('online_users', 'DELETE', null, item.id).catch(() => { });
-                    }
+        document.getElementById('onlineCount').textContent = freshList.length;
+
+        onlineTimer = setInterval(async ()=>{
+            const tickNow = Date.now();
+            let tickList = await supabaseRequest('online_users');
+            tickList = Array.isArray(tickList) ? tickList : [];
+            for(const item of tickList){
+                if(tickNow - new Date(item.last_active).getTime() > expireMs){
+                    await supabaseRequest('online_users','DELETE',null,item.id).catch(()=>{});
                 }
-                const freshList = Array.isArray(await supabaseRequest('online_users')) ? await supabaseRequest('online_users') : [];
-                let currentNick, uniqueId;
-                if(loginUser){
-                    currentNick = loginUser.nickname;
-                    uniqueId = "user_" + loginUser.id;
-                }else{
-                    currentNick = "游客";
-                    uniqueId = getGuestId();
-                }
-                const me = freshList.find(u => u.unique_id === uniqueId);
-                if (me) {
-                    await supabaseRequest('online_users', 'PATCH', {
-                        last_active: new Date().toISOString(),
-                        nickname: currentNick
-                    }, me.id).catch(() => { });
-                } else {
-                    await supabaseRequest('online_users', 'POST', {
-                        unique_id: uniqueId,
-                        nickname: currentNick,
-                        last_active: new Date().toISOString()
-                    }).catch(() => { });
-                }
-                onlineTimer = setInterval(async () => {
-                    const tickNow = Date.now();
-                    let tickList = Array.isArray(await supabaseRequest('online_users')) ? await supabaseRequest('online_users') : [];
-                    for (const item of tickList) {
-                        const t = new Date(item.last_active).getTime();
-                        if (tickNow - t > expireMs) {
-                            await supabaseRequest('online_users', 'DELETE', null, item.id).catch(() => { });
-                        }
-                    }
-                    tickList = Array.isArray(await supabaseRequest('online_users')) ? await supabaseRequest('online_users') : [];
-                    let selfNick, selfUid;
-                    if(loginUser){
-                        selfNick = loginUser.nickname;
-                        selfUid = "user_" + loginUser.id;
-                    }else{
-                        selfNick = "游客";
-                        selfUid = getGuestId();
-                    }
-                    const self = tickList.find(u => u.unique_id === selfUid);
-                    if (self) {
-                        await supabaseRequest('online_users', 'PATCH', {
-                            last_active: new Date().toISOString(),
-                            nickname: selfNick
-                        }, self.id).catch(() => { });
-                    }
-                    document.getElementById('onlineCount').textContent = tickList.length;
-                }, 30000);
-                document.getElementById('onlineCount').textContent = freshList.length;
-            } catch (e) {
-                console.error('在线用户异常', e);
-                document.getElementById('onlineCount').textContent = '?';
             }
-        }
-        async function showOnlineUsers() {
-            const expireMs = 90 * 1000;
-            const now = Date.now();
-            const raw = await supabaseRequest('online_users');
-            const users = Array.isArray(raw) ? raw : [];
-            const active = users.filter(item => now - new Date(item.last_active).getTime() < expireMs);
-            if (active.length === 0) return alert('暂无在线用户');
-            alert('当前在线：\n' + active.map(u => u.nickname).join('\n'));
-        }
-        // ===== 模块系统 =====
-        const modules = {};
-        function registerModule(mod) {
-            modules[mod.id] = mod;
-        }
-        let currentModuleId = null;
-        function renderNav() {
-            const navEl = document.getElementById('mainNav');
-            navEl.innerHTML = Object.values(modules).map(m =>
-                `<div class="nav-item ${currentModuleId === m.id ? 'active' : ''}" onclick="openModule('${m.id}')">${m.icon} ${m.name}</div>`
-            ).join('');
-        }
-        async function openModule(id) {
-            const mod = modules[id];
-            if (!mod) return;
-            currentModuleId = id;
-            renderNav();
-            const contentBox = document.getElementById('moduleContent');
-            if (mod.render) contentBox.innerHTML = mod.render({});
-            if (mod.init && typeof mod.init === 'function') await mod.init({});
-        }
-        // ===== 注册各个模块 =====
+            tickList = await supabaseRequest('online_users');
+            tickList = Array.isArray(tickList) ? tickList : [];
+            const selfUid = loginUser ? 'user_' + loginUser.id : getGuestId();
+            const selfNick = loginUser ? loginUser.nickname : '游客';
+            const self = tickList.find(u => u.unique_id === selfUid);
+            if(self){
+                await supabaseRequest('online_users','PATCH',{last_active:new Date().toISOString(), nickname:selfNick}, self.id).catch(()=>{});
+            }
+            document.getElementById('onlineCount').textContent = tickList.length;
+        }, 30000);
+    }catch(e){
+        console.error('在线用户异常', e);
+        document.getElementById('onlineCount').textContent = '?';
+    }
+}
+async function showOnlineUsers(){
+    const expireMs = 90 * 1000;
+    const now = Date.now();
+    const raw = await supabaseRequest('online_users');
+    const users = Array.isArray(raw) ? raw : [];
+    const active = users.filter(item => now - new Date(item.last_active).getTime() < expireMs);
+    if(active.length === 0) return alert('暂无在线用户');
+    alert('当前在线：\n' + active.map(u => u.nickname).join('\n'));
+}
+
+/* ===== 模块系统 ===== */
+const modules = {};
+function registerModule(mod){ modules[mod.id] = mod; }
+let currentModuleId = null;
+function renderNav(){
+    const navEl = document.getElementById('mainNav');
+    navEl.innerHTML = Object.values(modules).map(m =>
+        `<div class="nav-item ${currentModuleId === m.id ? 'active' : ''}" onclick="openModule('${m.id}')">${m.icon} ${m.name}</div>`
+    ).join('');
+}
+async function openModule(id){
+    const mod = modules[id];
+    if(!mod) return;
+    currentModuleId = id;
+    renderNav();
+    const contentBox = document.getElementById('moduleContent');
+    if(mod.render) contentBox.innerHTML = mod.render({});
+    if(mod.init && typeof mod.init === 'function') await mod.init({});
+}
+
+/* ===== 历史书模块 ===== */
 registerModule({
     id: 'book', name: '历史书', icon: '📖',
-    _volumes:[],
-    _currentVolumeId:null,
-    _chapters:[],
-    render(data) {
-        this._volumes = data.volumes||[];
-        this._currentVolumeId = data.currentVolumeId||null;
-        this._chapters = data.chapters||[];
+    _volumes: [],
+    _currentVolumeId: null,
+    _chapters: [],
+    render(data){
+        this._volumes = data.volumes || [];
+        this._currentVolumeId = data.currentVolumeId || null;
+        this._chapters = data.chapters || [];
         if(!this._currentVolumeId){
-            //展示分册列表首页
-            if(this._volumes.length===0){
+            if(this._volumes.length === 0){
                 return `<div class="empty">📚暂无分册，请管理员后台添加分册</div>`;
             }
             return `
             <div class="generic-page">
                 <h1>📚历史回忆册</h1>
-                <p style="margin-bottom:16px;">请选择一册进入查看章节</p>
-                ${this._volumes.map(vol=>`
+                <p style="margin-bottom:16px;color:#666;">请选择一册进入查看章节</p>
+                ${this._volumes.map(vol => `
                 <div class="toc-item" style="cursor:pointer;margin-bottom:8px;" onclick="modules['book'].openVolume(${vol.id})">
                     📖 ${escapeHtml(vol.title)}
-                    ${vol.description?`<div style="font-size:0.9em;color:#666;margin-top:4px;">${escapeHtml(vol.description)}</div>`:""}
-                </div>
-                `).join("")}
+                    ${vol.description ? `<div style="font-size:0.9em;color:#666;margin-top:4px;">${escapeHtml(vol.description)}</div>` : ''}
+                </div>`).join('')}
             </div>`;
-        }else{
-            //选中某一册，展示该册章节目录
-            const volInfo = this._volumes.find(v=>v.id===this._currentVolumeId);
-            return `
-            <div class="book-layout">
-                <aside class="book-toc">
-                    <div style="cursor:pointer;color:#2563eb;margin-bottom:12px;" onclick="modules['book'].backVolumeList()">← 返回全部分册</div>
-                    <h3>📚 ${escapeHtml(volInfo?.title||"")}</h3>
-                    ${this._chapters.length>0?
-                        this._chapters.map((ch,idx)=>`
+        }
+        const volInfo = this._volumes.find(v => v.id === this._currentVolumeId);
+        return `
+        <div class="book-layout">
+            <aside class="book-toc">
+                <div style="cursor:pointer;color:#8d6e63;margin-bottom:12px;" onclick="modules['book'].backVolumeList()">← 返回全部分册</div>
+                <h3>📚 ${escapeHtml(volInfo?.title || '')}</h3>
+                ${this._chapters.length > 0
+                    ? this._chapters.map((ch, idx) => `
                         <div class="toc-item" onclick="modules['book'].openChapter(${idx})">
                             第${idx + 1}章 ${escapeHtml(ch.title || '未命名')}
                         </div>`).join('')
-                        :`<div style="color:#888;">该分册暂无章节</div>`
-                    }
-                </aside>
-                <article class="book-content" id="bookContent">
-                    <div class="welcome-hint">📖 请从左侧目录选择章节</div>
-                </article>
-            </div>
-            `;
-        }
+                    : `<div style="color:#888;">该分册暂无章节</div>`}
+            </aside>
+            <article class="book-content" id="bookContent">
+                <div class="welcome-hint">📖 请从左侧目录选择章节</div>
+            </article>
+        </div>`;
     },
-    async init() {
-        //加载全部分册
+    async init(){
         const vols = await supabaseRequest('book_volume');
-        this._volumes = Array.isArray(vols)?vols:[];
+        this._volumes = Array.isArray(vols) ? vols : [];
         this._currentVolumeId = null;
         document.getElementById('moduleContent').innerHTML = this.render({volumes:this._volumes});
     },
-    //打开某一分册，加载该分册下所有章节
     async openVolume(volumeId){
         this._currentVolumeId = volumeId;
-        //筛选volume_id匹配的章节
         const allCh = await supabaseRequest('chapters');
-        this._chapters = Array.isArray(allCh)? allCh.filter(c=>c.volume_id === volumeId):[];
+        this._chapters = Array.isArray(allCh) ? allCh.filter(c => c.volume_id === volumeId) : [];
         document.getElementById('moduleContent').innerHTML = this.render({
-            volumes:this._volumes,
-            currentVolumeId:this._currentVolumeId,
-            chapters:this._chapters
+            volumes: this._volumes,
+            currentVolumeId: this._currentVolumeId,
+            chapters: this._chapters
         });
     },
-    //退回到分册总列表
     backVolumeList(){
-        this._currentVolumeId=null;
-        this._chapters=[];
+        this._currentVolumeId = null;
+        this._chapters = [];
         document.getElementById('moduleContent').innerHTML = this.render({volumes:this._volumes});
     },
-    openChapter(idx) {
+    openChapter(idx){
         const ch = this._chapters[idx];
-        if (!ch) return;
+        if(!ch) return;
         const el = document.getElementById('bookContent');
-        if (!el) return;
+        if(!el) return;
         el.innerHTML = `
             <h1>${escapeHtml(ch.title || '')}</h1>
             ${ch.preface ? `<section class="bk-section preface"><h4>📋 课前导言</h4>${formatText(ch.preface)}</section>` : ''}
             ${ch.body ? `<section class="bk-section body"><h4>📖 正文</h4>${formatText(ch.body)}</section>` : ''}
             ${ch.exercises ? `<section class="bk-section exercises"><h4>📝 课后习题</h4>${formatText(ch.exercises)}</section>` : ''}
             ${ch.extension ? `<section class="bk-section extension"><h4>🔗 知识扩展</h4>${formatText(ch.extension)}</section>` : ''}
+            <section class="bk-section chapter-discuss-section">
+                <h4>💬 本课讨论</h4>
+                <div id="chapterComments-${ch.id}" class="chapter-comments">
+                    <div style="color:#999;padding:8px 0;">加载中...</div>
+                </div>
+                <div class="chapter-comment-input">
+                    <input id="chapterCommentInput-${ch.id}" placeholder="写下你的想法..." />
+                    <button onclick="postChapterComment(${ch.id})">发送</button>
+                </div>
+            </section>
         `;
         document.querySelectorAll('.toc-item').forEach((item, i) => item.classList.toggle('active', i === idx));
+        loadChapterComments(ch.id);
     }
 });
 
-        registerModule({
-            id: 'notice', name: '公告栏', icon: '📋',
-            render(data) {
-                const notices = data.notices || [];
-                if (notices.length === 0) return '<div class="empty">📭 暂无公告</div>';
-                return `
-                    <div class="notice-list">
-                        ${notices.map(n => `
-                            <div class="notice-card">
-                                <div class="notice-date">📅 ${n.date || ''}</div>
-                                <h3 class="notice-title">${escapeHtml(n.title || '')}</h3>
-                                <div class="notice-body">${formatText(n.content || '')}</div>
-                            </div>
-                        `).join('')}
-                    </div>
-                `;
-            },
-            async init() {
-                const notices = await supabaseRequest('notices');
-                document.getElementById('moduleContent').innerHTML = this.render({ notices: Array.isArray(notices) ? notices : [] });
-            }
+/* ===== 每课讨论 ===== */
+async function loadChapterComments(chapterId){
+    const container = document.getElementById(`chapterComments-${chapterId}`);
+    if(!container) return;
+    container.innerHTML = '<div style="color:#999;padding:8px 0;">加载中...</div>';
+    try{
+        const url = `${SUPABASE_URL}/rest/v1/chapter_discussions?chapter_id=eq.${chapterId}&order=created_at.asc`;
+        const res = await fetch(url, {
+            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
         });
-        registerModule({
-            id: 'novel', name: '小说', icon: '📖',
-            render(data) {
-                const novels = data.novels || [];
-                return `
-                    <div class="generic-page">
-                        <h1>📖 小说天地</h1>
-                        <input class="search-box" placeholder="🔍 搜索小说标题..." oninput="searchNovels(this.value)" />
-                        <div style="margin-bottom:12px;">
-                            <button class="btn-primary" onclick="showNovelForm()">📝 发布小说</button>
-                            <button class="btn-primary" style="margin-left:8px;" onclick="sortNovelsByLikes()">🔥 按热度排序</button>
-                        </div>
-                        <div id="novelForm" style="display:none; margin:20px 0;"></div>
-                        <div id="novelList">
-                            ${novels.map(n => renderNovelCard(n)).join('') || '<div class="empty">📚 暂无小说，快来发布吧！</div>'}
-                        </div>
+        const comments = await res.json();
+        if(!Array.isArray(comments) || comments.length === 0){
+            container.innerHTML = '<div style="color:#999;padding:8px 0;">暂无讨论，来发表第一条吧</div>';
+            return;
+        }
+        container.innerHTML = comments.map(c => `
+            <div class="chapter-comment-item">
+                <div class="comment-avatar">${c.avatar ? `<img src="${escapeHtml(c.avatar)}" alt="">` : '👤'}</div>
+                <div class="comment-content">
+                    <div class="comment-meta">
+                        <strong>${escapeHtml(c.nickname || '匿名')}</strong>
+                        <span class="comment-time">${formatTime(c.created_at)}</span>
                     </div>
-                `;
-            },
-            async init() {
-                const res = await supabaseRequest('novels');
-                allNovels = Array.isArray(res) ? res : [];
-                document.getElementById('moduleContent').innerHTML = this.render({ novels: allNovels });
-            }
-        });
-        let allNovels = [];
-        function renderNovelCard(n) {
-            const canDelete = loginUser && loginUser.id === n.user_id;
-            return `
-                <div class="novel-card" id="novel-${n.id}">
-                    ${n.cover ? `<img class="novel-cover" src="${n.cover}" onclick="openOverlay('${n.cover}')" alt="封面" />` : ''}
-                    <div class="novel-info">
-                        <h3 class="novel-title">${escapeHtml(n.title || '无题')}</h3>
-                        <div class="novel-meta">
-                            <span>✍️ ${escapeHtml(n.author || '匿名')}</span>
-                            <span>👍 ${n.likes || 0}</span>
-                        </div>
-                        <div class="novel-intro">${escapeHtml(n.intro || '暂无简介')}</div>
-                        <div class="novel-actions">
-                            <button class="like-btn" onclick="likeNovel(${n.id})">👍 点赞</button>
-                            <button onclick="toggleNovelBody(${n.id})">📖 阅读</button>
-                            ${canDelete ? `<button class="delete-btn" onclick="deleteNovel(${n.id})">🗑️ 删除</button>` : ''}
-                        </div>
-                        <div class="novel-body" id="novelBody-${n.id}">${formatText(n.body || '')}</div>
-                    </div>
+                    <div class="comment-text">${escapeHtml(c.content)}</div>
                 </div>
-            `;
-        }
-        function searchNovels(keyword) {
-            const filtered = allNovels.filter(n => n.title.includes(keyword) || n.intro.includes(keyword));
-            document.getElementById('novelList').innerHTML = filtered.map(n => renderNovelCard(n)).join('') || '<div class="empty">未找到相关小说</div>';
-        }
-        function sortNovelsByLikes() {
-            allNovels.sort((a, b) => (b.likes || 0) - (a.likes || 0));
-            document.getElementById('novelList').innerHTML = allNovels.map(n => renderNovelCard(n)).join('');
-        }
-        function showNovelForm() {
-            if(!checkLogin()) return;
-            const el = document.getElementById('novelForm');
-            el.style.display = 'block';
-            el.innerHTML = `
-                <div class="editor-box">
-                    <label>📝 小说标题</label>
-                    <input id="novelTitle" placeholder="输入标题" />
-                    <label>📄 小说简介</label>
-                    <textarea id="novelIntro" placeholder="一句话介绍..."></textarea>
-                    <label>📖 小说正文</label>
-                    <textarea id="novelBodyInput" class="big" placeholder="开始创作..."></textarea>
-                    <div class="actions">
-                        <button class="btn-primary" onclick="publishNovel()">📨 发布小说</button>
-                        <button onclick="document.getElementById('novelForm').style.display='none'">取消</button>
-                    </div>
-                </div>
-            `;
-        }
-        async function publishNovel() {
-            if(!checkLogin()) return;
-            const title = document.getElementById('novelTitle').value.trim();
-            const intro = document.getElementById('novelIntro').value.trim();
-            const body = document.getElementById('novelBodyInput').value.trim();
-            if (!title || !body) return alert('请填写标题和正文');
-            await supabaseRequest('novels', 'POST', {
-                title,
-                author: loginUser.nickname,
-                intro,
-                body,
-                cover: '',
-                likes: 0,
-                user_id: loginUser.id
-            });
-            alert('🎉 小说发布成功！');
-            openModule('novel');
-        }
-        async function likeNovel(id) {
-            const list = await supabaseRequest('novels');
-            const novel = Array.isArray(list) && list.find(x => x.id === id);
-            if (!novel) return;
-            await supabaseRequest('novels', 'PATCH', { likes: (novel.likes || 0) + 1 }, id);
-            openModule('novel');
-        }
-        async function deleteNovel(id) {
-            if (!confirm('确认删除？')) return;
-            await supabaseRequest('novels', 'DELETE', null, id);
-            alert('删除成功');
-            openModule('novel');
-        }
-        function toggleNovelBody(id) {
-            const dom = document.getElementById(`novelBody-${id}`);
-            dom.style.display = dom.style.display === 'block' ? 'none' : 'block';
-        }
-        registerModule({
-            id: 'submit', name: '创作投稿', icon: '✍️',
-            render() {
-                return `
-                    <div class="generic-page">
-                        <h1>✍️ 创作投稿</h1>
-                        <p style="color:#666;margin-bottom:20px;">📝 投稿新章节，审核通过后会发布到历史书。</p>
-                        <div class="editor-box">
-                            <label>📖 章节标题</label>
-                            <input id="submitTitle" placeholder="第X章 标题" />
-                            <label>📋 课前导言</label>
-                            <textarea id="submitPreface" placeholder="课前导言..."></textarea>
-                            <label>📖 正文内容</label>
-                            <textarea id="submitBody" class="big" placeholder="正文内容..."></textarea>
-                            <label>📝 课后习题</label>
-                            <textarea id="submitExercises" placeholder="课后习题..."></textarea>
-                            <label>🔗 知识扩展</label>
-                            <textarea id="submitExtension" placeholder="知识扩展..."></textarea>
-                            <div class="actions" style="margin-top:16px;">
-                                <button class="btn-primary" onclick="doSubmit()">📨 提交投稿</button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
-        });
-        async function doSubmit() {
-            if(!checkLogin()) return;
-            const title = document.getElementById('submitTitle').value.trim();
-            const preface = document.getElementById('submitPreface').value.trim();
-            const body = document.getElementById('submitBody').value.trim();
-            const exercises = document.getElementById('submitExercises').value.trim();
-            const extension = document.getElementById('submitExtension').value.trim();
-            if (!title || !body) return alert('请填写章节标题和正文');
-            await supabaseRequest('submissions', 'POST', {
-                nickname: loginUser.nickname,
-                content: JSON.stringify({ title, preface, body, exercises, extension, images: [] }),
-                status: 'pending',
-                user_id: loginUser.id
-            });
-            alert('🎉 投稿成功！等待管理员审核。');
-            openModule('submit');
-        }
-        registerModule({
-            id: 'discuss', name: '讨论', icon: '💬',
-            render() {
-                return `
-                    <div class="generic-page">
-                        <h1>💬 班级讨论</h1>
-                        <div class="editor-box" style="margin-bottom:20px;">
-                            <label>💬 说点什么...</label>
-                            <textarea id="discContent" class="big" placeholder="分享你的想法..."></textarea>
-                            <div class="actions">
-                                <button class="btn-primary" onclick="postDiscussion()">📨 发布</button>
-                            </div>
-                        </div>
-                        <div id="discussList"></div>
-                    </div>
-                `;
+            </div>
+        `).join('');
+    }catch(e){
+        console.error('加载章节讨论失败', e);
+        container.innerHTML = '<div style="color:#999;">加载失败</div>';
+    }
+}
+async function postChapterComment(chapterId){
+    if(!checkLogin()) return;
+    const input = document.getElementById(`chapterCommentInput-${chapterId}`);
+    if(!input) return;
+    const content = input.value.trim();
+    if(!content) return alert('请输入内容');
+    const data = {
+        chapter_id: chapterId,
+        user_id: loginUser.id,
+        nickname: loginUser.nickname,
+        avatar: loginUser.avatar || '',
+        content
+    };
+    try{
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/chapter_discussions`, {
+            method: 'POST',
+            headers: {
+                'apikey': SUPABASE_KEY,
+                'Authorization': `Bearer ${SUPABASE_KEY}`,
+                'Content-Type': 'application/json; charset=utf-8',
+                'Prefer': 'return=representation'
             },
-            async init() {
-                await loadDiscussions();
-            }
+            body: JSON.stringify(data)
         });
-        async function loadDiscussions() {
-            const list = await supabaseRequest('discussions');
-            const data = Array.isArray(list) ? list : [];
-            document.getElementById('discussList').innerHTML = data.length
-                ? data.map(d => `
-                    <div class="item-row">
-                        <div>
-                            <strong>👤 ${escapeHtml(d.nickname || '匿名')}</strong>
-                            <span class="sugg-date">🕐 ${formatTime(d.created_at)}</span>
-                            <div style="margin-top:8px; line-height: 1.8;">${escapeHtml(d.content)}</div>
-                        </div>
-                    </div>`).join('')
-                : '<div class="empty">💬 暂无讨论，来说两句吧！</div>';
-        }
-        async function postDiscussion() {
-            if(!checkLogin()) return;
-            const content = document.getElementById('discContent').value.trim();
-            if (!content) return alert('说点什么吧！');
-            await supabaseRequest('discussions', 'POST', {
-                nickname: loginUser.nickname,
-                content,
-                user_id: loginUser.id
-            });
-            document.getElementById('discContent').value = '';
-            await loadDiscussions();
-        }
-        registerModule({
-            id: 'share', name: '日常分享', icon: '📸',
-            render() {
-                return `
-                    <div class="generic-page">
-                        <h1>📸 日常分享</h1>
-                        <input class="search-box" placeholder="🔍 搜索帖子内容..." oninput="searchPosts(this.value)" />
-                        <div style="margin-bottom:12px;">
-                            <button class="btn-primary" onclick="showPostForm()">📝 发帖</button>
-                            <button class="btn-primary" style="margin-left:8px;" onclick="sortPostsByLikes()">🔥 按热度排序</button>
-                        </div>
-                        <div id="postForm" style="display:none; margin:20px 0;"></div>
-                        <div id="postList"></div>
-                    </div>
-                `;
-            },
-            async init() {
-                await loadPosts();
-            }
-        });
+        if(!res.ok){ alert('发送失败：' + await res.text()); return; }
+        input.value = '';
+        await loadChapterComments(chapterId);
+    }catch(e){
+        console.error(e);
+        alert('发送失败，请重试');
+    }
+}
 
-//=====补回 用户列表虚拟模块 =====
+/* ===== 公告模块 ===== */
 registerModule({
-    id: 'userlist',
-    name: '用户列表',
-    icon: '👥',
-    render(){ return ''; },
+    id: 'notice', name: '公告栏', icon: '📋',
+    render(data){
+        const notices = data.notices || [];
+        if(notices.length === 0) return '<div class="empty">📭 暂无公告</div>';
+        return `
+            <div class="notice-list">
+                ${notices.map(n => `
+                    <div class="notice-card">
+                        <div class="notice-date">📅 ${escapeHtml(n.date || '')}</div>
+                        <h3 class="notice-title">${escapeHtml(n.title || '')}</h3>
+                        <div class="notice-body">${formatText(n.content || '')}</div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    },
     async init(){
-        location.href = "userlist.html";
+        const notices = await supabaseRequest('notices');
+        document.getElementById('moduleContent').innerHTML = this.render({ notices: Array.isArray(notices) ? notices : [] });
     }
 });
 
-        //========激活数字模块========
-        registerModule({
-            id:'activate',
-            name:'激活数字',
-            icon:'🔢',
-            render(){
-                return `
-                <div class="generic-page">
-                    <h1>🔢 激活数字</h1>
-                    <p>输入数字执行预设指令</p>
-                    <div class="activate-input-wrap">
-                        <input id="activateInput" type="number" placeholder="输入数字">
-                        <button class="btn-primary" onclick="runActivateCode()">执行</button>
-                    </div>
-                    <h3>可用指令列表</h3>
-                    <div id="activateListWrap"></div>
-                </div>`;
-            },
-            async init(){
-                const res = await supabaseRequest("activate_codes");
-                activateCodeList = Array.isArray(res) ? res : [];
-                const wrap = document.getElementById("activateListWrap");
-                if(activateCodeList.length===0){
-                    wrap.innerHTML = `<p class="empty">暂无可用激活数字</p>`;
-                }else{
-                    wrap.innerHTML = activateCodeList.map(item=>`
-                    <div class="activate-item">
-                        <b>🔢 ${escapeHtml(item.code)}</b> — ${escapeHtml(item.description||"无说明")}
-                    </div>`).join("");
-                }
-            }
-        });
-        //执行激活数字
-        window.runActivateCode = async function(){
-            const dom = document.getElementById("activateInput");
-            const num = Number(dom.value.trim());
-            const find = activateCodeList.find(x=>Number(x.code)===num);
-            if(!find){
-                alert("该数字没有对应指令");
-                return;
-            }
-            if(find.type === "alert"){
-                alert(find.payload);
-            }else if(find.type === "jump"){
-                location.href = find.payload;
-            }else{
-                alert("未知指令类型");
-            }
-        };
-        let allPosts = [];
-        function searchPosts(keyword) {
-            const filtered = allPosts.filter(p => (p.content && p.content.includes(keyword)) || (p.nickname && p.nickname.includes(keyword)));
-            renderPostList(filtered);
-        }
-        function sortPostsByLikes() {
-            allPosts.sort((a, b) => (b.likes || 0) - (a.likes || 0));
-            renderPostList(allPosts);
-        }
-        function showPostForm() {
-            if(!checkLogin()) return;
-            const el = document.getElementById('postForm');
-            el.style.display = 'block';
-            el.innerHTML = `
+/* ===== 小说模块 ===== */
+registerModule({
+    id: 'novel', name: '小说', icon: '📖',
+    render(data){
+        const novels = data.novels || [];
+        return `
+            <div class="generic-page">
+                <h1>📖 小说天地</h1>
+                <input class="search-box" placeholder="🔍 搜索小说标题..." oninput="searchNovels(this.value)" />
+                <div style="margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap;">
+                    <button class="btn-primary" onclick="showNovelForm()">📝 发布小说</button>
+                    <button class="btn-primary" onclick="sortNovelsByLikes()">🔥 按热度排序</button>
+                </div>
+                <div id="novelForm" style="display:none; margin:20px 0;"></div>
+                <div id="novelList">
+                    ${novels.map(n => renderNovelCard(n)).join('') || '<div class="empty">📚 暂无小说，快来发布吧！</div>'}
+                </div>
+            </div>
+        `;
+    },
+    async init(){
+        const res = await supabaseRequest('novels');
+        allNovels = Array.isArray(res) ? res : [];
+        document.getElementById('moduleContent').innerHTML = this.render({ novels: allNovels });
+    }
+});
+function renderNovelCard(n){
+    const canDelete = loginUser && loginUser.id === n.user_id;
+    const avatarHtmlStr = n.avatar
+        ? `<img class="novel-author-avatar" src="${escapeHtml(n.avatar)}" alt="">`
+        : `<span class="novel-author-avatar">👤</span>`;
+    return `
+        <div class="novel-card" id="novel-${n.id}">
+            ${n.cover ? `<img class="novel-cover" src="${n.cover}" onclick="openOverlay('${n.cover}')" alt="封面" />` : ''}
+            <div class="novel-info">
+                <h3 class="novel-title">${escapeHtml(n.title || '无题')}</h3>
+                <div class="novel-meta">
+                    <a class="novel-author" href="profile.html?uid=${encodeURIComponent(n.user_id || '')}">
+                        ${avatarHtmlStr}
+                        <span>✍️ ${escapeHtml(n.author || '匿名')}</span>
+                    </a>
+                    <span>👍 ${n.likes || 0}</span>
+                </div>
+                <div class="novel-intro">${escapeHtml(n.intro || '暂无简介')}</div>
+                <div class="novel-actions">
+                    <button class="like-btn" onclick="likeNovel(${n.id})">👍 点赞</button>
+                    <button onclick="toggleNovelBody(${n.id})">📖 阅读</button>
+                    ${canDelete ? `<button class="delete-btn" onclick="deleteNovel(${n.id})">🗑️ 删除</button>` : ''}
+                </div>
+                <div class="novel-body" id="novelBody-${n.id}">${formatText(n.body || '')}</div>
+            </div>
+        </div>
+    `;
+}
+function searchNovels(keyword){
+    const filtered = allNovels.filter(n => (n.title || '').includes(keyword) || (n.intro || '').includes(keyword));
+    document.getElementById('novelList').innerHTML = filtered.map(n => renderNovelCard(n)).join('') || '<div class="empty">未找到相关小说</div>';
+}
+function sortNovelsByLikes(){
+    allNovels.sort((a, b) => (b.likes || 0) - (a.likes || 0));
+    document.getElementById('novelList').innerHTML = allNovels.map(n => renderNovelCard(n)).join('');
+}
+function showNovelForm(){
+    if(!checkLogin()) return;
+    const el = document.getElementById('novelForm');
+    el.style.display = 'block';
+    el.innerHTML = `
+        <div class="editor-box">
+            <label>📝 小说标题</label>
+            <input id="novelTitle" placeholder="输入标题" />
+            <label>📄 小说简介</label>
+            <textarea id="novelIntro" placeholder="一句话介绍..."></textarea>
+            <label>📖 小说正文</label>
+            <textarea id="novelBodyInput" class="big" placeholder="开始创作..."></textarea>
+            <div class="actions">
+                <button class="btn-primary" onclick="publishNovel()">📨 发布小说</button>
+                <button onclick="document.getElementById('novelForm').style.display='none'" style="padding:12px 24px;border-radius:14px;background:#bbb;color:#fff;border:none;cursor:pointer;">取消</button>
+            </div>
+        </div>
+    `;
+}
+async function publishNovel(){
+    if(!checkLogin()) return;
+    const title = document.getElementById('novelTitle').value.trim();
+    const intro = document.getElementById('novelIntro').value.trim();
+    const body = document.getElementById('novelBodyInput').value.trim();
+    if(!title || !body) return alert('请填写标题和正文');
+    await supabaseRequest('novels','POST',{
+        title, author: loginUser.nickname, intro, body, cover: '',
+        likes: 0, user_id: loginUser.id,
+        avatar: loginUser.avatar || ''
+    });
+    alert('🎉 小说发布成功！');
+    openModule('novel');
+}
+async function likeNovel(id){
+    const list = await supabaseRequest('novels');
+    const novel = Array.isArray(list) && list.find(x => x.id === id);
+    if(!novel) return;
+    await supabaseRequest('novels','PATCH',{likes:(novel.likes || 0) + 1}, id);
+    openModule('novel');
+}
+async function deleteNovel(id){
+    if(!confirm('确认删除？')) return;
+    await supabaseRequest('novels','DELETE',null,id);
+    alert('删除成功');
+    openModule('novel');
+}
+function toggleNovelBody(id){
+    const dom = document.getElementById(`novelBody-${id}`);
+    dom.style.display = dom.style.display === 'block' ? 'none' : 'block';
+}
+
+/* ===== 投稿模块 ===== */
+registerModule({
+    id: 'submit', name: '创作投稿', icon: '✍️',
+    render(){
+        return `
+            <div class="generic-page">
+                <h1>✍️ 创作投稿</h1>
+                <p style="color:#666;margin-bottom:20px;">📝 投稿新章节，审核通过后会发布到历史书。</p>
                 <div class="editor-box">
+                    <label>📖 章节标题</label>
+                    <input id="submitTitle" placeholder="第X章 标题" />
+                    <label>📋 课前导言</label>
+                    <textarea id="submitPreface" placeholder="课前导言..."></textarea>
+                    <label>📖 正文内容</label>
+                    <textarea id="submitBody" class="big" placeholder="正文内容..."></textarea>
+                    <label>📝 课后习题</label>
+                    <textarea id="submitExercises" placeholder="课后习题..."></textarea>
+                    <label>🔗 知识扩展</label>
+                    <textarea id="submitExtension" placeholder="知识扩展..."></textarea>
+                    <div class="actions" style="margin-top:16px;">
+                        <button class="btn-primary" onclick="doSubmit()">📨 提交投稿</button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+});
+async function doSubmit(){
+    if(!checkLogin()) return;
+    const title = document.getElementById('submitTitle').value.trim();
+    const preface = document.getElementById('submitPreface').value.trim();
+    const body = document.getElementById('submitBody').value.trim();
+    const exercises = document.getElementById('submitExercises').value.trim();
+    const extension = document.getElementById('submitExtension').value.trim();
+    if(!title || !body) return alert('请填写章节标题和正文');
+    await supabaseRequest('submissions','POST',{
+        nickname: loginUser.nickname,
+        content: JSON.stringify({title, preface, body, exercises, extension, images: []}),
+        status: 'pending',
+        user_id: loginUser.id
+    });
+    alert('🎉 投稿成功！等待管理员审核。');
+    openModule('submit');
+}
+
+/* ===== 讨论模块 ===== */
+registerModule({
+    id: 'discuss', name: '讨论', icon: '💬',
+    render(){
+        return `
+            <div class="generic-page">
+                <h1>💬 班级讨论</h1>
+                <div class="editor-box" style="margin-bottom:20px;">
                     <label>💬 说点什么...</label>
-                    <textarea id="postContent" class="big" placeholder="分享你的日常..."></textarea>
-                    <label>🖼️ 上传图片（可选，可多选）</label>
-                    <input type="file" id="postImageFiles" accept="image/*" multiple style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;" />
-                    <div id="imagePreview" style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;"></div>
-                    <label>🎬 上传视频（可选）</label>
-                    <input type="file" id="postVideoFile" accept="video/*" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;" />
-                    <div id="videoPreview" style="margin-top:10px;"></div>
+                    <textarea id="discContent" class="big" placeholder="分享你的想法..."></textarea>
                     <div class="actions">
-                        <button class="btn-primary" onclick="publishPost()">📨 发布</button>
-                        <button onclick="document.getElementById('postForm').style.display='none'">取消</button>
+                        <button class="btn-primary" onclick="postDiscussion()">📨 发布</button>
                     </div>
                 </div>
-            `;
-            document.getElementById('postImageFiles').onchange = function () {
-                const preview = document.getElementById('imagePreview');
-                preview.innerHTML = '';
-                Array.from(this.files).forEach(file => {
-                    const reader = new FileReader();
-                    reader.onload = e => preview.innerHTML += `<img src="${e.target.result}" style="height:80px;border-radius:6px;object-fit:cover;">`;
-                    reader.readAsDataURL(file);
-                });
-            };
-            document.getElementById('postVideoFile').onchange = function () {
-                const preview = document.getElementById('videoPreview');
-                preview.innerHTML = '';
-                if (this.files[0]) {
-                    const reader = new FileReader();
-                    reader.onload = e => preview.innerHTML = `<video controls style="width:100%;border-radius:8px;"><source src="${e.target.result}"></video>`;
-                    reader.readAsDataURL(this.files[0]);
-                }
-            };
+                <div id="discussList"></div>
+            </div>
+        `;
+    },
+    async init(){ await loadDiscussions(); }
+});
+async function loadDiscussions(){
+    const list = await supabaseRequest('discussions');
+    const data = Array.isArray(list) ? list : [];
+    document.getElementById('discussList').innerHTML = data.length
+        ? data.map(d => {
+            const av = d.avatar
+                ? `<img class="discuss-author-avatar" src="${escapeHtml(d.avatar)}" alt="">`
+                : `<span class="discuss-author-avatar">👤</span>`;
+            return `
+            <div class="item-row">
+                <div>
+                    <a class="discuss-author" href="profile.html?uid=${encodeURIComponent(d.user_id || '')}">
+                        ${av}
+                        <strong>${escapeHtml(d.nickname || '匿名')}</strong>
+                    </a>
+                    <span class="sugg-date">🕐 ${formatTime(d.created_at)}</span>
+                    <div style="margin-top:8px; line-height:1.8;">${escapeHtml(d.content)}</div>
+                </div>
+            </div>`;
+        }).join('')
+        : '<div class="empty">💬 暂无讨论，来说两句吧！</div>';
+}
+async function postDiscussion(){
+    if(!checkLogin()) return;
+    const content = document.getElementById('discContent').value.trim();
+    if(!content) return alert('说点什么吧！');
+    await supabaseRequest('discussions','POST',{
+        nickname: loginUser.nickname,
+        content,
+        user_id: loginUser.id,
+        avatar: loginUser.avatar || ''
+    });
+    document.getElementById('discContent').value = '';
+    await loadDiscussions();
+}
+
+/* ===== 日常分享模块 ===== */
+registerModule({
+    id: 'share', name: '日常分享', icon: '📸',
+    render(){
+        return `
+            <div class="generic-page">
+                <h1>📸 日常分享</h1>
+                <input class="search-box" placeholder="🔍 搜索帖子内容..." oninput="searchPosts(this.value)" />
+                <div style="margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap;">
+                    <button class="btn-primary" onclick="showPostForm()">📝 发帖</button>
+                    <button class="btn-primary" onclick="sortPostsByLikes()">🔥 按热度排序</button>
+                </div>
+                <div id="postForm" style="display:none; margin:20px 0;"></div>
+                <div id="postList"></div>
+            </div>
+        `;
+    },
+    async init(){ await loadPosts(); }
+});
+function searchPosts(keyword){
+    const filtered = allPosts.filter(p => (p.content && p.content.includes(keyword)) || (p.nickname && p.nickname.includes(keyword)));
+    renderPostList(filtered, window._lastAllComments || []);
+}
+function sortPostsByLikes(){
+    allPosts.sort((a, b) => (b.likes || 0) - (a.likes || 0));
+    renderPostList(allPosts, window._lastAllComments || []);
+}
+function showPostForm(){
+    if(!checkLogin()) return;
+    const el = document.getElementById('postForm');
+    el.style.display = 'block';
+    el.innerHTML = `
+        <div class="editor-box">
+            <label>💬 说点什么...</label>
+            <textarea id="postContent" class="big" placeholder="分享你的日常..."></textarea>
+            <label>🖼️ 上传图片（可选，可多选，自动压缩）</label>
+            <input type="file" id="postImageFiles" accept="image/*" multiple style="width:100%;padding:10px;border:1px solid rgba(255,255,255,0.85);border-radius:12px;background:rgba(255,255,255,0.7);" />
+            <div id="imagePreview" style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;"></div>
+            <label>🎬 上传视频（可选，建议小文件）</label>
+            <input type="file" id="postVideoFile" accept="video/*" style="width:100%;padding:10px;border:1px solid rgba(255,255,255,0.85);border-radius:12px;background:rgba(255,255,255,0.7);" />
+            <div id="videoPreview" style="margin-top:10px;"></div>
+            <div class="actions">
+                <button class="btn-primary" onclick="publishPost()">📨 发布</button>
+                <button onclick="document.getElementById('postForm').style.display='none'" style="padding:12px 24px;border-radius:14px;background:#bbb;color:#fff;border:none;cursor:pointer;">取消</button>
+            </div>
+        </div>
+    `;
+    document.getElementById('postImageFiles').onchange = function(){
+        const preview = document.getElementById('imagePreview');
+        preview.innerHTML = '';
+        Array.from(this.files).forEach(file => {
+            const reader = new FileReader();
+            reader.onload = e => preview.innerHTML += `<img src="${e.target.result}" style="height:80px;border-radius:12px;object-fit:cover;">`;
+            reader.readAsDataURL(file);
+        });
+    };
+    document.getElementById('postVideoFile').onchange = function(){
+        const preview = document.getElementById('videoPreview');
+        preview.innerHTML = '';
+        if(this.files[0]){
+            const reader = new FileReader();
+            reader.onload = e => preview.innerHTML = `<video controls preload="metadata" style="width:100%;border-radius:12px;"><source src="${e.target.result}"></video>`;
+            reader.readAsDataURL(this.files[0]);
         }
-        async function publishPost() {
-            if(!checkLogin()) return;
-            const content = document.getElementById('postContent').value.trim();
-            const imgFiles = document.getElementById('postImageFiles').files;
-            const imagePromises = Array.from(imgFiles).map(file => new Promise(res => {
-                const r = new FileReader(); r.onload = e => res(e.target.result); r.readAsDataURL(file);
-            }));
-            const images = await Promise.all(imagePromises);
-            let video_url = null;
-            const vFile = document.getElementById('postVideoFile').files[0];
-            if (vFile) {
-                video_url = await new Promise(res => {
-                    const r = new FileReader(); r.onload = e => res(e.target.result); r.readAsDataURL(vFile);
-                });
+    };
+}
+async function publishPost(){
+    if(!checkLogin()) return;
+    const content = document.getElementById('postContent').value.trim();
+    const imgFiles = document.getElementById('postImageFiles').files;
+    const vFile = document.getElementById('postVideoFile').files[0];
+
+    if(!content && imgFiles.length === 0 && !vFile){
+        return alert('写点内容或上传图片/视频吧！');
+    }
+
+    const btn = document.querySelector('#postForm .btn-primary');
+    if(btn){ btn.disabled = true; btn.textContent = '上传中...'; }
+
+    try{
+        // 1. 图片：先压缩，再上传
+        const images = [];
+        for(const f of Array.from(imgFiles)){
+            let file = f;
+            if(f.type.startsWith('image/')){
+                try { file = await compressImageFile(f, 1600, 0.82); }
+                catch(e){ file = f; }
             }
-            if (!content && images.length === 0 && !video_url) return alert('写点内容或上传图片/视频吧！');
-            await supabaseRequest('posts', 'POST', {
-                nickname: loginUser.nickname,
-                content,
-                images,
-                video_url,
-                likes: 0,
-                user_id: loginUser.id
-            });
-            document.getElementById('postForm').style.display = 'none';
-            await loadPosts();
+            const url = await uploadFileToStorage(file, 'images');
+            images.push(url);
         }
-        async function loadPosts() {
-            const postsRaw = await supabaseRequest('posts');
-            const commentsRaw = await supabaseRequest('comments');
-            allPosts = Array.isArray(postsRaw) ? postsRaw : [];
-            const allComments = Array.isArray(commentsRaw) ? commentsRaw : [];
-            renderPostList(allPosts, allComments);
+
+        // 2. 视频：直接上传
+        let video_url = null;
+        if(vFile){
+            video_url = await uploadFileToStorage(vFile, 'videos');
         }
-        function renderPostList(posts, allComments = []) {
-            const listDom = document.getElementById('postList');
-            listDom.innerHTML = posts.length ? posts.map(p => {
-                const pc = allComments.filter(c => c.post_id === p.id);
-                const canDelete = loginUser && loginUser.id === p.user_id;
-                return `
-                <div class="post-card" id="post-${p.id}">
-                    <div class="post-header">
-                        <strong>👤 ${escapeHtml(p.nickname || '匿名')}</strong>
-                        <span class="sugg-date">🕐 ${formatTime(p.created_at)}</span>
+
+        // 3. 只存 URL
+        await supabaseRequest('posts','POST',{
+            nickname: loginUser.nickname,
+            content,
+            images,
+            video_url,
+            likes: 0,
+            user_id: loginUser.id,
+            avatar: loginUser.avatar || ''
+        });
+
+        document.getElementById('postForm').style.display = 'none';
+        await loadPosts();
+    }catch(e){
+        console.error(e);
+        alert(e.message || '上传失败，请重试');
+    }finally{
+        if(btn){ btn.disabled = false; btn.textContent = '📨 发布'; }
+    }
+}
+async function loadPosts(){
+    // 只拉最新 20 条，按时间倒序
+    const postsRaw = await fetch(
+        `${SUPABASE_URL}/rest/v1/posts?order=created_at.desc&limit=20`,
+        { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
+    ).then(r => r.json());
+
+    const commentsRaw = await supabaseRequest('comments');
+    allPosts = Array.isArray(postsRaw) ? postsRaw : [];
+    const allComments = Array.isArray(commentsRaw) ? commentsRaw : [];
+    window._lastAllComments = allComments;
+    renderPostList(allPosts, allComments);
+}
+function renderPostList(posts, allComments = []){
+    const listDom = document.getElementById('postList');
+    listDom.innerHTML = posts.length ? posts.map(p => {
+        const pc = allComments.filter(c => c.post_id === p.id);
+        const canDelete = loginUser && loginUser.id === p.user_id;
+        const av = p.avatar
+            ? `<img class="post-author-avatar" src="${escapeHtml(p.avatar)}" alt="">`
+            : `<span class="post-author-avatar">👤</span>`;
+        return `
+        <div class="post-card" id="post-${p.id}">
+            <div class="post-header">
+                <a class="post-author" href="profile.html?uid=${encodeURIComponent(p.user_id || '')}">
+                    ${av}
+                    <span>${escapeHtml(p.nickname || '匿名')}</span>
+                </a>
+                <span class="sugg-date">🕐 ${formatTime(p.created_at)}</span>
+            </div>
+            ${p.content ? `<div class="post-content">${escapeHtml(p.content)}</div>` : ''}
+            ${p.images && p.images.length > 0
+                ? `<div class="post-images">${p.images.map(img =>
+                    `<img src="${img}" loading="lazy" onclick="openOverlay('${img}')">`
+                  ).join('')}</div>`
+                : ''}
+            ${p.video_url
+                ? `<div class="post-video"><video controls preload="metadata" style="width:100%;border-radius:12px;"><source src="${p.video_url}"></video></div>`
+                : ''}
+            <div class="post-actions">
+                <button class="like-btn" onclick="likePost(${p.id})">❤️ 点赞 (${p.likes || 0})</button>
+                <button onclick="toggleComments(${p.id})">💬 评论(${pc.length})</button>
+                ${canDelete ? `<button class="delete-btn" onclick="deletePost(${p.id})">🗑 删除</button>` : ''}
+            </div>
+            <div class="post-comments" id="comments-${p.id}" style="display:none;">
+                ${pc.map(cm => `
+                    <div class="comment-item">
+                        <strong>${escapeHtml(cm.nickname)}</strong>
+                        <div>${escapeHtml(cm.content)}</div>
                     </div>
-                    ${p.content ? `<div class="post-content">${escapeHtml(p.content)}</div>` : ''}
-                    ${p.images && p.images.length > 0 ? `<div class="post-images">${p.images.map(img=>`<img src="${img}" onclick="openOverlay('${img}')">`).join('')}</div>` : ''}
-                    ${p.video_url ? `<div class="post-video"><video controls style="width:100%;border-radius:8px;"><source src="${p.video_url}"></video></div>` : ''}
-                    <div class="post-actions">
-                        <button class="like-btn" onclick="likePost(${p.id})">❤️ 点赞 (${p.likes||0})</button>
-                        <button onclick="toggleComments(${p.id})">💬 评论(${pc.length})</button>
-                        ${canDelete ? `<button class="delete-btn" onclick="deletePost(${p.id})">🗑 删除</button>` : ''}
-                    </div>
-                    <div class="post-comments" id="comments-${p.id}" style="display:none;">
-                        ${pc.map(cm => `
-                            <div class="comment-item">
-                                <strong>${escapeHtml(cm.nickname)}</strong>
-                                <div>${escapeHtml(cm.content)}</div>
-                            </div>
-                        `).join('')}
-                        <div style="margin-top:10px;display:flex;gap:8px;">
-                            <input id="commentContent-${p.id}" placeholder="写下评论..." style="flex:1;">
-                            <button class="btn-primary" onclick="addComment(${p.id})">发送</button>
-                        </div>
-                    </div>
+                `).join('')}
+                <div style="margin-top:10px;display:flex;gap:8px;">
+                    <input id="commentContent-${p.id}" placeholder="写下评论..." style="flex:1;">
+                    <button class="btn-primary" onclick="addComment(${p.id})" style="padding:10px 20px;">发送</button>
                 </div>
-                `;
-            }).join('') : '<div class="empty">📸 还没有日常分享，快来发布第一条！</div>';
+            </div>
+        </div>`;
+    }).join('') : '<div class="empty">📸 还没有日常分享，快来发布第一条！</div>';
+}
+function toggleComments(postId){
+    const dom = document.getElementById(`comments-${postId}`);
+    dom.style.display = dom.style.display === 'block' ? 'none' : 'block';
+}
+async function addComment(postId){
+    if(!checkLogin()) return;
+    const input = document.getElementById(`commentContent-${postId}`);
+    const content = input.value.trim();
+    if(!content) return alert('请输入评论内容');
+    await supabaseRequest('comments','POST',{
+        post_id: postId,
+        nickname: loginUser.nickname,
+        content,
+        user_id: loginUser.id
+    });
+    await loadPosts();
+}
+async function likePost(id){
+    const list = await supabaseRequest('posts');
+    const post = Array.isArray(list) && list.find(x => x.id === id);
+    if(!post) return;
+    await supabaseRequest('posts','PATCH',{likes:(post.likes || 0) + 1}, id);
+    await loadPosts();
+}
+async function deletePost(id){
+    if(!confirm('确定删除这条分享？')) return;
+    await supabaseRequest('posts','DELETE',null,id);
+    await loadPosts();
+}
+
+/* ===== 激活数字模块 ===== */
+registerModule({
+    id: 'activate',
+    name: '激活数字',
+    icon: '🔢',
+    render(){
+        return `
+        <div class="generic-page">
+            <h1>🔢 激活数字</h1>
+            <p>输入数字执行预设指令</p>
+            <div class="activate-input-wrap">
+                <input id="activateInput" type="number" placeholder="输入数字">
+                <button class="btn-primary" onclick="runActivateCode()">执行</button>
+            </div>
+            <h3>可用指令列表</h3>
+            <div id="activateListWrap"></div>
+        </div>`;
+    },
+    async init(){
+        const res = await supabaseRequest('activate_codes');
+        activateCodeList = Array.isArray(res) ? res : [];
+        const wrap = document.getElementById('activateListWrap');
+        if(activateCodeList.length === 0){
+            wrap.innerHTML = `<p class="empty">暂无可用激活数字</p>`;
+        }else{
+            wrap.innerHTML = activateCodeList.map(item => `
+                <div class="activate-item">
+                    <b>🔢 ${escapeHtml(item.code)}</b> — ${escapeHtml(item.description || '无说明')}
+                </div>`).join('');
         }
-        function toggleComments(postId) {
-            const dom = document.getElementById(`comments-${postId}`);
-            dom.style.display = dom.style.display === 'block' ? 'none' : 'block';
-        }
-        async function addComment(postId) {
-            if(!checkLogin()) return;
-            const input = document.getElementById(`commentContent-${postId}`);
-            const content = input.value.trim();
-            if(!content) return alert('请输入评论内容');
-            await supabaseRequest('comments','POST',{
-                post_id:postId,
-                nickname:loginUser.nickname,
-                content,
-                user_id:loginUser.id
-            });
-            await loadPosts();
-        }
-        async function likePost(id) {
-            const list = await supabaseRequest('posts');
-                       const post = Array.isArray(list) && list.find(x => x.id === id);
-            if (!post) return;
-            await supabaseRequest('posts', 'PATCH', { likes: (post.likes || 0) + 1 }, id);
-            await loadPosts();
-        }
-        async function deletePost(id) {
-            if (!confirm('确定删除这条分享？')) return;
-            await supabaseRequest('posts', 'DELETE', null, id);
-            await loadPosts();
-        }
-        async function initApp() {
-            refreshUserStatus();
-            renderNav();
-            await registerOnline();
-            openModule('book');
-        }
-        window.addEventListener('DOMContentLoaded', initApp);
+    }
+});
+window.runActivateCode = async function(){
+    const dom = document.getElementById('activateInput');
+    const num = Number(dom.value.trim());
+    const find = activateCodeList.find(x => Number(x.code) === num);
+    if(!find){ alert('该数字没有对应指令'); return; }
+    if(find.type === 'alert') alert(find.payload);
+    else if(find.type === 'jump') location.href = find.payload;
+    else alert('未知指令类型');
+};
+
+/* ===== 启动 ===== */
+async function initApp(){
+    refreshUserStatus();
+    renderNav();
+    await registerOnline();
+    openModule('book');
+}
+window.addEventListener('DOMContentLoaded', initApp);
 </script>
 </body>
 </html>
